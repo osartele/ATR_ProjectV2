@@ -1,0 +1,2 @@
+"Project","Focal_Class","Test_Class","Focal_Path","Test_Path","Module","Focal_Method","Test_Case","AST_Focal_Method","AST_Test_Method","Sample_Key","Sample_File"
+"42949039","SwaggerGenMojo","SwaggerGenMojoTest","repos/42949039/herd-build/herd-swaggergen-maven-plugin/src/main/java/org/finra/herd/swaggergen/SwaggerGenMojo.java","repos/42949039/herd-build/herd-swaggergen-maven-plugin/src/test/java/org/finra/herd/swaggergen/SwaggerGenMojoTest.java","herd-build\herd-swaggergen-maven-plugin","execute","test_2","execute","test_2","42949039_5","42949039_5.json"

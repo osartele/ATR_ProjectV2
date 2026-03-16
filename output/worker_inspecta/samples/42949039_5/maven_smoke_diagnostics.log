@@ -1,0 +1,12 @@
+[2026-03-16 15:50:01] [IterativeHealing] Baseline failed for SwaggerGenMojoTest; starting retry loop (max_retries=3).
+[2026-03-16 15:50:01] [IterativeHealing] Retry 1/3 for SwaggerGenMojoTest on focal SwaggerGenMojo.
+[2026-03-16 15:50:30] [IterativeHealing] Retry 1 style-lock rejection captured: Codex output rejected for iterative-healing: iterative style-lock validation failed (local focal-class instantiation is forbidden in iterative style lock (SwaggerGenMojo)).
+[2026-03-16 15:50:30] [IterativeHealing] Codex method patch generation failed on retry 1 for SwaggerGenMojoTest.
+[2026-03-16 15:50:30] [IterativeHealing] Retry 2/3 for SwaggerGenMojoTest on focal SwaggerGenMojo.
+[2026-03-16 15:53:17] [IterativeHealing] Retry 2 failure signal: java.lang.IllegalArgumentException: Could not find field 'swaggerGenMojo' on target object [org.finra.herd.swaggergen.SwaggerGenMojoTest@185d8b6] or target class [class org.finra.herd.swaggergen.SwaggerGenMojoTest]
+[2026-03-16 15:53:17] [IterativeHealing] Retry 3/3 for SwaggerGenMojoTest on focal SwaggerGenMojo.
+[2026-03-16 15:54:07] [IterativeHealing] Retry 3 style-lock rejection captured: Codex output rejected for iterative-healing: iterative style-lock validation failed (local focal-class instantiation is forbidden in iterative style lock (SwaggerGenMojo)).
+[2026-03-16 15:54:07] [IterativeHealing] Codex method patch generation failed on retry 3 for SwaggerGenMojoTest.
+[2026-03-16 15:54:07] [IterativeHealing] Exhausted retries for SwaggerGenMojoTest without baseline success.
+[2026-03-16 15:55:08] [RegenerativeSync] Starting primary generation pass for SwaggerGenMojoTest on focal SwaggerGenMojo.
+[2026-03-16 15:57:02] [RegenerativeSync] Baseline passed on first pass for SwaggerGenMojoTest; running targeted PIT.

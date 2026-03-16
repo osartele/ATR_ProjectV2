@@ -1,0 +1,13 @@
+[
+  {
+    "mutation_type": "logical",
+    "method_name": "getStorageAttributeIntegerValueByName",
+    "old_operator": "==",
+    "new_operator": "!=",
+    "line": 193,
+    "column": 19,
+    "mutation_priority_class": "NEGATE_CONDITIONALS",
+    "focal_path": "compiledrepos/worker_w23a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/StorageHelper.java",
+    "test_path": "compiledrepos/worker_w23a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/StorageHelperTest.java"
+  }
+]

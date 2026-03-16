@@ -1,0 +1,494 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <packaging>pom</packaging>
+   <modules>
+      <module>herd-sdk</module>
+      <module>herd-sdk-ext</module>
+   </modules>
+
+   <parent>
+      <groupId>org.finra.herd</groupId>
+      <artifactId>herd-code</artifactId>
+      <version>${revision}</version>
+   </parent>
+
+   <properties>
+      <swagger.spec.name>herd.swagger.yaml</swagger.spec.name>
+      <swagger.spec.path>
+         ${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/${swagger.spec.name}
+      </swagger.spec.path>
+      <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+      <maven.replacer.plugin.version>1.5.3</maven.replacer.plugin.version>
+   </properties>
+
+   <name>herd sdk common</name>
+
+   <!-- groupId and version are inherited from the parent and can be overridden here if needed. -->
+   <artifactId>herd-sdk-common</artifactId>
+
+   <description>This project contains swagger generated clients that invoke the herd REST API's.
+   </description>
+   <url>http://finraos.github.io/herd/</url>
+
+   <dependencies>
+      <dependency>
+         <groupId>org.finra.herd</groupId>
+         <artifactId>herd-sdk-resources</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>com.sun.jersey</groupId>
+         <artifactId>jersey-client</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.sun.jersey.contribs</groupId>
+         <artifactId>jersey-multipart</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-core</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-annotations</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-databind</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>com.fasterxml.jackson.jaxrs</groupId>
+         <artifactId>jackson-jaxrs-json-provider</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>com.fasterxml.jackson.datatype</groupId>
+         <artifactId>jackson-datatype-joda</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>joda-time</groupId>
+         <artifactId>joda-time</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.brsanthu</groupId>
+         <artifactId>migbase64</artifactId>
+      </dependency>
+   </dependencies>
+
+   <build>
+      <plugins>
+
+         <plugin>
+            <groupId>org.commonjava.maven.plugins</groupId>
+            <artifactId>directory-maven-plugin</artifactId>
+            <version>0.1</version>
+            <executions>
+               <execution>
+                  <id>directories</id>
+                  <goals>
+                     <goal>directory-of</goal>
+                  </goals>
+                  <phase>initialize</phase>
+                  <configuration>
+                     <property>herd-sdk-common.basedir</property>
+                     <project>
+                        <groupId>org.finra.herd</groupId>
+                        <artifactId>herd-sdk-common</artifactId>
+                     </project>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <artifactId>maven-remote-resources-plugin</artifactId>
+            <version>1.6.0</version>
+            <executions>
+               <execution>
+                  <id>process-remote-resources</id>
+                  <goals>
+                     <goal>process</goal>
+                  </goals>
+                  <configuration>
+                     <resourceBundles>
+                        <resourceBundle>org.finra.herd:herd-sdk-resources:${project.version}</resourceBundle>
+                     </resourceBundles>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <!--
+             Copy the generated YAML file from the herd-docs-swagger project to this one in the target directory so
+             it can be picked up by the swagger-codegen-maven-plugin.
+         -->
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>unpack-shared-resources</id>
+                  <goals>
+                     <goal>unpack</goal>
+                  </goals>
+                  <phase>initialize</phase>
+                  <configuration>
+                     <artifactItems>
+                        <artifactItem>
+                           <groupId>${project.groupId}</groupId>
+                           <artifactId>herd-docs-swagger</artifactId>
+                           <version>${project.version}</version>
+                           <type>zip</type>
+                           <outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
+                           <includes>**/${swagger.spec.name}</includes>
+                        </artifactItem>
+                     </artifactItems>
+                  </configuration>
+               </execution>
+            </executions>
+            <dependencies>
+               <dependency>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>herd-docs-swagger</artifactId>
+                  <version>${project.version}</version>
+               </dependency>
+            </dependencies>
+         </plugin>
+
+         <!-- Generate the SDK files from the YAML file  -->
+
+         <plugin>
+            <groupId>org.openapitools</groupId>
+            <artifactId>openapi-generator-maven-plugin</artifactId>
+            <executions>
+
+               <!-- Set of executions to generate complete herd-swagger API wrappers -->
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <id>JAVA-Generation</id>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <inputSpec>${swagger.spec.path}</inputSpec>
+                     <output>${project.build.directory}/generated-sources/swagger</output>
+                     <addCompileSourceRoot>false</addCompileSourceRoot>
+                     <generatorName>java</generatorName>
+                     <apiPackage>org.finra.herd.sdk.api</apiPackage>
+                     <modelPackage>org.finra.herd.sdk.model</modelPackage>
+                     <invokerPackage>org.finra.herd.sdk.invoker</invokerPackage>
+                     <!--This generation can be refactored to generate its own tests and pom configuration-->
+                     <!--When that happens these should be set to true and other config options need to be set-->
+                     <generateApiTests>false</generateApiTests>
+                     <generateModelTests>false</generateModelTests>
+                     <generateApiDocumentation>false</generateApiDocumentation>
+                     <generateModelDocumentation>false</generateModelDocumentation>
+                     <!--uncomment next line in order to see all possible <configOptions> for the selected language-->
+                     <!--<configHelp>true</configHelp>-->
+                     <configOptions>
+                        <!--these are the options specific to the java generation language-->
+                        <licenseName>Apache-2.0</licenseName>
+                        <licenseUrl>https://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+                        <library>jersey1</library>
+                        <dateLibrary>joda</dateLibrary>
+                     </configOptions>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <id>SCALA-Generation</id>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <inputSpec>${swagger.spec.path}</inputSpec>
+                     <output>${project.build.directory}/scala-client</output>
+                     <addCompileSourceRoot>false</addCompileSourceRoot>
+                     <generatorName>scala-httpclient</generatorName>
+                     <apiPackage>org.finra.herd.sdk.api</apiPackage>
+                     <modelPackage>org.finra.herd.sdk.model</modelPackage>
+                     <invokerPackage>org.finra.herd.sdk.invoker</invokerPackage>
+                     <!--This generation can be refactored to generate its own tests and pom configuration-->
+                     <!--When that happens these should be set to true and other config options need to be set-->
+                     <configOptions>
+                        <!--these are the options specific to the java generation language-->
+                        <licenseName>Apache-2.0</licenseName>
+                        <licenseUrl>https://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+                        <library>jersey1</library>
+                        <dateLibrary>joda</dateLibrary>
+                     </configOptions>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <id>Node-Generation</id>
+                  <phase>prepare-package</phase>
+                  <configuration>
+                     <inputSpec>${swagger.spec.path}</inputSpec>
+                     <output>${project.build.directory}/node-client</output>
+                     <generatorName>typescript-node</generatorName>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <id>AngularJS-Generation</id>
+                  <phase>prepare-package</phase>
+                  <configuration>
+                     <inputSpec>${swagger.spec.path}</inputSpec>
+                     <output>${project.build.directory}/angularjs-client</output>
+                     <generatorName>typescript-angularjs</generatorName>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <id>Angular-Generation</id>
+                  <phase>prepare-package</phase>
+                  <configuration>
+                     <inputSpec>${swagger.spec.path}</inputSpec>
+                     <output>${project.build.directory}/angular-client</output>
+                     <generatorName>typescript-angular</generatorName>
+                     <configOptions>
+                        <ngVersion>6.1.2</ngVersion>
+                        <providedInRoot>true</providedInRoot>
+                     </configOptions>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <id>Python-Generation</id>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <inputSpec>${swagger.spec.path}</inputSpec>
+                     <output>${project.build.directory}/python-client</output>
+                     <generatorName>python</generatorName>
+                     <configOptions>
+                        <packageName>herdsdk</packageName>
+                        <projectName>herdsdk</projectName>
+                        <packageVersion>${herd.sdk.version}</packageVersion>
+                     </configOptions>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>com.google.code.maven-replacer-plugin</groupId>
+            <artifactId>replacer</artifactId>
+            <version>${maven.replacer.plugin.version}</version>
+            <executions>
+               <execution>
+                  <phase>generate-resources</phase>
+                  <goals>
+                     <goal>replace</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <includes>
+                  <include>${project.build.directory}/generated-sources/swagger/**/*/ApiClient.java</include>
+               </includes>
+               <replacements>
+                  <replacement>
+                     <token>ClientResponse response = getAPIResponse</token>
+                     <!--suppress UnresolvedMavenProperty -->
+                     <valueFile>${herd-sdk-common.basedir}/src/main/resources/replacement.txt</valueFile>
+                  </replacement>
+               </replacements>
+            </configuration>
+         </plugin>
+
+         <!-- Add in the sources. -->
+
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>3.0.0</version>
+            <executions>
+               <execution>
+                  <id>add-source</id>
+                  <phase>generate-sources</phase>
+                  <goals>
+                     <goal>add-source</goal>
+                  </goals>
+                  <configuration>
+                     <sources>
+                        <source>${project.build.directory}/generated-sources/swagger/src/main/java</source>
+                     </sources>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <!-- Building sources jar -->
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>attach-sources</id>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <!-- Include only the java files and not the other stuff the Swagger plug-in generates. -->
+               <includes>
+                  <include>**/*.java</include>
+               </includes>
+               <!-- Exclude the 2nd set of java code that the Swagger plug-in generates. -->
+               <excludes>
+                  <excludes>swagger/src/main/java/**</excludes>
+               </excludes>
+            </configuration>
+         </plugin>
+
+         <!-- Building javadoc jar -->
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>jar</id>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <!-- Specify the location where the swagger plugin generated the sources. -->
+               <sourcepath>${project.build.directory}/generated-sources/swagger/src/main/java</sourcepath>
+            </configuration>
+         </plugin>
+
+         <!-- Configure thk25539 JDK 1.5 to produce the appropriate class files that can be used with JDK 1.5 and up. -->
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+               <source>1.5</source>
+               <target>1.5</target>
+            </configuration>
+         </plugin>
+
+         <!-- Copy configuration files into generated client's folders -->
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>replace-herd-sdk-version</id>
+                  <phase>initialize</phase>
+                  <configuration>
+                     <tasks>
+                        <replace token="VERSION" value="${project.version}" dir="${herd-sdk-common.basedir}/src/main/resources/">
+                           <include name="replacement.txt" />
+                        </replace>
+                     </tasks>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
+               <execution>
+                  <id>copy-angular-ts-config</id>
+                  <phase>package</phase>
+                  <configuration>
+                     <target>
+                        <copy overwrite="true" todir="${project.build.directory}/angular-client">
+                           <fileset
+                                   dir="${project.build.directory}/maven-shared-archive-resources/tsconfig/angular"/>
+                           <filterset>
+                              <filter token="NPM_VERSION"
+                                      value="${project.version}.${maven.build.timestamp}"/>
+                           </filterset>
+                        </copy>
+                     </target>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
+               <execution>
+                  <id>copy-angularjs-ts-config</id>
+                  <phase>package</phase>
+                  <configuration>
+                     <target>
+                        <copy overwrite="true" todir="${project.build.directory}/angularjs-client">
+                           <fileset
+                                   dir="${project.build.directory}/maven-shared-archive-resources/tsconfig/angularjs"/>
+                           <filterset>
+                              <filter token="NPM_VERSION"
+                                      value="${project.version}.${maven.build.timestamp}"/>
+                           </filterset>
+                        </copy>
+                     </target>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
+               <execution>
+                  <id>copy-node-ts-config</id>
+                  <phase>package</phase>
+                  <configuration>
+                     <target>
+                        <copy overwrite="true" todir="${project.build.directory}/node-client">
+                           <fileset
+                                   dir="${project.build.directory}/maven-shared-archive-resources/tsconfig/node"/>
+                           <filterset>
+                              <filter token="NPM_VERSION"
+                                      value="${project.version}.${maven.build.timestamp}"/>
+                           </filterset>
+                        </copy>
+                     </target>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+
+      </plugins>
+   </build>
+</project>

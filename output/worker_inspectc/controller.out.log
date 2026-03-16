@@ -1,0 +1,4 @@
+[inspectc] Queue size: 1
+[inspectc] (1/1) Running 42949039_5
+[inspectc] (1/1) 42949039_5 -> OK (exit=0, outputs=1, data_rows=3)
+[inspectc] Queue completed.

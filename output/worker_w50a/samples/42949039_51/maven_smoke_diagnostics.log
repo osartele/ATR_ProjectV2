@@ -1,0 +1,8 @@
+[2026-03-16 16:45:44] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/worker_w50a/42949039/herd-code/herd-core/src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java; starting prioritized retries (limit=2).
+[2026-03-16 16:45:44] [MutationLiveGate] Retry 1 did not apply a new mutation: logical: No logical mutation candidate was found in the focal class.; signature: No behavioral mutation candidate was found in the target method body.
+[2026-03-16 16:45:44] [MutationLiveGate] Mutation remained quiet after 2 attempts for focal=compiledrepos/worker_w50a/42949039/herd-code/herd-core/src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java.
+[2026-03-16 16:45:44] [IterativeHealing] Skipping Codex/PIT for ConfigurationHelperTest: quiet_mutation_after_2_attempts.
+[2026-03-16 16:46:03] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/worker_w50a/42949039/herd-code/herd-core/src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java; starting prioritized retries (limit=2).
+[2026-03-16 16:46:03] [MutationLiveGate] Retry 1 did not apply a new mutation: logical: No logical mutation candidate was found in the focal class.; signature: No behavioral mutation candidate was found in the target method body.
+[2026-03-16 16:46:03] [MutationLiveGate] Mutation remained quiet after 2 attempts for focal=compiledrepos/worker_w50a/42949039/herd-code/herd-core/src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java.
+[2026-03-16 16:46:03] [RegenerativeSync] Skipping Codex/PIT for ConfigurationHelperTest: quiet_mutation_after_2_attempts.

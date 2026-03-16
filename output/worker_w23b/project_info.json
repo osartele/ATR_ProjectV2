@@ -1,0 +1,9 @@
+{
+    "42949039":  {
+                     "java_version":  "1.8",
+                     "testng_version":  null,
+                     "junit_version":  "4.12",
+                     "type":  "Maven",
+                     "version":  "3.8.1"
+                 }
+}

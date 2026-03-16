@@ -1,0 +1,5 @@
+[2026-03-16 16:21:11] [IterativeHealing] Baseline failed for SwaggerGenMojoTest; starting retry loop (max_retries=3).
+[2026-03-16 16:21:12] [IterativeHealing] Retry 1/3 for SwaggerGenMojoTest on focal SwaggerGenMojo.
+[2026-03-16 16:22:04] [IterativeHealing] Baseline passed on retry 1 for SwaggerGenMojoTest; running targeted PIT.
+[2026-03-16 16:22:49] [RegenerativeSync] Starting primary generation pass for SwaggerGenMojoTest on focal SwaggerGenMojo.
+[2026-03-16 16:24:33] [RegenerativeSync] Baseline passed on first pass for SwaggerGenMojoTest; running targeted PIT.

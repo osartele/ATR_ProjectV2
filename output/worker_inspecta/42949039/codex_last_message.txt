@@ -1,0 +1,19 @@
+@Test
+public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+{
+    ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+
+    MockEnvironment environment = new MockEnvironment();
+    environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+    try
+    {
+        ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+        fail("expected IllegalStateException, but no exception was thrown");
+    }
+    catch (Exception e)
+    {
+        assertEquals("thrown exception type", IllegalStateException.class, e.getClass());
+        assertEquals("thrown exception message", "configurationValue is required", e.getMessage());
+    }
+}

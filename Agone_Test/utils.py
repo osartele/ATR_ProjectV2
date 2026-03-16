@@ -320,17 +320,40 @@ def run_test_smell_detector(csv_path, project, test_type, technique, module=None
     detector_path = os.path.join(os.path.dirname(__file__), "TestSmellDetector.jar")
     if not os.path.exists(detector_path):
         return None
-    command = ["java", "-jar", detector_path, csv_path]
+    project_output_dir = PATH_CONTEXT.get_project_output_path(project)
+    os.makedirs(project_output_dir, exist_ok=True)
+    detector_workdir = project_output_dir
+
+    # Remove stale detector outputs from prior runs to avoid cross-sample/cross-worker contamination.
+    for entry in os.listdir(detector_workdir):
+        if entry.startswith("Output_TestSmellDetection"):
+            stale_path = os.path.join(detector_workdir, entry)
+            try:
+                if os.path.isfile(stale_path):
+                    os.remove(stale_path)
+            except OSError:
+                pass
+
+    command = ["java", "-jar", detector_path, os.path.abspath(csv_path)]
     try:
         test_smell_timeout_seconds = get_subprocess_timeout_seconds("test_smell_timeout_seconds", 300)
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT, timeout=test_smell_timeout_seconds)
+        subprocess.check_output(
+            command,
+            stderr=subprocess.STDOUT,
+            timeout=test_smell_timeout_seconds,
+            cwd=detector_workdir,
+        )
     except subprocess.TimeoutExpired:
         print("Test smell detector timed out.")
         return None
     except Exception as e:
-        print(e.output.decode("utf-8")) 
+        error_output = getattr(e, "output", b"")
+        if isinstance(error_output, bytes):
+            print(error_output.decode("utf-8", errors="replace"))
+        else:
+            print(str(error_output))
         return None
-    files = os.listdir(os.getcwd())
+    files = os.listdir(detector_workdir)
     result_path = None
     for file in files:
         if file.startswith('Output_TestSmellDetection'): 
@@ -344,14 +367,11 @@ def run_test_smell_detector(csv_path, project, test_type, technique, module=None
                     new_name = f'TestSmellDetection_{project}_{module}_{test_type}_{technique}.csv'
                 else:
                     new_name = f'TestSmellDetection_{project}_{module}_{test_type}.csv'
-            if os.path.exists(f'{new_name}'):
-                os.remove(f'{new_name}')
-            os.rename(file, new_name)  
-            result_path = _worker_project_output_path(project, new_name)
+            source_path = os.path.join(detector_workdir, file)
+            result_path = os.path.join(detector_workdir, new_name)
             if os.path.exists(result_path):
                 os.remove(result_path)
-            os.makedirs(PATH_CONTEXT.get_project_output_path(project), exist_ok=True)
-            shutil.move(new_name, PATH_CONTEXT.get_project_output_path(project))
+            os.rename(source_path, result_path)
             break
     return result_path
 
@@ -1337,6 +1357,23 @@ def _contains_local_mock_creation_regex(method_block):
     return re.search(r"(?<!\.)\bmock\s*\(", method_block) is not None
 
 
+def _method_has_local_focal_instantiation(
+    method_declaration,
+    method_block,
+    focal_class_simple_name,
+):
+    has_local_focal_instantiation = _contains_local_focal_instantiation_ast(
+        method_declaration,
+        focal_class_simple_name,
+    )
+    if not has_local_focal_instantiation:
+        has_local_focal_instantiation = _contains_local_focal_instantiation_regex(
+            method_block,
+            focal_class_simple_name,
+        )
+    return has_local_focal_instantiation
+
+
 def _validate_iterative_method_style_lock(
     original_test_class_source,
     generated_patch_content,
@@ -1386,19 +1423,27 @@ def _validate_iterative_method_style_lock(
             f"(expected={original_declaration_lock}, actual={candidate_declaration_lock})",
         )
 
-    has_local_focal_instantiation = _contains_local_focal_instantiation_ast(
-        candidate_method_declaration,
+    original_has_local_focal_instantiation = _method_has_local_focal_instantiation(
+        original_method_declaration,
+        original_method_block,
         focal_class_simple_name,
     )
-    if not has_local_focal_instantiation:
-        has_local_focal_instantiation = _contains_local_focal_instantiation_regex(
-            candidate_method_block,
-            focal_class_simple_name,
-        )
-    if has_local_focal_instantiation:
+    candidate_has_local_focal_instantiation = _method_has_local_focal_instantiation(
+        candidate_method_declaration,
+        candidate_method_block,
+        focal_class_simple_name,
+    )
+    if original_has_local_focal_instantiation and not candidate_has_local_focal_instantiation:
         return (
             False,
-            f"local focal-class instantiation is forbidden in iterative style lock ({focal_class_simple_name})",
+            "mapped method style requires local focal-class instantiation to be preserved "
+            f"({focal_class_simple_name})",
+        )
+    if not original_has_local_focal_instantiation and candidate_has_local_focal_instantiation:
+        return (
+            False,
+            "local focal-class instantiation is forbidden in iterative style lock when the mapped "
+            f"method does not instantiate the focal class ({focal_class_simple_name})",
         )
 
     has_local_mock_creation = _contains_local_mock_creation_ast(candidate_method_declaration)
@@ -2633,6 +2678,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
                 stdout=diagnostic_log,
                 stderr=subprocess.STDOUT,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 check=False,
                 timeout=codex_timeout_seconds,
             )
@@ -2872,10 +2919,24 @@ def generate_test_with_codex(
         instruction_parts.append(
             "You may change parameters and throws only if needed to align with evolved focal behavior."
         )
-        instruction_parts.append("Use existing class-level fields/collaborators only; do not instantiate the focal class locally and do not create local mocks.")
+        focal_class_simple_name = os.path.splitext(os.path.basename(str(focal_path or "")))[0]
+        mapped_style_anchor = str(prompt_data.get("mapped_test_method_anchor", "") or "").strip()
+        anchor_has_local_focal_instantiation = _contains_local_focal_instantiation_regex(
+            mapped_style_anchor,
+            focal_class_simple_name,
+        )
+        if anchor_has_local_focal_instantiation:
+            instruction_parts.append(
+                "Preserve local focal-class instantiation style from the mapped method anchor when present "
+                f"(e.g., `new {focal_class_simple_name}(...)`)."
+            )
+        else:
+            instruction_parts.append(
+                "Do not introduce local focal-class instantiation if the mapped method anchor does not use it."
+            )
+        instruction_parts.append("Do not create local Mockito mocks inside the target method.")
         instruction_parts.append("Do not modify any other method in the class.")
         instruction_parts.append("Do not add helpers, fields, imports, or annotations.")
-        mapped_style_anchor = str(prompt_data.get("mapped_test_method_anchor", "") or "").strip()
         if mapped_style_anchor:
             instruction_parts.append(
                 "Preserve this method style anchor exactly (except for the minimal assertion/setup edits needed to resolve the failure):\n"

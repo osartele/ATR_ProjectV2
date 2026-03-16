@@ -1,8 +1,0 @@
-@Test
-public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled() throws Exception
-{
-    org.finra.herd.model.jpa.TagEntity tagEntity = new org.finra.herd.model.jpa.TagEntity();
-    tagEntity.setId(999L);
-
-    searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, "UPDATE");
-}

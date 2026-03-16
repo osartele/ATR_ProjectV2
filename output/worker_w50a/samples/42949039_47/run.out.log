@@ -1,0 +1,319 @@
+Initializing ExecutionManager...
+Loaded prompts: {'iterative-healing': [{'role': 'system', 'content': '[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]\nYou are an expert Java developer tasked with repairing a failing test suite. Your strictly defined goal is to heal the provided JUnit test methods so they pass against the updated focal class.\n\nCRITICAL CONSTRAINTS:\n1. Modify ONLY the specific @Test method explicitly identified in the AST mapping.\n2. Preserve the mapped method declaration lock exactly: method name, modifiers, annotations, and return type must match the original mapped method.\n3. Parameters and throws may change only when required by the evolved focal behavior.\n4. Preserve collaborator setup style from the mapped method anchor: if the mapped method uses local focal-class instantiation, keep that style; otherwise do not introduce local focal-class instantiation.\n5. Do not create local Mockito mocks inside the target method.\n6. DO NOT create, generate, or hallucinate any new @Test methods, helper methods, fields, imports, or annotations.\n7. Update only the necessary setup, mocks, inputs, or assertions within the target method body to resolve the failure log.\n8. Reply with only the full mapped @Test method block (annotation + signature + body). Do not output the whole class.\n{{can_use_mockito}} {{set_public}}'}, {'role': 'user', 'content': 'The project uses {{testing_framework}} and Java {{java_version}}. \nAnalyze the focal modifications and repair the existing test class.\n\n// --- UPDATED FOCAL CLASS ---\n<code>\n{{focal_class}}\n</code>\n\n// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---\n<code>\n{{existing_test_class}}\n</code>\n\n// --- ORIGINAL MAPPED TEST METHOD STYLE ANCHOR ---\n<code>\n{{mapped_test_method_anchor}}\n</code>\n\n// --- AST MAPPING & CONTEXT ---\nTest to Focal Method Mapping:\n<code>\n{{mapped_focal_methods}}\n</code>\nRelevant Focal Method Implementations:\n<code>\n{{focal_method_context}}\n</code>\n\n// --- TEST FAILURE LOG ---\nThe baseline test execution failed with the following output:\n<code>\n{{failure_log}}\n</code>\nAnalyze this failure trace to pinpoint the exact assertion or mock configuration that broke.\n\n// --- PROJECT ENVIRONMENT ---\nProject Structure:\n<code>\n{{project_structure}}\n</code>\nProject Dependencies:\n<code>\n{{project_dependencies}}\n</code>'}], 'regenerative-sync': [{'role': 'system', 'content': "[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]\nYou are an expert Java software engineer synchronizing an outdated JUnit test suite with a newly modified focal class. Your strictly defined goal is to update the existing test method's logic to account for new exceptions, new return types, or modified control flow in the focal class.\n\nCRITICAL CONSTRAINTS:\n1. You must update the specific mapped @Test method identified in the AST mapping.\n2. You may include additional brand-new @Test methods only when new focal logic paths require coverage.\n3. Preserve all unmapped existing tests exactly as they are. Do not alter or delete them.\n4. Do not output package declarations, class declarations, imports, fields, helper methods, or non-@Test methods.\n5. Reply with method blocks only: mapped repaired @Test method first, then optional new @Test method blocks.\n{{can_use_mockito}} {{set_public}}"}, {'role': 'user', 'content': 'The project uses {{testing_framework}} and Java {{java_version}}. \nAnalyze the focal modifications and repair the existing test class.\n\n// --- UPDATED FOCAL CLASS ---\n<code>\n{{focal_class}}\n</code>\n\n// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---\n<code>\n{{existing_test_class}}\n</code>\n\n// --- AST MAPPING & CONTEXT ---\nTest to Focal Method Mapping:\n<code>\n{{mapped_focal_methods}}\n</code>\nRelevant Focal Method Implementations:\n<code>\n{{focal_method_context}}\n</code>\n\n// --- PROJECT ENVIRONMENT ---\nProject Structure:\n<code>\n{{project_structure}}\n</code>\nProject Dependencies:\n<code>\n{{project_dependencies}}\n</code>'}]}
+Loaded agents: {'human': {}, 'codex-cli': {}}
+Fetching agents list...
+Fetching prompts list...
+This script is running without administrator privileges!
+Please re-run the script with administrator privileges to avoid errors during execution!
+WELCOME TO AGONE TEST!
+Fetching agents list...
+Fetching prompts list...
+1. A specific project
+2. All projects
+What do you want to do? Do you want to correct the class that eventualy not compile? (Y/N)  Reset function: Do you want to clean up all the previous executions? (Y/N)  Execution override function: Do you want to re-execute the projects (with the relative test types) that have already been processed? (Y/N)  Starting to generate files
+
+At least 1 projects are compatible for evosuite execution!
+
+
+
+
+-------------------------------------------------------------------
+PROCESSING PROJECT: '42949039'
+Using JAVA_HOME C:\Program Files\Eclipse Adoptium\jdk-8.0.482.8-hotspot
+Restoring focal backups before the human baseline for project 42949039
+
+42949039 is a Maven project
+
+----
+STARTING 'human' test type
+
+--//loading maven execution..//
+Test classes: -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull
+Maven baseline module selection: -pl herd-code/herd-core
+Maven PIT module selection: -pl herd-code/herd-core
+PITest filters: -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper
+AST test method scope: testGetPropertyValidationThrowsWhenTargetTypeIsNull
+AST focal method scope: getProperty
+PITest excluded focal methods: getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-core -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-core -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper -DincludedTestMethods=testGetPropertyValidationThrowsWhenTargetTypeIsNull -Dpitest.includedMethods=getProperty -DexcludedMethods=getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Test classes: -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull
+Maven baseline module selection: -pl herd-code/herd-core
+Maven PIT module selection: -pl herd-code/herd-core
+PITest filters: -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper
+AST test method scope: testGetPropertyValidationThrowsWhenTargetTypeIsNull
+AST focal method scope: getProperty
+PITest excluded focal methods: getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-core -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-core -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper -DincludedTestMethods=testGetPropertyValidationThrowsWhenTargetTypeIsNull -Dpitest.includedMethods=getProperty -DexcludedMethods=getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[INFO] Package command completed for 42949039
+
+The test smell detector ended successfully
+DataFrame saved to C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\TestClasses_42949039_human.csv
+Applied exception mutation to compiledrepos/worker_w50a/42949039/herd-code/herd-core/src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java
+
+----
+STARTING 'codex-cli' test type
+
+
+Processing test_type: codex-cli, technique: iterative-healing
+
+Dispatching Codex CLI for test_type: codex-cli, technique: iterative-healing, focal class: ConfigurationHelper
+Test classes: -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull
+Maven baseline module selection: -pl herd-code/herd-core
+Maven PIT module selection: -pl herd-code/herd-core
+PITest filters: -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper
+AST test method scope: testGetPropertyValidationThrowsWhenTargetTypeIsNull
+AST focal method scope: getProperty
+PITest excluded focal methods: getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-core -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-core -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper -DincludedTestMethods=testGetPropertyValidationThrowsWhenTargetTypeIsNull -Dpitest.includedMethods=getProperty -DexcludedMethods=getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[MutationLiveGate] Quiet mutation detected for focal=compiledrepos/worker_w50a/42949039/herd-code/herd-core/src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java; starting prioritized retries (limit=2).
+[MutationLiveGate] Retry 1 applied mutation type=logical class=NEGATE_CONDITIONALS.
+Test classes: -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull
+Maven baseline module selection: -pl herd-code/herd-core
+Maven PIT module selection: -pl herd-code/herd-core
+PITest filters: -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper
+AST test method scope: testGetPropertyValidationThrowsWhenTargetTypeIsNull
+AST focal method scope: getProperty
+PITest excluded focal methods: getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-core -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-core -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper -DincludedTestMethods=testGetPropertyValidationThrowsWhenTargetTypeIsNull -Dpitest.includedMethods=getProperty -DexcludedMethods=getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[MutationLiveGate] Retry 1 activated a live mutation.
+[IterativeHealing] Baseline failed for ConfigurationHelperTest; starting retry loop (max_retries=3).
+[IterativeHealing] Retry 1/3 for ConfigurationHelperTest on focal ConfigurationHelper.
+Fetching prompts dictionary...
+Codex diagnostic log: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
+Codex last message path: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
+Codex executable resolved to: C:\Users\osart\.codex\.sandbox-bin\codex.exe
+Codex working root: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50a\42949039\herd-code\herd-core
+Codex target files count: 2
+Codex prompt length: 98717 characters
+Codex timeout: 420 seconds
+Starting Codex subprocess...
+Codex subprocess finished in 113.25s with returncode=0.
+Codex diagnostic log available at: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
+File generated at: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\response_codex-cli_iterative-healing_ConfigurationHelperTest_iterative_retry_1.java
+Test classes: -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull
+Maven baseline module selection: -pl herd-code/herd-core
+Maven PIT module selection: -pl herd-code/herd-core
+PITest filters: -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper
+AST test method scope: testGetPropertyValidationThrowsWhenTargetTypeIsNull
+AST focal method scope: getProperty
+PITest excluded focal methods: getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-core -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-core -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper -DincludedTestMethods=testGetPropertyValidationThrowsWhenTargetTypeIsNull -Dpitest.includedMethods=getProperty -DexcludedMethods=getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[IterativeHealing] Retry 1 failure signal: java.lang.IllegalStateException: Failed to load ApplicationContext
+[IterativeHealing] Retry 2/3 for ConfigurationHelperTest on focal ConfigurationHelper.
+Fetching prompts dictionary...
+Codex diagnostic log: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
+Codex last message path: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
+Codex executable resolved to: C:\Users\osart\.codex\.sandbox-bin\codex.exe
+Codex working root: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50a\42949039\herd-code\herd-core
+Codex target files count: 2
+Codex prompt length: 98657 characters
+Codex timeout: 420 seconds
+Starting Codex subprocess...
+Codex subprocess finished in 239.56s with returncode=0.
+Codex diagnostic log available at: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
+File generated at: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\response_codex-cli_iterative-healing_ConfigurationHelperTest_iterative_retry_2.java
+Test classes: -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull
+Maven baseline module selection: -pl herd-code/herd-core
+Maven PIT module selection: -pl herd-code/herd-core
+PITest filters: -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper
+AST test method scope: testGetPropertyValidationThrowsWhenTargetTypeIsNull
+AST focal method scope: getProperty
+PITest excluded focal methods: getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-core -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-core -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper -DincludedTestMethods=testGetPropertyValidationThrowsWhenTargetTypeIsNull -Dpitest.includedMethods=getProperty -DexcludedMethods=getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[IterativeHealing] Retry 2 failure signal: java.lang.IllegalStateException: Failed to load ApplicationContext
+[IterativeHealing] Retry 3/3 for ConfigurationHelperTest on focal ConfigurationHelper.
+Fetching prompts dictionary...
+Codex diagnostic log: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
+Codex last message path: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
+Codex executable resolved to: C:\Users\osart\.codex\.sandbox-bin\codex.exe
+Codex working root: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50a\42949039\herd-code\herd-core
+Codex target files count: 2
+Codex prompt length: 98775 characters
+Codex timeout: 420 seconds
+Starting Codex subprocess...
+Codex subprocess finished in 303.26s with returncode=1.
+Codex diagnostic log available at: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
+Codex execution summary:
+returncode=1
+
+diagnostic_log=C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
+
+last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
+
+stdout:
+isk.jcredstash': [{'artifactId': 'jcredstash', 'version': '0.0.4'}], 'org.bouncycastle': [{'artifactId': 'bcprov-jdk15on', 'version': '1.60'}], 'vc.inreach.aws': [{'artifactId': 'aws-signing-request-interceptor', 'version': '0.0.22'}], 'org.jsoup': [{'artifactId': 'jsoup', 'version': '1.11.3'}], 'com.opencsv': [{'artifactId': 'opencsv', 'version': '4.4'}], 'com.google.code.gson': [{'artifactId': 'gson', 'version': '2.8.6'}], 'org.apache.hive': [{'artifactId': 'hive-serde', 'version': '2.3.4'}], 'com.github.stefanbirkner': [{'artifactId': 'system-rules', 'scope': 'test', 'version': '1.19.0'}], 'uk.org.lidalia': [{'artifactId': 'slf4j-test', 'scope': 'test', 'version': '1.2.0'}]}, 'subdependencies': {'herd-build': {'pompath': './compiledrepos/42949039/herd-build/pom.xml', 'dependencies': {}}, 'herd-code': {'pompath': './compiledrepos/42949039/herd-code/pom.xml', 'dependencies': {'junit': [{'artifactId': 'junit', 'scope': 'test'}], 'org.postgresql': [{'artifactId': 'postgresql', 'scope': 'test'}], 'com.h2database': [{'artifactId': 'h2', 'scope': 'test'}], 'org.slf4j': [{'artifactId': 'slf4j-api'}, {'artifactId': 'jcl-over-slf4j'}], 'org.apache.logging.log4j': [{'artifactId': 'log4j-slf4j-impl'}, {'artifactId': 'log4j-api'}, {'artifactId': 'log4j-core'}], 'org.apache.commons': [{'artifactId': 'commons-dbcp2'}], 'com.google.code.findbugs': [{'artifactId': 'annotations'}], 'io.swagger': [{'artifactId': 'swagger-annotations'}], '${project.groupId}': [{'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}]}}}}
+</code>
+
+Use the provided focal class and AST mapping as the source of truth.
+
+Repair only the mapped @Test method `testGetPropertyValidationThrowsWhenTargetTypeIsNull`.
+
+Preserve the mapped method declaration lock exactly: name, modifiers, annotations, and return type must match the original mapped method.
+
+You may change parameters and throws only if needed to align with evolved focal behavior.
+
+Do not introduce local focal-class instantiation if the mapped method anchor does not use it.
+
+Do not create local Mockito mocks inside the target method.
+
+Do not modify any other method in the class.
+
+Do not add helpers, fields, imports, or annotations.
+
+Preserve this method style anchor exactly (except for the minimal assertion/setup edits needed to resolve the failure):
+<code>
+@Test
+    public void testGetPropertyValidationThrowsWhenTargetTypeIsNull()
+    {
+        MockEnvironment environment = new MockEnvironment();
+
+        try
+        {
+            ConfigurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT, null, environment);
+            fail("expected IllegalArgumentException, but no exception was thrown");
+        }
+        catch (Exception e)
+        {
+            assertEquals("thrown exception type", IllegalStateException.class, e.getClass());
+            assertEquals("thrown exception message", "configurationValue is required", e.getMessage());
+        }
+    }
+</code>
+
+AST target mapping: testGetPropertyValidationThrowsWhenTargetTypeIsNull -> getProperty.
+
+Keep or add this package declaration: package org.finra.herd.core.helper;
+
+Return only the full mapped @Test method block (annotations + signature + body).
+
+Do not return the entire class, and do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java
+- src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java
+Return only the final Java source code.
+mcp startup: no servers
+2026-03-16T20:38:08.375141Z  WARN codex_core::codex: stream disconnected - retrying sampling request (1/5 in 216ms)...
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:14 PM.
+Warning: no last agent message; wrote empty content to C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
+[IterativeHealing] Codex method patch generation failed on retry 3 for ConfigurationHelperTest.
+[IterativeHealing] Exhausted retries for ConfigurationHelperTest without baseline success.
+Package command failed for project: 42949039, test type: codex-cli, technique: iterative-healing
+
+The test smell detector ended successfully
+--//loading maven execution..//
+Test classes: -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull
+Maven baseline module selection: -pl herd-code/herd-core
+Maven PIT module selection: -pl herd-code/herd-core
+PITest filters: -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper
+AST test method scope: testGetPropertyValidationThrowsWhenTargetTypeIsNull
+AST focal method scope: getProperty
+PITest excluded focal methods: getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-core -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-core -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper -DincludedTestMethods=testGetPropertyValidationThrowsWhenTargetTypeIsNull -Dpitest.includedMethods=getProperty -DexcludedMethods=getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+
+--------------------
+The test compiled, but failed at runtime with this stack trace:
+java.lang.IllegalStateException: configurationValue is required
+
+--------------------
+[iterative-healing] Final execution failed. Recording mavenfailed marker for CSV failure row.
+
+
+Processing test_type: codex-cli, technique: regenerative-sync
+
+Dispatching Codex CLI for test_type: codex-cli, technique: regenerative-sync, focal class: ConfigurationHelper
+Test classes: -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull
+Maven baseline module selection: -pl herd-code/herd-core
+Maven PIT module selection: -pl herd-code/herd-core
+PITest filters: -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper
+AST test method scope: testGetPropertyValidationThrowsWhenTargetTypeIsNull
+AST focal method scope: getProperty
+PITest excluded focal methods: getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-core -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-core -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper -DincludedTestMethods=testGetPropertyValidationThrowsWhenTargetTypeIsNull -Dpitest.includedMethods=getProperty -DexcludedMethods=getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[RegenerativeSync] Starting primary generation pass for ConfigurationHelperTest on focal ConfigurationHelper.
+Fetching prompts dictionary...
+Codex diagnostic log: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
+Codex last message path: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
+Codex executable resolved to: C:\Users\osart\.codex\.sandbox-bin\codex.exe
+Codex working root: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50a\42949039\herd-code\herd-core
+Codex target files count: 2
+Codex prompt length: 74114 characters
+Codex timeout: 420 seconds
+Starting Codex subprocess...
+Codex subprocess finished in 2.45s with returncode=1.
+Codex diagnostic log available at: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
+Codex execution summary:
+returncode=1
+
+diagnostic_log=C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
+
+last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
+
+stdout:
+.21.0'}, {'artifactId': 'activiti-secure-javascript', 'version': '5.21.0'}], 'org.mockito': [{'artifactId': 'mockito-core', 'scope': 'test', 'version': '2.10.0'}], 'com.sun.jersey': [{'artifactId': 'jersey-client', 'version': '1.19.4'}], 'com.sun.jersey.contribs': [{'artifactId': 'jersey-multipart', 'version': '1.19.4'}], 'joda-time': [{'artifactId': 'joda-time', 'version': '2.10.1'}], 'com.brsanthu': [{'artifactId': 'migbase64', 'version': '2.2'}], 'org.elasticsearch': [{'artifactId': 'elasticsearch', 'version': '7.8.0'}], 'org.elasticsearch.client': [{'artifactId': 'elasticsearch-rest-client', 'version': '7.8.0'}, {'artifactId': 'elasticsearch-rest-high-level-client', 'version': '7.8.0'}], 'com.floragunn': [{'artifactId': 'search-guard-ssl'}], 'co.wrisk.jcredstash': [{'artifactId': 'jcredstash', 'version': '0.0.4'}], 'org.bouncycastle': [{'artifactId': 'bcprov-jdk15on', 'version': '1.60'}], 'vc.inreach.aws': [{'artifactId': 'aws-signing-request-interceptor', 'version': '0.0.22'}], 'org.jsoup': [{'artifactId': 'jsoup', 'version': '1.11.3'}], 'com.opencsv': [{'artifactId': 'opencsv', 'version': '4.4'}], 'com.google.code.gson': [{'artifactId': 'gson', 'version': '2.8.6'}], 'org.apache.hive': [{'artifactId': 'hive-serde', 'version': '2.3.4'}], 'com.github.stefanbirkner': [{'artifactId': 'system-rules', 'scope': 'test', 'version': '1.19.0'}], 'uk.org.lidalia': [{'artifactId': 'slf4j-test', 'scope': 'test', 'version': '1.2.0'}]}, 'subdependencies': {'herd-build': {'pompath': './compiledrepos/42949039/herd-build/pom.xml', 'dependencies': {}}, 'herd-code': {'pompath': './compiledrepos/42949039/herd-code/pom.xml', 'dependencies': {'junit': [{'artifactId': 'junit', 'scope': 'test'}], 'org.postgresql': [{'artifactId': 'postgresql', 'scope': 'test'}], 'com.h2database': [{'artifactId': 'h2', 'scope': 'test'}], 'org.slf4j': [{'artifactId': 'slf4j-api'}, {'artifactId': 'jcl-over-slf4j'}], 'org.apache.logging.log4j': [{'artifactId': 'log4j-slf4j-impl'}, {'artifactId': 'log4j-api'}, {'artifactId': 'log4j-core'}], 'org.apache.commons': [{'artifactId': 'commons-dbcp2'}], 'com.google.code.findbugs': [{'artifactId': 'annotations'}], 'io.swagger': [{'artifactId': 'swagger-annotations'}], '${project.groupId}': [{'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}]}}}}
+</code>
+
+Use the provided focal class and AST mapping as the source of truth.
+
+Update the mapped @Test method `testGetPropertyValidationThrowsWhenTargetTypeIsNull` first.
+
+Preserve all existing unmapped @Test methods exactly as they are.
+
+You may add new @Test methods only if the focal change requires extra coverage.
+
+Do not rewrite package/class declarations, imports, fields, or helper methods.
+
+AST target mapping: testGetPropertyValidationThrowsWhenTargetTypeIsNull -> getProperty.
+
+Keep or add this package declaration: package org.finra.herd.core.helper;
+
+Return method blocks only: the mapped @Test method block is required, and optional brand-new @Test method blocks may follow.
+
+Do not return a full class, package declaration, imports, fields, or helper methods.
+
+Do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java
+- src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java
+Return only the final Java source code.
+mcp startup: no servers
+2026-03-16T20:38:41.857850Z  WARN codex_core::codex: startup websocket prewarm setup failed: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:14 PM.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:14 PM.
+Warning: no last agent message; wrote empty content to C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
+[RegenerativeSync] Primary generation failed for ConfigurationHelperTest.
+Package command failed for project: 42949039, test type: codex-cli, technique: regenerative-sync
+
+The test smell detector ended successfully
+--//loading maven execution..//
+Test classes: -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull
+Maven baseline module selection: -pl herd-code/herd-core
+Maven PIT module selection: -pl herd-code/herd-core
+PITest filters: -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper
+AST test method scope: testGetPropertyValidationThrowsWhenTargetTypeIsNull
+AST focal method scope: getProperty
+PITest excluded focal methods: getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-core -Dtest=ConfigurationHelperTest#testGetPropertyValidationThrowsWhenTargetTypeIsNull -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-core -DtargetTests=org.finra.herd.core.helper.ConfigurationHelperTest -DtargetClasses=org.finra.herd.core.helper.ConfigurationHelper -DincludedTestMethods=testGetPropertyValidationThrowsWhenTargetTypeIsNull -Dpitest.includedMethods=getProperty -DexcludedMethods=getBigDecimalRequiredProperty,getBooleanProperty,getNonNegativeBigDecimalRequiredProperty,getPropertyAsString,getRequiredProperty,logErrorAndThrowIllegalStateException -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+
+--------------------
+The test compiled, but failed at runtime with this stack trace:
+java.lang.IllegalStateException: configurationValue is required
+
+--------------------
+[regenerative-sync] Final execution failed. Recording mavenfailed marker for CSV failure row.
+
+Adjusting data_df_output length. Expected 40, got 32
+Adjusting data_df_output length. Expected 40, got 32
+Adjusting data_df_output length. Expected 40, got 32
+/42949039_Output.csv saved correctly
+Output agone files updated!
+File processing completed!

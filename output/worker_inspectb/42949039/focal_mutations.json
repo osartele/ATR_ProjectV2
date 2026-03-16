@@ -1,0 +1,11 @@
+[
+  {
+    "mutation_type": "exception",
+    "method_name": "execute",
+    "added_exception": "AssertionError(\"AGONE_MUTATION_TRIGGER\")",
+    "line": 160,
+    "column": 6,
+    "focal_path": "compiledrepos/worker_inspectb/42949039/herd-build/herd-swaggergen-maven-plugin/src/main/java/org/finra/herd/swaggergen/SwaggerGenMojo.java",
+    "test_path": "compiledrepos/worker_inspectb/42949039/herd-build/herd-swaggergen-maven-plugin/src/test/java/org/finra/herd/swaggergen/SwaggerGenMojoTest.java"
+  }
+]

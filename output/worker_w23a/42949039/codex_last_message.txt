@@ -1,0 +1,10 @@
+@Test
+public void testGetStorageAttributeIntegerValueByNameWithDefault_4()
+{
+    String attributeName = "test";
+    String attributeValue = "1234";
+    StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
+    Integer defaultValue = null;
+    Integer value = storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, defaultValue);
+    assertNull(value);
+}

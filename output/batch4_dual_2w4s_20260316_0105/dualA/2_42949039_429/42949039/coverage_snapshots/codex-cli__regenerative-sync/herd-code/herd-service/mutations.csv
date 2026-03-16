@@ -1,2 +1,0 @@
-SearchIndexUpdateHelper.java,org.finra.herd.service.helper.SearchIndexUpdateHelper,org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator,modifyTagInSearchIndex,98,KILLED,org.finra.herd.service.helper.SearchIndexUpdateHelperTest.testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled(org.finra.herd.service.helper.SearchIndexUpdateHelperTest)
-SearchIndexUpdateHelper.java,org.finra.herd.service.helper.SearchIndexUpdateHelper,org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator,modifyTagInSearchIndex,101,NO_COVERAGE,none

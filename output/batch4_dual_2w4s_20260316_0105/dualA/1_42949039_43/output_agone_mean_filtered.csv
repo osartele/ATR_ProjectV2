@@ -1,4 +1,0 @@
-Test_type,Prompt_Technique,Compilation%,Branch_Coverage%,Line_Coverage%,Method_Coverage%,Mutation_Coverage%,NumberOfMethods,Assertion Roulette,Conditional Test Logic,Constructor Initialization,Default Test,EmptyTest,Exception Catching Throwing,General Fixture,Mystery Guest,Print Statement,Redundant Assertion,Sensitive Equality,Verbose Test,Sleepy Test,Eager Test,Lazy Test,Duplicate Assert,Unknown Test,IgnoredTest,Resource Optimism,Magic Number Test,Dependent Test
-human,-,None,None,None,None,None,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
-codex-cli,iterative-healing,None,None,None,None,None,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
-codex-cli,regenerative-sync,None,None,None,None,None,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-

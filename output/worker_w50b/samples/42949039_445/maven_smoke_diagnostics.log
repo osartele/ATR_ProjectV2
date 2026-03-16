@@ -1,0 +1,10 @@
+[2026-03-16 15:25:32] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/worker_w50b/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/StorageHelper.java; starting prioritized retries (limit=2).
+[2026-03-16 15:25:32] [MutationLiveGate] Retry 1 applied mutation type=logical class=NEGATE_CONDITIONALS.
+[2026-03-16 15:26:36] [MutationLiveGate] Retry 2 did not apply a new mutation: signature: No behavioral mutation candidate was found in the target method body.
+[2026-03-16 15:26:36] [MutationLiveGate] Mutation remained quiet after 3 attempts for focal=compiledrepos/worker_w50b/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/StorageHelper.java.
+[2026-03-16 15:26:36] [IterativeHealing] Skipping Codex/PIT for StorageHelperTest: quiet_mutation_after_3_attempts.
+[2026-03-16 15:27:46] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/worker_w50b/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/StorageHelper.java; starting prioritized retries (limit=2).
+[2026-03-16 15:27:46] [MutationLiveGate] Retry 1 applied mutation type=exception class=ASSERTION_ERROR_FALLBACK.
+[2026-03-16 15:28:37] [MutationLiveGate] Retry 2 did not apply a new mutation: signature: No behavioral mutation candidate was found in the target method body.
+[2026-03-16 15:28:37] [MutationLiveGate] Mutation remained quiet after 3 attempts for focal=compiledrepos/worker_w50b/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/StorageHelper.java.
+[2026-03-16 15:28:37] [RegenerativeSync] Skipping Codex/PIT for StorageHelperTest: quiet_mutation_after_3_attempts.
