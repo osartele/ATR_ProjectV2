@@ -2,6 +2,8 @@ import unittest
 from unittest.mock import patch
 
 import pandas as pd
+import os
+import tempfile
 
 try:
     from Agone_Test import mavenLib
@@ -199,6 +201,43 @@ class MutationLiveGateTests(unittest.TestCase):
         )
         self.assertEqual(metrics["High_Signal"], 0)
         self.assertEqual(metrics["Signal_Reason"], "quiet_mutation_after_3_attempts")
+
+    def test_generate_output_keeps_row_for_mavenfailed_technique(self):
+        project = "1"
+        project_df = _scoped_dataframe()
+        test_types = ["codex-cli"]
+        techniques = ["iterative-healing"]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            project_output_dir = os.path.join(tmp_dir, project)
+            os.makedirs(project_output_dir, exist_ok=True)
+            marker_path = os.path.join(
+                project_output_dir,
+                f"TestClasses_{project}_codex-cli_iterative-healing.mavenfailed",
+            )
+            with open(marker_path, "w", encoding="utf-8"):
+                pass
+
+            with patch.object(utils, "PATH_CONTEXT") as mocked_path_context, patch.object(
+                mavenLib, "df_chance", pd.DataFrame()
+            ):
+                mocked_path_context.get_project_output_path.return_value = project_output_dir
+                mocked_path_context.to_worker_compiled_path.side_effect = (
+                    lambda current_project, path_value: path_value
+                )
+                df_output, _ = utils.generate_output_csv_project(
+                    project=project,
+                    project_dataframe=project_df,
+                    test_types=test_types,
+                    techniques=techniques,
+                )
+
+        self.assertIsNotNone(df_output)
+        self.assertFalse(df_output.empty)
+        row = df_output[
+            (df_output["Generator(LLM/EVOSUITE)"] == "codex-cli")
+            & (df_output["Prompt_Technique"] == "iterative-healing")
+        ].iloc[0]
+        self.assertEqual(str(row["Compilation"]), "0")
 
 
 if __name__ == "__main__":

@@ -13,6 +13,12 @@ import focal_mutator
 import project_structure_analyzer as psa
 import utils
 import sys
+from path_context import get_path_context
+
+try:
+    import psutil
+except Exception:
+    psutil = None
 
 df_chance = pd.DataFrame(
     columns=[
@@ -29,10 +35,22 @@ df_chance = pd.DataFrame(
     ]
 )
 
+PATH_CONTEXT = get_path_context()
+
+
+def _worker_output_path(*parts):
+    base = PATH_CONTEXT.get_output_path()
+    return os.path.join(base, *[str(part) for part in parts])
+
+
+def _worker_project_output_path(project_id, *parts):
+    base = PATH_CONTEXT.get_project_output_path(project_id)
+    return os.path.join(base, *[str(part) for part in parts])
+
 MUTATION_RETRY_PRIORITIES = [
     ("logical", "NEGATE_CONDITIONALS", focal_mutator.apply_logical_mutation),
     ("signature", "MATH_PRIMITIVE_RETURNS", focal_mutator.apply_signature_mutation),
-    ("exception", "EXCEPTION_FALLBACK", focal_mutator.apply_exception_mutation),
+    ("exception", "ASSERTION_ERROR_FALLBACK", focal_mutator.apply_exception_mutation),
 ]
 
 FAILURE_SIGNAL_PATTERNS = [
@@ -81,16 +99,7 @@ def _normalize_method_name(method_name):
 def _normalize_compiled_path(project_id, raw_path):
     if raw_path is None:
         return None
-    normalized_path = str(raw_path).strip().replace("\\", "/")
-    if not normalized_path or normalized_path.lower() == "nan":
-        return None
-    if normalized_path.startswith("compiledrepos/"):
-        return normalized_path
-    if normalized_path.startswith("repos/"):
-        return normalized_path.replace("repos/", "compiledrepos/", 1)
-    if project_id is not None:
-        return f"compiledrepos/{project_id}/{normalized_path.lstrip('/')}"
-    return normalized_path
+    return PATH_CONTEXT.to_worker_compiled_path(project_id, raw_path)
 
 
 def _extract_ast_method_pair(test_path, focal_path, preferred_test_method=None, preferred_focal_method=None):
@@ -306,7 +315,7 @@ def _write_json_file(file_path, payload):
 def _load_mutation_backup_content(project_id, focal_path):
     if project_id is None or not focal_path:
         return None
-    backups_path = os.path.join("output", str(project_id), "focal_mutation_backups.json")
+    backups_path = _worker_project_output_path(project_id, "focal_mutation_backups.json")
     backup_map = _load_json_file(backups_path, {})
     if not isinstance(backup_map, dict):
         return None
@@ -332,7 +341,7 @@ def _restore_focal_from_backup(project_id, focal_path):
 
 
 def _focal_mutations_file_path(project_id):
-    return os.path.join("output", str(project_id), "focal_mutations.json")
+    return _worker_project_output_path(project_id, "focal_mutations.json")
 
 
 def _current_mutation_type_for_focal(project_id, focal_path):
@@ -612,7 +621,7 @@ def _persist_generated_response_artifact(
 ):
     if generated_test_content is None:
         return None
-    output_directory = os.path.join("output", str(project))
+    output_directory = PATH_CONTEXT.get_project_output_path(project)
     os.makedirs(output_directory, exist_ok=True)
     safe_suffix = f"_{suffix}" if suffix else ""
     artifact_path = os.path.join(
@@ -745,12 +754,11 @@ def _build_maven_subprocess_env():
 
 
 def _resolve_maven_diagnostic_log_path(path):
-    normalized_path = os.path.abspath(path).replace("\\", "/")
-    match = re.search(r"/compiledrepos/(\d+)(?:/|$)", normalized_path)
-    if match:
-        output_directory = os.path.join("output", match.group(1))
+    project_id = PATH_CONTEXT.extract_project_id(path)
+    if project_id:
+        output_directory = PATH_CONTEXT.get_project_output_path(project_id)
     else:
-        output_directory = "output"
+        output_directory = PATH_CONTEXT.get_output_path()
     os.makedirs(output_directory, exist_ok=True)
     return os.path.join(output_directory, "maven_smoke_diagnostics.log")
 
@@ -785,12 +793,11 @@ def _read_maven_new_output(log_path, start_offset):
 
 
 def _resolve_failure_log_path(path):
-    normalized_path = os.path.abspath(path).replace("\\", "/")
-    match = re.search(r"/compiledrepos/(\d+)(?:/|$)", normalized_path)
-    if match:
-        output_directory = os.path.join("output", match.group(1))
+    project_id = PATH_CONTEXT.extract_project_id(path)
+    if project_id:
+        output_directory = PATH_CONTEXT.get_project_output_path(project_id)
     else:
-        output_directory = "output"
+        output_directory = PATH_CONTEXT.get_output_path()
     os.makedirs(output_directory, exist_ok=True)
     return os.path.join(output_directory, "latest_failure_log.txt")
 
@@ -1209,6 +1216,57 @@ def _log_maven_stage_transitions(chunk_text, seen_stages, diagnostic_log_path):
         )
 
 
+def _terminate_process_tree(process):
+    if process is None:
+        return
+    pid = getattr(process, "pid", None)
+    if pid is None:
+        return
+    terminated = False
+    if psutil is not None:
+        try:
+            root_process = psutil.Process(pid)
+            children = root_process.children(recursive=True)
+            for child in children:
+                try:
+                    child.terminate()
+                except psutil.NoSuchProcess:
+                    continue
+            psutil.wait_procs(children, timeout=5)
+            for child in children:
+                try:
+                    if child.is_running():
+                        child.kill()
+                except psutil.NoSuchProcess:
+                    continue
+            if root_process.is_running():
+                root_process.terminate()
+                try:
+                    root_process.wait(timeout=5)
+                except psutil.TimeoutExpired:
+                    root_process.kill()
+            terminated = True
+        except Exception:
+            terminated = False
+
+    if not terminated:
+        try:
+            if os.name == "nt":
+                subprocess.run(
+                    ["taskkill", "/F", "/T", "/PID", str(pid)],
+                    capture_output=True,
+                    check=False,
+                )
+            else:
+                process.terminate()
+                process.wait(timeout=5)
+        except Exception:
+            try:
+                process.kill()
+            except Exception:
+                pass
+
+
 def _run_maven_smoke_command(command, path, maven_env, build_timeout_seconds, diagnostic_log_path, command_label="lifecycle"):
     print(f"Maven smoke {command_label} command: {' '.join(command)}")
     _append_maven_diagnostic(
@@ -1248,7 +1306,7 @@ def _run_maven_smoke_command(command, path, maven_env, build_timeout_seconds, di
 
             elapsed = time.monotonic() - start_time
             if elapsed > build_timeout_seconds:
-                process.kill()
+                _terminate_process_tree(process)
                 raise subprocess.TimeoutExpired(command, build_timeout_seconds)
 
             time.sleep(1)
@@ -2591,6 +2649,7 @@ def process_maven_project(project, test_types, techniques, project_path, project
                 0(int) if the process failed.
     """
     swtich_to_next_project = False
+    os.makedirs(PATH_CONTEXT.get_project_output_path(project), exist_ok=True)
     project_ast_test_method, project_ast_focal_method = _extract_ast_scope_from_dataframe(project_df)
     # add jacoco and pitest dependecies to pom.xml
     original_pom = edit_pom_file(
@@ -2605,8 +2664,8 @@ def process_maven_project(project, test_types, techniques, project_path, project
         print("An errore occured while trying to edit the pom file")
         return 0 # Switch to the next project
     for i, test_type in enumerate(test_types):
-        output_path_failed = f'./output/{project}/TestClasses_{project}_{test_type}.failed' # Indicates that the test type failed due to an error during the execution of the script.
-        output_path_failed_maven = f'./output/{project}/TestClasses_{project}_{test_type}.mavenfailed'  # Indicates that all the test classes of the test type failed during the maven execution.
+        output_path_failed = _worker_project_output_path(project, f"TestClasses_{project}_{test_type}.failed") # Indicates that the test type failed due to an error during the execution of the script.
+        output_path_failed_maven = _worker_project_output_path(project, f"TestClasses_{project}_{test_type}.mavenfailed")  # Indicates that all the test classes of the test type failed during the maven execution.
         swtich_to_next_test_type = False
         print('\n----')
         print(f"STARTING '{test_type}' test type\n")
@@ -2678,8 +2737,8 @@ def process_maven_project(project, test_types, techniques, project_path, project
             for index, row in project_df_evosuite.iterrows(): # iterate over each test class and focal class
                 name_focal_class = row['Focal_Class']
                 name_test_class = row['Test_Class']
-                test_path = row['Test_Path'].replace('repos/', 'compiledrepos/')
-                focal_path = row['Focal_Path'].replace('repos/', 'compiledrepos/')
+                test_path = _normalize_compiled_path(project, row['Test_Path'])
+                focal_path = _normalize_compiled_path(project, row['Focal_Path'])
                 last_execution = None # outcome of the last maven execution, True = Build Success, False = Build Failure
                 current_module = utils.find_module_class(project, test_path)
                 try:
@@ -2873,8 +2932,8 @@ def process_maven_project(project, test_types, techniques, project_path, project
             # Iterate over each technique
             for j, technique in enumerate(techniques):
                 global df_chance
-                output_path_failed = f'./output/{project}/TestClasses_{project}_{test_type}_{technique}.failed' # Indicates that a test type/technique failed due to an error during the execution of AgonTest.py or during a call to the API
-                output_path_failed_maven = f'./output/{project}/TestClasses_{project}_{test_type}_{technique}.mavenfailed' # Indicates that all the test classes of the test type failed during the maven execution.
+                output_path_failed = _worker_project_output_path(project, f"TestClasses_{project}_{test_type}_{technique}.failed") # Indicates that a test type/technique failed due to an error during the execution of AgonTest.py or during a call to the API
+                output_path_failed_maven = _worker_project_output_path(project, f"TestClasses_{project}_{test_type}_{technique}.mavenfailed") # Indicates that all the test classes of the test type failed during the maven execution.
 
                 restart_technique = False 
                 print(f"\nProcessing test_type: {test_type}, technique: {technique}")
@@ -2883,13 +2942,8 @@ def process_maven_project(project, test_types, techniques, project_path, project
                 for index, row in project_df_technique.iterrows(): # iterate over each test class and focal class
                     name_focal_class = row['Focal_Class']
                     name_test_class = row['Test_Class']
-                    if "repos/" in row['Test_Path']:
-                        test_path = row['Test_Path'].replace("repos/", "compiledrepos/")
-                        focal_path = row['Focal_Path'].replace("repos/", "compiledrepos/")
-                    else:
-                        project = row['Project']
-                        test_path = f"compiledrepos/{project}/" + row['Test_Path']
-                        focal_path = f"compiledrepos/{project}/" + row['Focal_Path']
+                    test_path = _normalize_compiled_path(project, row['Test_Path'])
+                    focal_path = _normalize_compiled_path(project, row['Focal_Path'])
                     last_execution = None # outcome of the last maven execution, True = Build Success, False = Build Failure
                     testing_framework = None
                     if junit_version is not None:
@@ -3123,7 +3177,11 @@ def process_maven_project(project, test_types, techniques, project_path, project
                             if chance_result:
                                 last_execution = True
                                 record_tracking_metrics(name_test_class, test_path, test_type, technique, num_chance, total_prompt_tokens, total_completion_tokens, iterations_to_pass)
-                        errorCorrection.save_conversation_to_json(messages, name_test_class, os.path.join("output", str(project), "codex_conversations"))
+                        errorCorrection.save_conversation_to_json(
+                            messages,
+                            name_test_class,
+                            _worker_project_output_path(project, "codex_conversations"),
+                        )
                         if not chance_result:
                             record_tracking_metrics(name_test_class, test_path, test_type, technique, 6, total_prompt_tokens, total_completion_tokens, iterations_to_pass)
                     elif not esito and not correct:
@@ -3165,15 +3223,20 @@ def process_maven_project(project, test_types, techniques, project_path, project
                             ast_test_method=project_ast_test_method,
                             ast_focal_method=project_ast_focal_method,
                         )[0]==False: # if error while running maven
-                            print('An error occured while trying to execute the final version of test classes.\n')
+                            print(
+                                f"[{technique}] Final execution failed. "
+                                "Recording mavenfailed marker for CSV failure row.\n"
+                            )
                             try:
                                 utils.write_files(dictionary_for_restore)
-                                with open(output_path_failed, 'w') as file:
+                                if os.path.exists(output_path_failed):
+                                    os.remove(output_path_failed)
+                                with open(output_path_failed_maven, 'w') as file:
                                     pass
                             except Exception as e:
                                 original_pom.write(os.path.join(project_path, "pom.xml")) # restore pom to previous version
                                 utils.write_files(dictionary_for_restore)
-                                print(f'An error occured while trying to open output_path_failed: {e}')
+                                print(f'An error occured while trying to open output_path_failed_maven: {e}')
                                 sys.exit(1)
                             continue  # switch to next technique      
                     # Retrieve Code Coverage and Cyclomatic Complexity on test classes                            
@@ -3236,6 +3299,7 @@ def process_maven_module(project, module, test_types, techniques, path, project_
     Returns:
                 0(int) if the process failed.
     """
+    os.makedirs(PATH_CONTEXT.get_project_output_path(project), exist_ok=True)
     module_ast_test_method, module_ast_focal_method = _extract_ast_scope_from_dataframe(module_df)
     # add jacoco and pitest dependecies to pom.xml
     original_pom = edit_pom_file(
@@ -3250,8 +3314,8 @@ def process_maven_module(project, module, test_types, techniques, path, project_
         print("An errore occured while trying to edit the pom file")
         return 0
     for test_type in test_types:
-        output_path_failed = f'./output/{project}/TestClasses_{project}_{test_type}.failed' # Indicates that the test type failed due to an error during the execution of the script.
-        output_path_failed_maven = f'./output/{project}/TestClasses_{project}_{test_type}.mavenfailed'  # Indicates that all the test classes of the test type failed during the maven execution.
+        output_path_failed = _worker_project_output_path(project, f"TestClasses_{project}_{test_type}.failed") # Indicates that the test type failed due to an error during the execution of the script.
+        output_path_failed_maven = _worker_project_output_path(project, f"TestClasses_{project}_{test_type}.mavenfailed")  # Indicates that all the test classes of the test type failed during the maven execution.
 
         swtich_to_next_test_type = False
         print('\n----')
@@ -3282,7 +3346,7 @@ def process_maven_module(project, module, test_types, techniques, path, project_
                 print("The test smell detector ended successfully")  
             # Retrieve Code Coverage and Cyclomatic Complexity on test classes
             utils.snapshot_coverage_reports(
-                f'compiledrepos/{project}',
+                PATH_CONTEXT.get_compiled_repo_path(project),
                 module_df,
                 project,
                 'Maven',
@@ -3291,7 +3355,7 @@ def process_maven_module(project, module, test_types, techniques, path, project_
                 module,
             )
             measures_df = utils.retrieve_code_coverage_and_cyclomatic_complexity(
-                f'compiledrepos/{project}',
+                PATH_CONTEXT.get_compiled_repo_path(project),
                 module_df,
                 project,
                 'Maven',
@@ -3324,8 +3388,8 @@ def process_maven_module(project, module, test_types, techniques, path, project_
             for index, row in module_df_evosuite.iterrows(): # iterate over each test class and focal class
                 name_focal_class = row['Focal_Class']
                 name_test_class = row['Test_Class']
-                test_path = row['Test_Path'].replace('repos/', 'compiledrepos/')
-                focal_path = row['Focal_Path'].replace('repos/', 'compiledrepos/')
+                test_path = _normalize_compiled_path(project, row['Test_Path'])
+                focal_path = _normalize_compiled_path(project, row['Focal_Path'])
                 last_execution = None # outcome of the last maven execution, True = Build Success, False = Build Failure
                 try:
                     with open(test_path, 'r') as test_file_read:
@@ -3472,7 +3536,7 @@ def process_maven_module(project, module, test_types, techniques, path, project_
                         continue # Switch to next test type
                 # Retrieve Code Coverage and Cyclomatic Complexity on test classes
                 utils.snapshot_coverage_reports(
-                    f'compiledrepos/{project}',
+                    PATH_CONTEXT.get_compiled_repo_path(project),
                     module_df_evosuite,
                     project,
                     'Maven',
@@ -3481,7 +3545,7 @@ def process_maven_module(project, module, test_types, techniques, path, project_
                     module,
                 )
                 measures_df  = utils.retrieve_code_coverage_and_cyclomatic_complexity(
-                    f'compiledrepos/{project}',
+                    PATH_CONTEXT.get_compiled_repo_path(project),
                     module_df_evosuite,
                     project,
                     'Maven',
@@ -3517,8 +3581,8 @@ def process_maven_module(project, module, test_types, techniques, path, project_
         else:
             # Iterate over each technique
             for technique in techniques:  
-                output_path_failed = f'./output/{project}/TestClasses_{project}_{test_type}_{technique}.failed' # Indicates that the test type/technique failed due to an error during the execution of AgonTest.py or during a call to the API
-                output_path_failed_maven = f'./output/{project}/TestClasses_{project}_{test_type}_{technique}.mavenfailed'  # Indicates that all the test classes of the test type failed during the maven execution. 
+                output_path_failed = _worker_project_output_path(project, f"TestClasses_{project}_{test_type}_{technique}.failed") # Indicates that the test type/technique failed due to an error during the execution of AgonTest.py or during a call to the API
+                output_path_failed_maven = _worker_project_output_path(project, f"TestClasses_{project}_{test_type}_{technique}.mavenfailed")  # Indicates that all the test classes of the test type failed during the maven execution.
                 restart_technique = False 
                 print(f"\nProcessing test_type: {test_type}, technique: {technique}")
                 module_df_technique = module_df.copy() # dataframe of the current test type and technique
@@ -3526,8 +3590,8 @@ def process_maven_module(project, module, test_types, techniques, path, project_
                 for index, row in module_df_technique.iterrows(): # iterate over each test class and focal class
                     name_focal_class = row['Focal_Class']
                     name_test_class = row['Test_Class']
-                    focal_path = row['Focal_Path'].replace('repos/', 'compiledrepos/')
-                    test_path = row['Test_Path'].replace('repos/', 'compiledrepos/')
+                    focal_path = _normalize_compiled_path(project, row['Focal_Path'])
+                    test_path = _normalize_compiled_path(project, row['Test_Path'])
                     last_execution = None # outcome of the last maven execution, True = Build Success, False = Build Failure
                     testing_framework = None
                     if junit_version is not None:
@@ -3817,15 +3881,20 @@ def process_maven_module(project, module, test_types, techniques, path, project_
                             ast_test_method=module_ast_test_method,
                             ast_focal_method=module_ast_focal_method,
                         )[0]==False: # if error while running maven
-                            print('An error occured while trying to execute the final version of test classes.\n')
+                            print(
+                                f"[{technique}] Final execution failed. "
+                                "Recording mavenfailed marker for CSV failure row.\n"
+                            )
                             try:
                                 utils.write_files(dictionary_for_restore)
-                                with open(output_path_failed, 'w') as file:
+                                if os.path.exists(output_path_failed):
+                                    os.remove(output_path_failed)
+                                with open(output_path_failed_maven, 'w') as file:
                                     pass
                             except Exception as e:
                                 original_pom.write(os.path.join(path, "pom.xml")) # restore pom to previous version
                                 utils.write_files(dictionary_for_restore)
-                                print(f'An error occured while trying to open output_path_failed: {e}')
+                                print(f'An error occured while trying to open output_path_failed_maven: {e}')
                                 sys.exit(1)
                             continue  # switch to next technique      
                     # Retrieve Code Coverage and Cyclomatic Complexity on test classes

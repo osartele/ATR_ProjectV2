@@ -1,0 +1,81 @@
+[Surefire Report] C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core\target\surefire-reports\org.finra.herd.core.helper.ConfigurationHelperTest.txt
+-------------------------------------------------------------------------------
+Test set: org.finra.herd.core.helper.ConfigurationHelperTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 1.525 s <<< FAILURE! - in org.finra.herd.core.helper.ConfigurationHelperTest
+testGetPropertyReturnDefaultWhenValueConversionFails(org.finra.herd.core.helper.ConfigurationHelperTest)  Time elapsed: 0.002 s  <<< ERROR!
+java.lang.IllegalStateException: Failed to load ApplicationContext
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'org.springframework.scheduling.annotation.ProxyAsyncConfiguration': Initialization of bean failed; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'getAsyncExecutor' defined in org.finra.herd.core.config.CoreSpringModuleConfig: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [java.util.concurrent.Executor]: Factory method 'getAsyncExecutor' threw exception; nested exception is java.lang.IllegalStateException: configurationValue is required
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'getAsyncExecutor' defined in org.finra.herd.core.config.CoreSpringModuleConfig: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [java.util.concurrent.Executor]: Factory method 'getAsyncExecutor' threw exception; nested exception is java.lang.IllegalStateException: configurationValue is required
+Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [java.util.concurrent.Executor]: Factory method 'getAsyncExecutor' threw exception; nested exception is java.lang.IllegalStateException: configurationValue is required
+Caused by: java.lang.IllegalStateException: configurationValue is required
+
+[Maven Output]
+===== MAVEN BASELINE-TEST START =====
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------< org.finra.herd:herd-core >----------------------
+[INFO] Building herd core 0.176.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (default-cli) @ herd-core ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core\\target\\jacoco.exec,includes=org/finra/herd/core/helper/ConfigurationHelper*,output=file
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (jacoco-initialize) @ herd-core ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core\\target\\jacoco.exec,includes=org/finra/herd/core/helper/ConfigurationHelper*,output=file
+[INFO] 
+[INFO] --- build-helper:3.0.0:add-source (default) @ herd-core ---
+[INFO] Source directory: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core\target\generated-sources added.
+[INFO] 
+[INFO] --- resources:3.0.2:resources (default-resources) @ herd-core ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 1 resource
+[INFO] Copying 2 resources
+[INFO] 
+[INFO] --- flatten:1.1.0:flatten (flatten) @ herd-core ---
+[INFO] Generating flattened POM of project org.finra.herd:herd-core:jar:0.176.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.7.0:compile (default-compile) @ herd-core ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.0.2:testResources (default-testResources) @ herd-core ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 1 resource
+[INFO] 
+[INFO] --- compiler:3.7.0:testCompile (default-testCompile) @ herd-core ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 18 source files to C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core\target\test-classes
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_dualA/42949039/herd-code/herd-core/src/test/java/org/finra/herd/core/AbstractCoreTest.java: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core\src\test\java\org\finra\herd\core\AbstractCoreTest.java uses or overrides a deprecated API.
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_dualA/42949039/herd-code/herd-core/src/test/java/org/finra/herd/core/AbstractCoreTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_dualA/42949039/herd-code/herd-core/src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java:[73,5] cannot find symbol
+  symbol:   class Environment
+  location: class org.finra.herd.core.helper.ConfigurationHelperTest
+[ERROR] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_dualA/42949039/herd-code/herd-core/src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java:[73,36] cannot find symbol
+  symbol:   class Environment
+  location: class org.finra.herd.core.helper.ConfigurationHelperTest
+[INFO] 2 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.737 s
+[INFO] Finished at: 2026-03-16T01:21:09-04:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.7.0:testCompile (default-testCompile) on project herd-core: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_dualA/42949039/herd-code/herd-core/src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java:[73,5] cannot find symbol
+[ERROR]   symbol:   class Environment
+[ERROR]   location: class org.finra.herd.core.helper.ConfigurationHelperTest
+[ERROR] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_dualA/42949039/herd-code/herd-core/src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java:[73,36] cannot find symbol
+[ERROR]   symbol:   class Environment
+[ERROR]   location: class org.finra.herd.core.helper.ConfigurationHelperTest
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

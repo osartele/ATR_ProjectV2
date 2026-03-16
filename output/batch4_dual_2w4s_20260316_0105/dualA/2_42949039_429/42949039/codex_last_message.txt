@@ -1,0 +1,33 @@
+@Test
+public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled()
+{
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.clearProperty("agone.mutation.trigger");
+
+    try
+    {
+        org.finra.herd.model.jpa.TagEntity localTagEntity = new org.finra.herd.model.jpa.TagEntity();
+        localTagEntity.setId(1L);
+
+        try
+        {
+            searchIndexUpdateHelper.modifyTagInSearchIndex(localTagEntity, "UPDATE");
+            org.junit.Assert.fail("Expected AssertionError to be thrown.");
+        }
+        catch (AssertionError e)
+        {
+            org.junit.Assert.assertEquals("AGONE_MUTATION_TRIGGER", e.getMessage());
+        }
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+    }
+}

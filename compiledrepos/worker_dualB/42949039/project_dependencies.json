@@ -1,0 +1,682 @@
+{
+    "pompath": "C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualB\\42949039/pom.xml",
+    "dependencies": {
+        "${project.groupId}": [
+            {
+                "artifactId": "herd-model-api",
+                "scope": "test"
+            },
+            {
+                "artifactId": "herd-model",
+                "scope": "test"
+            },
+            {
+                "artifactId": "herd-core",
+                "scope": "test"
+            },
+            {
+                "artifactId": "herd-dao",
+                "scope": "test"
+            },
+            {
+                "artifactId": "herd-service",
+                "scope": "test"
+            },
+            {
+                "artifactId": "herd-ui",
+                "scope": "test"
+            },
+            {
+                "artifactId": "herd-rest",
+                "scope": "test"
+            },
+            {
+                "artifactId": "herd-app",
+                "scope": "test"
+            },
+            {
+                "artifactId": "herd-tools-common",
+                "scope": "test"
+            },
+            {
+                "artifactId": "herd-docs-swagger"
+            },
+            {
+                "artifactId": "herd-sdk"
+            }
+        ],
+        "com.amazonaws": [
+            {
+                "artifactId": "aws-java-sdk-core",
+                "version": "1.12.90"
+            },
+            {
+                "artifactId": "aws-java-sdk-ses",
+                "version": "1.12.90"
+            },
+            {
+                "artifactId": "aws-java-sdk-ec2",
+                "version": "1.12.90"
+            },
+            {
+                "artifactId": "aws-java-sdk-emr",
+                "version": "1.12.90"
+            },
+            {
+                "artifactId": "aws-java-sdk-s3",
+                "version": "1.12.90"
+            },
+            {
+                "artifactId": "aws-java-sdk-s3control",
+                "version": "1.12.90"
+            },
+            {
+                "artifactId": "aws-java-sdk-glacier",
+                "version": "1.12.90"
+            },
+            {
+                "artifactId": "aws-java-sdk-sts",
+                "version": "1.12.90"
+            },
+            {
+                "artifactId": "aws-java-sdk-config",
+                "version": "1.12.90"
+            },
+            {
+                "artifactId": "amazon-sqs-java-messaging-lib",
+                "version": "1.0.4"
+            },
+            {
+                "artifactId": "aws-java-sdk-sqs",
+                "version": "1.12.90"
+            },
+            {
+                "artifactId": "aws-java-sdk",
+                "version": "1.12.90"
+            }
+        ],
+        "org.aspectj": [
+            {
+                "artifactId": "aspectjweaver",
+                "version": "1.8.11"
+            },
+            {
+                "artifactId": "aspectjrt",
+                "version": "1.8.11"
+            }
+        ],
+        "commons-cli": [
+            {
+                "artifactId": "commons-cli",
+                "version": "1.4"
+            }
+        ],
+        "org.apache.commons": [
+            {
+                "artifactId": "commons-collections4",
+                "version": "4.1"
+            },
+            {
+                "artifactId": "commons-compress",
+                "version": "1.20"
+            },
+            {
+                "artifactId": "commons-email",
+                "version": "1.5"
+            },
+            {
+                "artifactId": "commons-lang3",
+                "version": "3.8.1"
+            },
+            {
+                "artifactId": "commons-text",
+                "version": "1.4"
+            },
+            {
+                "artifactId": "commons-dbcp2",
+                "scope": "test",
+                "version": "2.5.0"
+            }
+        ],
+        "commons-collections": [
+            {
+                "artifactId": "commons-collections",
+                "version": "3.2.2"
+            }
+        ],
+        "commons-configuration": [
+            {
+                "artifactId": "commons-configuration",
+                "version": "1.10"
+            }
+        ],
+        "commons-io": [
+            {
+                "artifactId": "commons-io",
+                "version": "2.6"
+            }
+        ],
+        "commons-codec": [
+            {
+                "artifactId": "commons-codec",
+                "version": "1.11"
+            }
+        ],
+        "org.hibernate.javax.persistence": [
+            {
+                "artifactId": "hibernate-jpa-2.1-api",
+                "version": "1.0.0"
+            }
+        ],
+        "org.hibernate": [
+            {
+                "artifactId": "hibernate-core",
+                "version": "5.2.12"
+            },
+            {
+                "artifactId": "hibernate-ehcache",
+                "version": "5.2.12"
+            },
+            {
+                "artifactId": "hibernate-entitymanager",
+                "version": "5.2.12"
+            },
+            {
+                "artifactId": "hibernate-jpamodelgen",
+                "version": "5.2.12"
+            },
+            {
+                "artifactId": "hibernate-validator",
+                "version": "5.4.2"
+            },
+            {
+                "artifactId": "hibernate-validator-annotation-processor",
+                "version": "5.4.2"
+            }
+        ],
+        "org.dom4j": [
+            {
+                "artifactId": "dom4j",
+                "version": "2.1.3"
+            }
+        ],
+        "javax.servlet": [
+            {
+                "artifactId": "javax.servlet-api",
+                "scope": "provided",
+                "version": "4.0.1"
+            }
+        ],
+        "org.glassfish.web": [
+            {
+                "artifactId": "javax.servlet.jsp.jstl",
+                "version": "1.2.4"
+            }
+        ],
+        "junit": [
+            {
+                "artifactId": "junit",
+                "scope": "test",
+                "version": "4.12"
+            }
+        ],
+        "org.postgresql": [
+            {
+                "artifactId": "postgresql",
+                "scope": "test",
+                "version": "42.3.3"
+            }
+        ],
+        "com.h2database": [
+            {
+                "artifactId": "h2",
+                "scope": "test",
+                "version": "1.4.200"
+            }
+        ],
+        "org.slf4j": [
+            {
+                "artifactId": "slf4j-api",
+                "version": "1.7.26"
+            },
+            {
+                "artifactId": "jcl-over-slf4j",
+                "version": "1.7.26"
+            }
+        ],
+        "org.apache.logging.log4j": [
+            {
+                "artifactId": "log4j-slf4j-impl",
+                "version": "2.17.1"
+            },
+            {
+                "artifactId": "log4j-api",
+                "version": "2.17.1"
+            },
+            {
+                "artifactId": "log4j-core",
+                "version": "2.17.1"
+            }
+        ],
+        "org.apache.poi": [
+            {
+                "artifactId": "poi",
+                "version": "5.0.0"
+            },
+            {
+                "artifactId": "poi-ooxml",
+                "version": "5.0.0"
+            }
+        ],
+        "org.springframework": [
+            {
+                "artifactId": "spring-aop",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-beans",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-context",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-context-support",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-core",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-expression",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-jdbc",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-orm",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-oxm",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-test",
+                "scope": "test",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-tx",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-web",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-webmvc",
+                "version": "4.3.30"
+            },
+            {
+                "artifactId": "spring-jms",
+                "version": "4.3.30"
+            }
+        ],
+        "org.springframework.ldap": [
+            {
+                "artifactId": "spring-ldap-core",
+                "version": "2.3.2"
+            }
+        ],
+        "org.springframework.security": [
+            {
+                "artifactId": "spring-security-web",
+                "version": "4.2.17"
+            },
+            {
+                "artifactId": "spring-security-config",
+                "version": "4.2.17"
+            }
+        ],
+        "org.springframework.retry": [
+            {
+                "artifactId": "spring-retry",
+                "version": "1.2.1"
+            }
+        ],
+        "com.fasterxml.jackson.core": [
+            {
+                "artifactId": "jackson-core",
+                "version": "2.11.0"
+            },
+            {
+                "artifactId": "jackson-annotations",
+                "version": "2.11.0"
+            },
+            {
+                "artifactId": "jackson-databind",
+                "version": "2.11.0"
+            }
+        ],
+        "com.fasterxml.jackson.jaxrs": [
+            {
+                "artifactId": "jackson-jaxrs-json-provider",
+                "version": "2.11.0"
+            }
+        ],
+        "com.fasterxml.jackson.datatype": [
+            {
+                "artifactId": "jackson-datatype-joda",
+                "version": "2.11.0"
+            }
+        ],
+        "org.jvnet.jaxb2_commons": [
+            {
+                "artifactId": "jaxb2-basics",
+                "version": "0.11.1"
+            },
+            {
+                "artifactId": "jaxb2-basics-annotate",
+                "version": "1.0.3"
+            },
+            {
+                "artifactId": "jaxb2-basics-runtime",
+                "version": "0.11.1"
+            },
+            {
+                "artifactId": "jaxb2-basics-tools",
+                "version": "0.11.1"
+            },
+            {
+                "artifactId": "jaxb2-value-constructor",
+                "version": "3.0"
+            }
+        ],
+        "com.google.code.findbugs": [
+            {
+                "artifactId": "annotations",
+                "version": "3.0.1"
+            }
+        ],
+        "org.apache.velocity": [
+            {
+                "artifactId": "velocity",
+                "version": "1.7"
+            }
+        ],
+        "org.codehaus.woodstox": [
+            {
+                "artifactId": "woodstox-core-asl",
+                "version": "4.4.1"
+            }
+        ],
+        "org.apache.maven": [
+            {
+                "artifactId": "maven-artifact",
+                "version": "3.5.0"
+            },
+            {
+                "artifactId": "maven-plugin-api",
+                "version": "3.5.0"
+            }
+        ],
+        "org.apache.maven.plugin-tools": [
+            {
+                "artifactId": "maven-plugin-annotations",
+                "scope": "provided",
+                "version": "3.5"
+            }
+        ],
+        "org.codehaus.plexus": [
+            {
+                "artifactId": "plexus-utils",
+                "version": "3.1.0"
+            }
+        ],
+        "io.swagger": [
+            {
+                "artifactId": "swagger-core",
+                "version": "1.5.9"
+            },
+            {
+                "artifactId": "swagger-annotations",
+                "version": "1.5.9"
+            }
+        ],
+        "org.jboss.forge.roaster": [
+            {
+                "artifactId": "roaster-api",
+                "version": "2.20.4"
+            },
+            {
+                "artifactId": "roaster-jdt",
+                "version": "2.20.4"
+            }
+        ],
+        "org.eclipse.persistence": [
+            {
+                "artifactId": "org.eclipse.persistence.moxy",
+                "version": "2.7.3"
+            }
+        ],
+        "org.quartz-scheduler": [
+            {
+                "artifactId": "quartz",
+                "version": "2.3.2"
+            },
+            {
+                "artifactId": "quartz-jobs",
+                "version": "2.3.2"
+            }
+        ],
+        "com.google.guava": [
+            {
+                "artifactId": "guava",
+                "version": "27.0.1"
+            }
+        ],
+        "com.googlecode.json-simple": [
+            {
+                "artifactId": "json-simple",
+                "version": "1.1.1"
+            }
+        ],
+        "org.activiti": [
+            {
+                "artifactId": "activiti-spring",
+                "version": "5.21.0"
+            },
+            {
+                "artifactId": "activiti-secure-javascript",
+                "version": "5.21.0"
+            }
+        ],
+        "org.mockito": [
+            {
+                "artifactId": "mockito-core",
+                "scope": "test",
+                "version": "2.10.0"
+            }
+        ],
+        "com.sun.jersey": [
+            {
+                "artifactId": "jersey-client",
+                "version": "1.19.4"
+            }
+        ],
+        "com.sun.jersey.contribs": [
+            {
+                "artifactId": "jersey-multipart",
+                "version": "1.19.4"
+            }
+        ],
+        "joda-time": [
+            {
+                "artifactId": "joda-time",
+                "version": "2.10.1"
+            }
+        ],
+        "com.brsanthu": [
+            {
+                "artifactId": "migbase64",
+                "version": "2.2"
+            }
+        ],
+        "org.elasticsearch": [
+            {
+                "artifactId": "elasticsearch",
+                "version": "7.8.0"
+            }
+        ],
+        "org.elasticsearch.client": [
+            {
+                "artifactId": "elasticsearch-rest-client",
+                "version": "7.8.0"
+            },
+            {
+                "artifactId": "elasticsearch-rest-high-level-client",
+                "version": "7.8.0"
+            }
+        ],
+        "com.floragunn": [
+            {
+                "artifactId": "search-guard-ssl"
+            }
+        ],
+        "co.wrisk.jcredstash": [
+            {
+                "artifactId": "jcredstash",
+                "version": "0.0.4"
+            }
+        ],
+        "org.bouncycastle": [
+            {
+                "artifactId": "bcprov-jdk15on",
+                "version": "1.60"
+            }
+        ],
+        "vc.inreach.aws": [
+            {
+                "artifactId": "aws-signing-request-interceptor",
+                "version": "0.0.22"
+            }
+        ],
+        "org.jsoup": [
+            {
+                "artifactId": "jsoup",
+                "version": "1.11.3"
+            }
+        ],
+        "com.opencsv": [
+            {
+                "artifactId": "opencsv",
+                "version": "4.4"
+            }
+        ],
+        "com.google.code.gson": [
+            {
+                "artifactId": "gson",
+                "version": "2.8.6"
+            }
+        ],
+        "org.apache.hive": [
+            {
+                "artifactId": "hive-serde",
+                "version": "2.3.4"
+            }
+        ],
+        "com.github.stefanbirkner": [
+            {
+                "artifactId": "system-rules",
+                "scope": "test",
+                "version": "1.19.0"
+            }
+        ],
+        "uk.org.lidalia": [
+            {
+                "artifactId": "slf4j-test",
+                "scope": "test",
+                "version": "1.2.0"
+            }
+        ]
+    },
+    "subdependencies": {
+        "herd-build": {
+            "pompath": "C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualB\\42949039/herd-build/pom.xml",
+            "dependencies": {}
+        },
+        "herd-code": {
+            "pompath": "C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualB\\42949039/herd-code/pom.xml",
+            "dependencies": {
+                "junit": [
+                    {
+                        "artifactId": "junit",
+                        "scope": "test"
+                    }
+                ],
+                "org.postgresql": [
+                    {
+                        "artifactId": "postgresql",
+                        "scope": "test"
+                    }
+                ],
+                "com.h2database": [
+                    {
+                        "artifactId": "h2",
+                        "scope": "test"
+                    }
+                ],
+                "org.slf4j": [
+                    {
+                        "artifactId": "slf4j-api"
+                    },
+                    {
+                        "artifactId": "jcl-over-slf4j"
+                    }
+                ],
+                "org.apache.logging.log4j": [
+                    {
+                        "artifactId": "log4j-slf4j-impl"
+                    },
+                    {
+                        "artifactId": "log4j-api"
+                    },
+                    {
+                        "artifactId": "log4j-core"
+                    }
+                ],
+                "org.apache.commons": [
+                    {
+                        "artifactId": "commons-dbcp2"
+                    }
+                ],
+                "com.google.code.findbugs": [
+                    {
+                        "artifactId": "annotations"
+                    }
+                ],
+                "io.swagger": [
+                    {
+                        "artifactId": "swagger-annotations"
+                    }
+                ],
+                "${project.groupId}": [
+                    {
+                        "artifactId": "herd-build-tools"
+                    },
+                    {
+                        "artifactId": "herd-build-tools"
+                    },
+                    {
+                        "artifactId": "herd-build-tools"
+                    }
+                ]
+            }
+        }
+    }
+}

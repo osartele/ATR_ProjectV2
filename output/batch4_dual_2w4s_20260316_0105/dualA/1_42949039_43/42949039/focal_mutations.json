@@ -1,0 +1,13 @@
+[
+  {
+    "mutation_type": "logical",
+    "method_name": "getProperty",
+    "old_operator": "==",
+    "new_operator": "!=",
+    "line": 72,
+    "column": 32,
+    "mutation_priority_class": "NEGATE_CONDITIONALS",
+    "focal_path": "compiledrepos/worker_dualA/42949039/herd-code/herd-core/src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java",
+    "test_path": "compiledrepos/worker_dualA/42949039/herd-code/herd-core/src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java"
+  }
+]

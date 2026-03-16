@@ -1,0 +1,656 @@
+Initializing ExecutionManager...
+Loaded prompts: {'iterative-healing': [{'role': 'system', 'content': '[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]\nYou are an expert Java developer tasked with repairing a failing test suite. Your strictly defined goal is to heal the provided JUnit test methods so they pass against the updated focal class.\n\nCRITICAL CONSTRAINTS:\n1. Modify ONLY the specific @Test method explicitly identified in the AST mapping.\n2. Preserve the mapped method declaration lock exactly: method name, modifiers, annotations, and return type must match the original mapped method.\n3. Parameters and throws may change only when required by the evolved focal behavior.\n4. Use only the existing class-level collaborators/fields already present in the test class context. Do not instantiate the focal class or create local mocks inside the target method.\n5. DO NOT create, generate, or hallucinate any new @Test methods, helper methods, fields, imports, or annotations.\n6. Update only the necessary setup, mocks, inputs, or assertions within the target method body to resolve the failure log.\n7. Reply with only the full mapped @Test method block (annotation + signature + body). Do not output the whole class.\n{{can_use_mockito}} {{set_public}}'}, {'role': 'user', 'content': 'The project uses {{testing_framework}} and Java {{java_version}}. \nAnalyze the focal modifications and repair the existing test class.\n\n// --- UPDATED FOCAL CLASS ---\n<code>\n{{focal_class}}\n</code>\n\n// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---\n<code>\n{{existing_test_class}}\n</code>\n\n// --- ORIGINAL MAPPED TEST METHOD STYLE ANCHOR ---\n<code>\n{{mapped_test_method_anchor}}\n</code>\n\n// --- AST MAPPING & CONTEXT ---\nTest to Focal Method Mapping:\n<code>\n{{mapped_focal_methods}}\n</code>\nRelevant Focal Method Implementations:\n<code>\n{{focal_method_context}}\n</code>\n\n// --- TEST FAILURE LOG ---\nThe baseline test execution failed with the following output:\n<code>\n{{failure_log}}\n</code>\nAnalyze this failure trace to pinpoint the exact assertion or mock configuration that broke.\n\n// --- PROJECT ENVIRONMENT ---\nProject Structure:\n<code>\n{{project_structure}}\n</code>\nProject Dependencies:\n<code>\n{{project_dependencies}}\n</code>'}], 'regenerative-sync': [{'role': 'system', 'content': "[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]\nYou are an expert Java software engineer synchronizing an outdated JUnit test suite with a newly modified focal class. Your strictly defined goal is to update the existing test method's logic to account for new exceptions, new return types, or modified control flow in the focal class.\n\nCRITICAL CONSTRAINTS:\n1. You must update the specific mapped @Test method identified in the AST mapping.\n2. You may include additional brand-new @Test methods only when new focal logic paths require coverage.\n3. Preserve all unmapped existing tests exactly as they are. Do not alter or delete them.\n4. Do not output package declarations, class declarations, imports, fields, helper methods, or non-@Test methods.\n5. Reply with method blocks only: mapped repaired @Test method first, then optional new @Test method blocks.\n{{can_use_mockito}} {{set_public}}"}, {'role': 'user', 'content': 'The project uses {{testing_framework}} and Java {{java_version}}. \nAnalyze the focal modifications and repair the existing test class.\n\n// --- UPDATED FOCAL CLASS ---\n<code>\n{{focal_class}}\n</code>\n\n// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---\n<code>\n{{existing_test_class}}\n</code>\n\n// --- AST MAPPING & CONTEXT ---\nTest to Focal Method Mapping:\n<code>\n{{mapped_focal_methods}}\n</code>\nRelevant Focal Method Implementations:\n<code>\n{{focal_method_context}}\n</code>\n\n// --- PROJECT ENVIRONMENT ---\nProject Structure:\n<code>\n{{project_structure}}\n</code>\nProject Dependencies:\n<code>\n{{project_dependencies}}\n</code>'}]}
+Loaded agents: {'human': {}, 'codex-cli': {}}
+Fetching agents list...
+Fetching prompts list...
+This script is running without administrator privileges!
+Please re-run the script with administrator privileges to avoid errors during execution!
+WELCOME TO AGONE TEST!
+Fetching agents list...
+Fetching prompts list...
+SMOKE TEST MODE: Running N=1 for target: SearchIndexUpdateHelperTest::testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -> SearchIndexUpdateHelper.modifyTagInSearchIndex
+SMOKE TEST MODE: Auto-selecting repair mode and execution override.
+Starting to generate files
+
+At least 1 projects are compatible for evosuite execution!
+
+
+
+
+-------------------------------------------------------------------
+SMOKE TEST MODE: Running N=1 for target: SearchIndexUpdateHelperTest::testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -> SearchIndexUpdateHelper.modifyTagInSearchIndex
+PROCESSING PROJECT: '42949039'
+Using JAVA_HOME C:\Program Files\Eclipse Adoptium\jdk-8.0.482.8-hotspot
+Restoring focal backups before the human baseline for project 42949039
+
+42949039 is a Maven project
+
+----
+STARTING 'human' test type
+
+--//loading maven execution..//
+Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+Maven baseline module selection: -pl herd-code/herd-service
+Maven PIT module selection: -pl herd-code/herd-service
+PITest filters: -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper
+AST test method scope: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+AST focal method scope: modifyTagInSearchIndex
+PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
+openjdk version "1.8.0_482"
+OpenJDK Runtime Environment (Temurin)(build 1.8.0_482-b08)
+OpenJDK 64-Bit Server VM (Temurin)(build 25.482-b08, mixed mode)
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Precision Maven mode enabled for smoke execution.
+Maven smoke diagnostics log: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\maven_smoke_diagnostics.log
+Maven smoke baseline-test command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven smoke stage reached: test
+Maven smoke baseline-test finished in 95.83s with returncode=0
+Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+Maven baseline module selection: -pl herd-code/herd-service
+Maven PIT module selection: -pl herd-code/herd-service
+PITest filters: -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper
+AST test method scope: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+AST focal method scope: modifyTagInSearchIndex
+PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
+openjdk version "1.8.0_482"
+OpenJDK Runtime Environment (Temurin)(build 1.8.0_482-b08)
+OpenJDK 64-Bit Server VM (Temurin)(build 25.482-b08, mixed mode)
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Precision Maven mode enabled for smoke execution.
+Maven smoke diagnostics log: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\maven_smoke_diagnostics.log
+Maven smoke pit-targeted command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Maven smoke stage reached: pitest
+Maven smoke pit-targeted finished in 144.45s with returncode=0
+[INFO] Package command completed for 42949039
+
+The test smell detector ended successfully
+DataFrame saved to C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\TestClasses_42949039_human.csv
+Applied exception mutation to compiledrepos/worker_a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java
+
+----
+STARTING 'codex-cli' test type
+
+
+Processing test_type: codex-cli, technique: iterative-healing
+
+Dispatching Codex CLI for test_type: codex-cli, technique: iterative-healing, focal class: SearchIndexUpdateHelper
+Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+Maven baseline module selection: -pl herd-code/herd-service
+Maven PIT module selection: -pl herd-code/herd-service
+PITest filters: -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper
+AST test method scope: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+AST focal method scope: modifyTagInSearchIndex
+PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
+openjdk version "1.8.0_482"
+OpenJDK Runtime Environment (Temurin)(build 1.8.0_482-b08)
+OpenJDK 64-Bit Server VM (Temurin)(build 25.482-b08, mixed mode)
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Precision Maven mode enabled for smoke execution.
+Maven smoke diagnostics log: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\maven_smoke_diagnostics.log
+Maven smoke baseline-test command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven smoke stage reached: test
+Maven smoke baseline-test finished in 100.15s with returncode=0
+[MutationLiveGate] Quiet mutation detected for focal=compiledrepos/worker_a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java; starting prioritized retries (limit=2).
+[MutationLiveGate] Retry 1 applied mutation type=signature class=MATH_PRIMITIVE_RETURNS.
+Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+Maven baseline module selection: -pl herd-code/herd-service
+Maven PIT module selection: -pl herd-code/herd-service
+PITest filters: -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper
+AST test method scope: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+AST focal method scope: modifyTagInSearchIndex
+PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
+openjdk version "1.8.0_482"
+OpenJDK Runtime Environment (Temurin)(build 1.8.0_482-b08)
+OpenJDK 64-Bit Server VM (Temurin)(build 25.482-b08, mixed mode)
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Precision Maven mode enabled for smoke execution.
+Maven smoke diagnostics log: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\maven_smoke_diagnostics.log
+Maven smoke baseline-test command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven smoke stage reached: test
+Maven smoke baseline-test finished in 66.33s with returncode=0
+[MutationLiveGate] Retry 1 activated a live mutation.
+[IterativeHealing] Baseline failed for SearchIndexUpdateHelperTest; starting retry loop (max_retries=3).
+[IterativeHealing] Retry 1/3 for SearchIndexUpdateHelperTest on focal SearchIndexUpdateHelper.
+Fetching prompts dictionary...
+Codex diagnostic log: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_cli_diagnostics.log
+Codex last message path: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_last_message.txt
+Codex executable resolved to: C:\Users\osart\.codex\.sandbox-bin\codex.exe
+Codex working root: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service
+Codex target files count: 2
+Codex prompt length: 10111 characters
+Codex timeout: 420 seconds
+Starting Codex subprocess...
+Codex subprocess finished in 18.70s with returncode=0.
+Codex diagnostic log available at: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_cli_diagnostics.log
+Codex execution summary:
+returncode=0
+
+diagnostic_log=C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_cli_diagnostics.log
+
+last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_last_message.txt
+
+stdout:
+y.getId());
+
+        // Create a search index dto
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Mock the call to external methods
+        when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn(MESSAGE_TEXT);
+        when(configurationHelper.getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED)).thenReturn("false");
+
+        // Call the method under test
+        searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Verify the calls to external methods
+        verify(jsonHelper).objectToJson(searchIndexUpdateDto);
+        verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
+        verifyNoMoreInteractionsHelper();
+    }
+</code>
+
+AST target mapping: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -> modifyTagInSearchIndex.
+
+Keep or add this package declaration: package org.finra.herd.service.helper;
+
+Smoke mode: prefer the provided focal and test files, avoid exploring unrelated modules, and make the minimal direct edit needed to restore compilation or coverage.
+
+Return only the full mapped @Test method block (annotations + signature + body).
+
+Do not return the entire class, and do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java
+- src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java
+Return only the final Java source code.
+mcp startup: no servers
+codex
+@Test
+    public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled()
+    {
+        // Create a tag entity
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setId(1L);
+
+        // Create a list of tag ids
+        List<Long> tagIds = new ArrayList<>();
+        tagIds.add(999L);
+
+        // Create a search index dto
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Mock the call to external methods
+        when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn(MESSAGE_TEXT);
+        when(configurationHelper.getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED)).thenReturn("false");
+
+        // Call the method under test
+        searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Verify the calls to external methods
+        verify(jsonHelper).objectToJson(searchIndexUpdateDto);
+        verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
+        verifyNoMoreInteractionsHelper();
+    }
+tokens used
+4,205
+@Test
+    public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled()
+    {
+        // Create a tag entity
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setId(1L);
+
+        // Create a list of tag ids
+        List<Long> tagIds = new ArrayList<>();
+        tagIds.add(999L);
+
+        // Create a search index dto
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Mock the call to external methods
+        when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn(MESSAGE_TEXT);
+        when(configurationHelper.getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED)).thenReturn("false");
+
+        // Call the method under test
+        searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Verify the calls to external methods
+        verify(jsonHelper).objectToJson(searchIndexUpdateDto);
+        verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
+        verifyNoMoreInteractionsHelper();
+    }
+
+last_message:
+@Test
+    public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled()
+    {
+        // Create a tag entity
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setId(1L);
+
+        // Create a list of tag ids
+        List<Long> tagIds = new ArrayList<>();
+        tagIds.add(999L);
+
+        // Create a search index dto
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Mock the call to external methods
+        when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn(MESSAGE_TEXT);
+        when(configurationHelper.getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED)).thenReturn("false");
+
+        // Call the method under test
+        searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Verify the calls to external methods
+        verify(jsonHelper).objectToJson(searchIndexUpdateDto);
+        verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
+        verifyNoMoreInteractionsHelper();
+    }
+File generated at: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\response_codex-cli_iterative-healing_SearchIndexUpdateHelperTest_iterative_retry_1.java
+Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+Maven baseline module selection: -pl herd-code/herd-service
+Maven PIT module selection: -pl herd-code/herd-service
+PITest filters: -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper
+AST test method scope: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+AST focal method scope: modifyTagInSearchIndex
+PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
+openjdk version "1.8.0_482"
+OpenJDK Runtime Environment (Temurin)(build 1.8.0_482-b08)
+OpenJDK 64-Bit Server VM (Temurin)(build 25.482-b08, mixed mode)
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Precision Maven mode enabled for smoke execution.
+Maven smoke diagnostics log: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\maven_smoke_diagnostics.log
+Maven smoke baseline-test command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven smoke stage reached: test
+Maven smoke baseline-test finished in 71.34s with returncode=0
+[IterativeHealing] Baseline passed on retry 1 for SearchIndexUpdateHelperTest; running targeted PIT.
+Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+Maven baseline module selection: -pl herd-code/herd-service
+Maven PIT module selection: -pl herd-code/herd-service
+PITest filters: -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper
+AST test method scope: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+AST focal method scope: modifyTagInSearchIndex
+PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
+openjdk version "1.8.0_482"
+OpenJDK Runtime Environment (Temurin)(build 1.8.0_482-b08)
+OpenJDK 64-Bit Server VM (Temurin)(build 25.482-b08, mixed mode)
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Precision Maven mode enabled for smoke execution.
+Maven smoke diagnostics log: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\maven_smoke_diagnostics.log
+Maven smoke pit-targeted command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Maven smoke stage reached: pitest
+Maven smoke pit-targeted finished in 79.24s with returncode=0
+Package command completed for 42949039
+
+The test smell detector ended successfully
+DataFrame saved to C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\TestClasses_42949039_codex-cli_iterative-healing.csv
+
+Processing test_type: codex-cli, technique: regenerative-sync
+
+Dispatching Codex CLI for test_type: codex-cli, technique: regenerative-sync, focal class: SearchIndexUpdateHelper
+Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+Maven baseline module selection: -pl herd-code/herd-service
+Maven PIT module selection: -pl herd-code/herd-service
+PITest filters: -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper
+AST test method scope: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+AST focal method scope: modifyTagInSearchIndex
+PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
+openjdk version "1.8.0_482"
+OpenJDK Runtime Environment (Temurin)(build 1.8.0_482-b08)
+OpenJDK 64-Bit Server VM (Temurin)(build 25.482-b08, mixed mode)
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Precision Maven mode enabled for smoke execution.
+Maven smoke diagnostics log: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\maven_smoke_diagnostics.log
+Maven smoke baseline-test command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven smoke stage reached: test
+Maven smoke baseline-test finished in 70.31s with returncode=0
+[RegenerativeSync] Starting primary generation pass for SearchIndexUpdateHelperTest on focal SearchIndexUpdateHelper.
+Fetching prompts dictionary...
+Codex diagnostic log: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_cli_diagnostics.log
+Codex last message path: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_last_message.txt
+Codex executable resolved to: C:\Users\osart\.codex\.sandbox-bin\codex.exe
+Codex working root: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service
+Codex target files count: 2
+Codex prompt length: 6015 characters
+Codex timeout: 420 seconds
+Starting Codex subprocess...
+Codex subprocess finished in 303.79s with returncode=0.
+Codex diagnostic log available at: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_cli_diagnostics.log
+Codex execution summary:
+returncode=0
+
+diagnostic_log=C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_cli_diagnostics.log
+
+last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_last_message.txt
+
+stdout:
+entCaptor<Object> dtoCaptor = org.mockito.ArgumentCaptor.forClass(Object.class);
+    org.mockito.Mockito.when(localJsonHelper.objectToJson(dtoCaptor.capture())).thenReturn("");
+
+    org.finra.herd.model.jpa.TagEntity tagEntity = org.mockito.Mockito.mock(org.finra.herd.model.jpa.TagEntity.class);
+
+    localSearchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, "UPDATE");
+
+    org.mockito.Mockito.verify(tagEntity, org.mockito.Mockito.never()).getId();
+
+    Object dto = dtoCaptor.getValue();
+    org.junit.Assert.assertTrue(dto instanceof org.finra.herd.model.dto.SearchIndexUpdateDto);
+
+    boolean containsExpectedTagId = false;
+    for (java.lang.reflect.Field field : dto.getClass().getDeclaredFields())
+    {
+        if (java.util.List.class.isAssignableFrom(field.getType()))
+        {
+            field.setAccessible(true);
+            Object value = field.get(dto);
+            if (value instanceof java.util.List)
+            {
+                java.util.List<?> ids = (java.util.List<?>) value;
+                if (ids.size() == 1 && java.lang.Long.valueOf(999L).equals(ids.get(0)))
+                {
+                    containsExpectedTagId = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    org.junit.Assert.assertTrue(containsExpectedTagId);
+}
+tokens used
+19,193
+@Test
+public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled() throws Exception
+{
+    org.finra.herd.service.helper.SearchIndexUpdateHelper localSearchIndexUpdateHelper = new org.finra.herd.service.helper.SearchIndexUpdateHelper();
+    org.finra.herd.core.helper.JsonHelper localJsonHelper = org.mockito.Mockito.mock(org.finra.herd.core.helper.JsonHelper.class);
+    org.finra.herd.core.helper.ConfigurationHelper localConfigurationHelper =
+        org.mockito.Mockito.mock(org.finra.herd.core.helper.ConfigurationHelper.class, new org.mockito.stubbing.Answer<Object>()
+        {
+            @Override
+            public Object answer(org.mockito.invocation.InvocationOnMock invocation) throws Throwable
+            {
+                return "false";
+            }
+        });
+
+    java.lang.reflect.Field jsonHelperField =
+        org.finra.herd.service.helper.SearchIndexUpdateHelper.class.getDeclaredField("jsonHelper");
+    jsonHelperField.setAccessible(true);
+    jsonHelperField.set(localSearchIndexUpdateHelper, localJsonHelper);
+
+    java.lang.reflect.Field configurationHelperField =
+        org.finra.herd.service.helper.SearchIndexUpdateHelper.class.getDeclaredField("configurationHelper");
+    configurationHelperField.setAccessible(true);
+    configurationHelperField.set(localSearchIndexUpdateHelper, localConfigurationHelper);
+
+    org.mockito.ArgumentCaptor<Object> dtoCaptor = org.mockito.ArgumentCaptor.forClass(Object.class);
+    org.mockito.Mockito.when(localJsonHelper.objectToJson(dtoCaptor.capture())).thenReturn("");
+
+    org.finra.herd.model.jpa.TagEntity tagEntity = org.mockito.Mockito.mock(org.finra.herd.model.jpa.TagEntity.class);
+
+    localSearchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, "UPDATE");
+
+    org.mockito.Mockito.verify(tagEntity, org.mockito.Mockito.never()).getId();
+
+    Object dto = dtoCaptor.getValue();
+    org.junit.Assert.assertTrue(dto instanceof org.finra.herd.model.dto.SearchIndexUpdateDto);
+
+    boolean containsExpectedTagId = false;
+    for (java.lang.reflect.Field field : dto.getClass().getDeclaredFields())
+    {
+        if (java.util.List.class.isAssignableFrom(field.getType()))
+        {
+            field.setAccessible(true);
+            Object value = field.get(dto);
+            if (value instanceof java.util.List)
+            {
+                java.util.List<?> ids = (java.util.List<?>) value;
+                if (ids.size() == 1 && java.lang.Long.valueOf(999L).equals(ids.get(0)))
+                {
+                    containsExpectedTagId = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    org.junit.Assert.assertTrue(containsExpectedTagId);
+}
+
+last_message:
+@Test
+public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled() throws Exception
+{
+    org.finra.herd.service.helper.SearchIndexUpdateHelper localSearchIndexUpdateHelper = new org.finra.herd.service.helper.SearchIndexUpdateHelper();
+    org.finra.herd.core.helper.JsonHelper localJsonHelper = org.mockito.Mockito.mock(org.finra.herd.core.helper.JsonHelper.class);
+    org.finra.herd.core.helper.ConfigurationHelper localConfigurationHelper =
+        org.mockito.Mockito.mock(org.finra.herd.core.helper.ConfigurationHelper.class, new org.mockito.stubbing.Answer<Object>()
+        {
+            @Override
+            public Object answer(org.mockito.invocation.InvocationOnMock invocation) throws Throwable
+            {
+                return "false";
+            }
+        });
+
+    java.lang.reflect.Field jsonHelperField =
+        org.finra.herd.service.helper.SearchIndexUpdateHelper.class.getDeclaredField("jsonHelper");
+    jsonHelperField.setAccessible(true);
+    jsonHelperField.set(localSearchIndexUpdateHelper, localJsonHelper);
+
+    java.lang.reflect.Field configurationHelperField =
+        org.finra.herd.service.helper.SearchIndexUpdateHelper.class.getDeclaredField("configurationHelper");
+    configurationHelperField.setAccessible(true);
+    configurationHelperField.set(localSearchIndexUpdateHelper, localConfigurationHelper);
+
+    org.mockito.ArgumentCaptor<Object> dtoCaptor = org.mockito.ArgumentCaptor.forClass(Object.class);
+    org.mockito.Mockito.when(localJsonHelper.objectToJson(dtoCaptor.capture())).thenReturn("");
+
+    org.finra.herd.model.jpa.TagEntity tagEntity = org.mockito.Mockito.mock(org.finra.herd.model.jpa.TagEntity.class);
+
+    localSearchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, "UPDATE");
+
+    org.mockito.Mockito.verify(tagEntity, org.mockito.Mockito.never()).getId();
+
+    Object dto = dtoCaptor.getValue();
+    org.junit.Assert.assertTrue(dto instanceof org.finra.herd.model.dto.SearchIndexUpdateDto);
+
+    boolean containsExpectedTagId = false;
+    for (java.lang.reflect.Field field : dto.getClass().getDeclaredFields())
+    {
+        if (java.util.List.class.isAssignableFrom(field.getType()))
+        {
+            field.setAccessible(true);
+            Object value = field.get(dto);
+            if (value instanceof java.util.List)
+            {
+                java.util.List<?> ids = (java.util.List<?>) value;
+                if (ids.size() == 1 && java.lang.Long.valueOf(999L).equals(ids.get(0)))
+                {
+                    containsExpectedTagId = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    org.junit.Assert.assertTrue(containsExpectedTagId);
+}
+File generated at: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\response_codex-cli_regenerative-sync_SearchIndexUpdateHelperTest_regen_pass_0.java
+Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+Maven baseline module selection: -pl herd-code/herd-service
+Maven PIT module selection: -pl herd-code/herd-service
+PITest filters: -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper
+AST test method scope: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+AST focal method scope: modifyTagInSearchIndex
+PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
+openjdk version "1.8.0_482"
+OpenJDK Runtime Environment (Temurin)(build 1.8.0_482-b08)
+OpenJDK 64-Bit Server VM (Temurin)(build 25.482-b08, mixed mode)
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Precision Maven mode enabled for smoke execution.
+Maven smoke diagnostics log: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\maven_smoke_diagnostics.log
+Maven smoke baseline-test command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven smoke baseline-test finished in 34.16s with returncode=1
+[RegenerativeSync] Compile retry 1/1 for SearchIndexUpdateHelperTest.
+Fetching prompts dictionary...
+Codex diagnostic log: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_cli_diagnostics.log
+Codex last message path: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_last_message.txt
+Codex executable resolved to: C:\Users\osart\.codex\.sandbox-bin\codex.exe
+Codex working root: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service
+Codex target files count: 2
+Codex prompt length: 6015 characters
+Codex timeout: 420 seconds
+Starting Codex subprocess...
+Codex subprocess finished in 172.64s with returncode=4294967295.
+Codex diagnostic log available at: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_cli_diagnostics.log
+Codex execution summary:
+returncode=4294967295
+
+diagnostic_log=C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_cli_diagnostics.log
+
+last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\codex_last_message.txt
+
+stdout:
+ied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.service.helper;
+
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE;
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_TAG_UPDATE;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+import org.quartz.ObjectAlreadyExistsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import org.finra.herd.core.helper.ConfigurationHelper;
+import or
+...[truncated to 1200 chars for smoke mode]...
+</code>
+
+// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.service.helper;
+
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_
+...[truncated to 700 chars for smoke mode]...
+</code>
+
+// --- AST MAPPING & CONTEXT ---
+Test to Focal Method Mapping:
+<code>
+{
+  "testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled": [
+    "modifyTagInSearchIndex"
+  ]
+}
+</code>
+Relevant Focal Method Implementations:
+<code>
+Focal method modifyTagInSearchIndex:
+public void modifyTagInSearchIndex(TagEntity tagEntity, String modificationType)
+    {
+        List<Long> tagIds = new ArrayList<>();
+        tagIds.add(999L);
+        processMessage(jsonHelper.objectToJson(new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, modificationType)));
+    }
+
+    /**
+     * Modify a list of tags
+     *
+     * @param tagEntityList the tag entities to modify
+     * @param modificationType the type of modification
+     */
+</code>
+
+// --- PROJECT ENVIRONMENT ---
+Project Structure:
+<code>
+Smoke mode: full project structure omitted for speed. Infer imports and collaborators from the provided focal/test files and direct file inspection.
+</code>
+Project Dependencies:
+<code>
+Smoke mode: full dependency list omitted for speed. Use existing imports, test base classes, and local file inspection as the source of truth.
+</code>
+
+Use the provided focal class and AST mapping as the source of truth.
+
+Update the mapped @Test method `testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled` first.
+
+Preserve all existing unmapped @Test methods exactly as they are.
+
+You may add new @Test methods only if the focal change requires extra coverage.
+
+Do not rewrite package/class declarations, imports, fields, or helper methods.
+
+AST target mapping: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -> modifyTagInSearchIndex.
+
+Keep or add this package declaration: package org.finra.herd.service.helper;
+
+Smoke mode: prefer the provided focal and test files, avoid exploring unrelated modules, and make the minimal direct edit needed to restore compilation or coverage.
+
+Return method blocks only: the mapped @Test method block is required, and optional brand-new @Test method blocks may follow.
+
+Do not return a full class, package declaration, imports, fields, or helper methods.
+
+Do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java
+- src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java
+Return only the final Java source code.
+mcp startup: no servers
+[RegenerativeSync] Generation failed on compile retry 1 for SearchIndexUpdateHelperTest.
+[RegenerativeSync] Compile retry exhausted for SearchIndexUpdateHelperTest.
+Package command failed for project: 42949039, test type: codex-cli, technique: regenerative-sync
+
+The test smell detector ended successfully
+--//loading maven execution..//
+Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+Maven baseline module selection: -pl herd-code/herd-service
+Maven PIT module selection: -pl herd-code/herd-service
+PITest filters: -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper
+AST test method scope: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+AST focal method scope: modifyTagInSearchIndex
+PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
+openjdk version "1.8.0_482"
+OpenJDK Runtime Environment (Temurin)(build 1.8.0_482-b08)
+OpenJDK 64-Bit Server VM (Temurin)(build 25.482-b08, mixed mode)
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Precision Maven mode enabled for smoke execution.
+Maven smoke diagnostics log: C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\maven_smoke_diagnostics.log
+Maven smoke baseline-test command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report

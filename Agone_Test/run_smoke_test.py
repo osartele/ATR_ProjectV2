@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from path_context import PathContext, get_worker_id, remove_path_force
 
 
 def _configure_java_8():
@@ -74,16 +75,19 @@ def main():
     script_directory = Path(__file__).resolve().parent
     workspace_root = script_directory.parent
     target_json = workspace_root / "Classes2Test" / "42949039_429.json"
-    smoke_log_path = workspace_root / "smoke_current.log"
+    worker_id = get_worker_id()
+    path_context = PathContext(workspace_root=workspace_root, worker_id=worker_id)
+    path_context.ensure_worker_directories()
 
-    try:
-        subprocess.run(
-            ["taskkill", "/F", "/IM", "java.exe", "/T"],
-            capture_output=True,
-            check=False,
-        )
-    except Exception:
-        pass
+    clean_workspace = os.environ.get("AGONE_CLEAN_WORKSPACE", "0").strip().lower() in {"1", "true", "yes", "on"}
+    if clean_workspace:
+        for candidate in (Path(path_context.get_compiled_root()), Path(path_context.get_output_path())):
+            if candidate.exists() or candidate.is_symlink():
+                if not remove_path_force(candidate):
+                    raise RuntimeError(f"Unable to clean worker workspace path: {candidate}")
+        path_context.ensure_worker_directories()
+
+    smoke_log_path = Path(path_context.get_log_path("smoke_current.log"))
 
     _configure_java_8()
     _configure_maven(workspace_root)
@@ -92,11 +96,14 @@ def main():
     env["AGONE_SMOKE_TEST"] = "1"
     env.setdefault("AGONE_SMOKE_TARGET_JSON", str(target_json))
     env.setdefault("PYTHONUNBUFFERED", "1")
+    env.setdefault("AGONE_WORKER_ID", worker_id)
 
     command = [sys.executable, str(script_directory / "agone_test.py")]
     print(f"Launching smoke test with target JSON: {env['AGONE_SMOKE_TARGET_JSON']}")
+    print(f"Using worker ID: {worker_id}")
     print(f"Writing smoke log to: {smoke_log_path}")
     print("Expected sequence: baseline -> mutation -> failure -> Codex repair -> final CSV write")
+    smoke_log_path.parent.mkdir(parents=True, exist_ok=True)
     with open(smoke_log_path, "w", encoding="utf-8", errors="replace") as smoke_log:
         completed_process = subprocess.run(
             command,

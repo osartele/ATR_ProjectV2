@@ -1,0 +1,803 @@
+[2026-03-15 23:25:35] Smoke execution started. baseline_module_args=['-pl', 'herd-code/herd-service'] pit_module_args=['-pl', 'herd-code/herd-service'] test_classes=-Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled target_tests=['org.finra.herd.service.helper.SearchIndexUpdateHelperTest'] target_classes=['org.finra.herd.service.helper.SearchIndexUpdateHelper'] ast_test_method=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled ast_focal_method=modifyTagInSearchIndex excluded_mutation_methods=['getSqsQueueName', 'modifyBusinessObjectDefinitionInSearchIndex', 'modifyBusinessObjectDefinitionsInSearchIndex', 'modifyTagsInSearchIndex', 'processMessage'] timeout=900s
+[2026-03-15 23:25:35] Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+[2026-03-15 23:25:35] Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[2026-03-15 23:25:35] Starting smoke baseline-test command=mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report cwd=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039
+
+===== MAVEN BASELINE-TEST START =====
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< org.finra.herd:herd-service >---------------------
+[INFO] Building herd service 0.176.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (default-cli) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (jacoco-initialize) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- build-helper:3.0.0:add-source (default) @ herd-service ---
+[INFO] Source directory: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\generated-sources added.
+[INFO] 
+[INFO] --- resources:3.0.2:resources (default-resources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\src\main\resources
+[INFO] 
+[INFO] --- flatten:1.1.0:flatten (flatten) @ herd-service ---
+[INFO] Generating flattened POM of project org.finra.herd:herd-service:jar:0.176.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.7.0:compile (default-compile) @ herd-service ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 359 source files to C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\classes
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/BusinessObjectDataDdlPartitionsHelper.java: Some input files use unchecked or unsafe operations.
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/BusinessObjectDataDdlPartitionsHelper.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- resources:3.0.2:testResources (default-testResources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 17 resources
+[INFO] 
+[INFO] --- compiler:3.7.0:testCompile (default-testCompile) @ herd-service ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 285 source files to C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\test-classes
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/BusinessObjectDataServiceTestHelper.java: Some input files use unchecked or unsafe operations.
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/BusinessObjectDataServiceTestHelper.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- surefire:2.22.2:test (default-test) @ herd-service ---
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running org.finra.herd.service.helper.SearchIndexUpdateHelperTest
+Using Log4J configuration location "classpath:herd-log4j-test.xml".
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 42.779 s - in org.finra.herd.service.helper.SearchIndexUpdateHelperTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jacoco:0.8.7:report (jacoco-site) @ herd-service ---
+[INFO] Loading execution data file C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\jacoco.exec
+[INFO] Analyzed bundle 'herd service' with 1 classes
+[INFO] 
+[INFO] --- jacoco:0.8.7:report (default-cli) @ herd-service ---
+[INFO] Loading execution data file C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\jacoco.exec
+[INFO] Analyzed bundle 'herd service' with 1 classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:29 min
+[INFO] Finished at: 2026-03-15T23:27:10-04:00
+[INFO] ------------------------------------------------------------------------
+
+===== MAVEN BASELINE-TEST END returncode=0 =====
+[2026-03-15 23:27:11] Finished smoke baseline-test in 95.83s with returncode=0
+[2026-03-15 23:27:11] Smoke execution started. baseline_module_args=['-pl', 'herd-code/herd-service'] pit_module_args=['-pl', 'herd-code/herd-service'] test_classes=-Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled target_tests=['org.finra.herd.service.helper.SearchIndexUpdateHelperTest'] target_classes=['org.finra.herd.service.helper.SearchIndexUpdateHelper'] ast_test_method=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled ast_focal_method=modifyTagInSearchIndex excluded_mutation_methods=['getSqsQueueName', 'modifyBusinessObjectDefinitionInSearchIndex', 'modifyBusinessObjectDefinitionsInSearchIndex', 'modifyTagsInSearchIndex', 'processMessage'] timeout=900s
+[2026-03-15 23:27:11] Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+[2026-03-15 23:27:11] Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[2026-03-15 23:27:11] Starting smoke pit-targeted command=mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage cwd=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039
+
+===== MAVEN PIT-TARGETED START =====
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< org.finra.herd:herd-service >---------------------
+[INFO] Building herd service 0.176.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- pitest:1.16.0:mutationCoverage (default-cli) @ herd-service ---
+[INFO] Root dir is : C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039
+[INFO] Found plugin : Default csv report plugin
+[INFO] Found plugin : Default xml report plugin
+[INFO] Found plugin : Default html report plugin
+[INFO] Found plugin : Static initializer code detector plugin
+[INFO] Found plugin : Excluded annotations plugin
+[INFO] Found plugin : Try with resources filter
+[INFO] Found plugin : Inlined finally block filter plugin
+[INFO] Found plugin : Implicit null check filter
+[INFO] Found plugin : Method reference null check filter
+[INFO] Found plugin : For each loop filter
+[INFO] Found plugin : Enum junk filter
+[INFO] Found plugin : Record junk mutation filter
+[INFO] Found plugin : String switch filter
+[INFO] Found plugin : Assertions filter
+[INFO] Found plugin : Enum switch filter
+[INFO] Found plugin : Logging calls filter
+[INFO] Found plugin : Infinite for loop filter
+[INFO] Found plugin : Long running iterator loop filter
+[INFO] Found plugin : For loop counter filter
+[INFO] Found plugin : Kotlin junk mutations filter
+[INFO] Found plugin : Groovy junk mutations filter
+[INFO] Found plugin : Max mutations per class limit
+[INFO] Found plugin : Equals shortcut equivalent mutant filter
+[INFO] Found plugin : Trivial return vals equivalence filter
+[INFO] Found plugin : Filters mutants with line number <= 1
+[INFO] Found plugin : Division by one equivalent mutant filter
+[INFO] Found plugin : Lombok junk mutations filter
+[INFO] Found plugin : Filter mutations to defensive wrappers such as unmodifiableCollection on return or field write
+[INFO] Found plugin : Mutant export plugin
+[INFO] Found plugin : Auto add java.awt.headless=true to keep keyboard focus on Mac OS
+[INFO] Found plugin : Auto set number of threads based on machine
+[INFO] Found plugin : Automatically add -ea to launch args to enable assertions
+[INFO] Found plugin : Default build verifier
+[INFO] Found plugin : Detect missing JUnit5 plugin
+[INFO] Found plugin : Detect missing TestNG plugin
+[INFO] Found plugin : Detect missing kotlin plugin
+[INFO] Found plugin : Detect missing spring plugin
+[INFO] Found plugin : Default coverage exporter
+[INFO] Found shared classpath plugin : Default mutation engine
+[INFO] Found shared classpath plugin : JUnit plugin
+[INFO] Available mutators : EXPERIMENTAL_ARGUMENT_PROPAGATION,FALSE_RETURNS,TRUE_RETURNS,CONDITIONALS_BOUNDARY,CONSTRUCTOR_CALLS,EMPTY_RETURNS,INCREMENTS,INLINE_CONSTS,INVERT_NEGS,MATH,NEGATE_CONDITIONALS,NON_VOID_METHOD_CALLS,NULL_RETURNS,PRIMITIVE_RETURNS,REMOVE_CONDITIONALS_EQUAL_IF,REMOVE_CONDITIONALS_EQUAL_ELSE,REMOVE_CONDITIONALS_ORDER_IF,REMOVE_CONDITIONALS_ORDER_ELSE,VOID_METHOD_CALLS,EXPERIMENTAL_BIG_DECIMAL,EXPERIMENTAL_BIG_INTEGER,EXPERIMENTAL_MEMBER_VARIABLE,EXPERIMENTAL_NAKED_RECEIVER,REMOVE_INCREMENTS,EXPERIMENTAL_SWITCH,EXPERIMENTAL_BIG_DECIMAL,EXPERIMENTAL_BIG_INTEGER
+[INFO] Adding org.pitest:pitest to SUT classpath
+[INFO] Mutating from C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\classes
+11:27:41 PM PIT >> INFO : Verbose logging is disabled. If you encounter a problem, please enable it before reporting an issue.
+11:27:41 PM PIT >> INFO : Created 1 mutation test units in pre scan
+11:27:44 PM PIT >> INFO : Sending 1 test classes to minion
+11:27:44 PM PIT >> INFO : Sent tests to minion
+/11:28:39 PM PIT >> INFO : Calculated coverage in 57 seconds.
+11:28:40 PM PIT >> INFO : Created 1 mutation test units
+/11:29:35 PM PIT >> INFO : Completed in 114 seconds
+================================================================================
+- Mutators
+================================================================================
+> org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator
+>> Generated 1 Killed 1 (100%)
+> KILLED 1 SURVIVED 0 TIMED_OUT 0 NON_VIABLE 0 
+> MEMORY_ERROR 0 NOT_STARTED 0 STARTED 0 RUN_ERROR 0 
+> NO_COVERAGE 0 
+--------------------------------------------------------------------------------
+================================================================================
+- Timings
+================================================================================
+> pre-scan for mutations : < 1 second
+> scan classpath : < 1 second
+> coverage and dependency analysis : 57 seconds
+> build mutation tests : < 1 second
+> run mutation analysis : 55 seconds
+--------------------------------------------------------------------------------
+> Total  : 1 minutes and 54 seconds
+--------------------------------------------------------------------------------
+================================================================================
+- Statistics
+================================================================================
+>> Line Coverage (for mutated classes only): 11/41 (27%)
+>> Generated 1 mutations Killed 1 (100%)
+>> Mutations with no coverage 0. Test strength 100%
+>> Ran 1 tests (1 tests per mutation)
+Enhanced functionality available at https://www.arcmutate.com/
+
+Build messages:- 
+* Project uses Spring, but the Arcmutate Spring plugin is not present. (https://docs.arcmutate.com/docs/spring.html)
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  02:18 min
+[INFO] Finished at: 2026-03-15T23:29:35-04:00
+[INFO] ------------------------------------------------------------------------
+
+===== MAVEN PIT-TARGETED END returncode=0 =====
+[2026-03-15 23:29:36] Finished smoke pit-targeted in 144.45s with returncode=0
+[2026-03-15 23:29:39] Smoke execution started. baseline_module_args=['-pl', 'herd-code/herd-service'] pit_module_args=['-pl', 'herd-code/herd-service'] test_classes=-Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled target_tests=['org.finra.herd.service.helper.SearchIndexUpdateHelperTest'] target_classes=['org.finra.herd.service.helper.SearchIndexUpdateHelper'] ast_test_method=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled ast_focal_method=modifyTagInSearchIndex excluded_mutation_methods=['getSqsQueueName', 'modifyBusinessObjectDefinitionInSearchIndex', 'modifyBusinessObjectDefinitionsInSearchIndex', 'modifyTagsInSearchIndex', 'processMessage'] timeout=900s
+[2026-03-15 23:29:39] Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+[2026-03-15 23:29:39] Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[2026-03-15 23:29:39] Starting smoke baseline-test command=mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report cwd=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039
+
+===== MAVEN BASELINE-TEST START =====
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< org.finra.herd:herd-service >---------------------
+[INFO] Building herd service 0.176.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (default-cli) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (jacoco-initialize) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- build-helper:3.0.0:add-source (default) @ herd-service ---
+[INFO] Source directory: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\generated-sources added.
+[INFO] 
+[INFO] --- resources:3.0.2:resources (default-resources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\src\main\resources
+[INFO] 
+[INFO] --- flatten:1.1.0:flatten (flatten) @ herd-service ---
+[INFO] Generating flattened POM of project org.finra.herd:herd-service:jar:0.176.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.7.0:compile (default-compile) @ herd-service ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 359 source files to C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\classes
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/BusinessObjectDataDdlPartitionsHelper.java: Some input files use unchecked or unsafe operations.
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/BusinessObjectDataDdlPartitionsHelper.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- resources:3.0.2:testResources (default-testResources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 17 resources
+[INFO] 
+[INFO] --- compiler:3.7.0:testCompile (default-testCompile) @ herd-service ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- surefire:2.22.2:test (default-test) @ herd-service ---
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running org.finra.herd.service.helper.SearchIndexUpdateHelperTest
+Using Log4J configuration location "classpath:herd-log4j-test.xml".
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 36.486 s - in org.finra.herd.service.helper.SearchIndexUpdateHelperTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jacoco:0.8.7:report (jacoco-site) @ herd-service ---
+[INFO] Loading execution data file C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\jacoco.exec
+[INFO] Analyzed bundle 'herd service' with 1 classes
+[INFO] 
+[INFO] --- jacoco:0.8.7:report (default-cli) @ herd-service ---
+[INFO] Loading execution data file C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\jacoco.exec
+[INFO] Analyzed bundle 'herd service' with 1 classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:35 min
+[INFO] Finished at: 2026-03-15T23:31:19-04:00
+[INFO] ------------------------------------------------------------------------
+
+===== MAVEN BASELINE-TEST END returncode=0 =====
+[2026-03-15 23:31:19] Finished smoke baseline-test in 100.15s with returncode=0
+[2026-03-15 23:31:19] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/worker_a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java; starting prioritized retries (limit=2).
+[2026-03-15 23:31:19] [MutationLiveGate] Retry 1 applied mutation type=signature class=MATH_PRIMITIVE_RETURNS.
+[2026-03-15 23:31:19] Smoke execution started. baseline_module_args=['-pl', 'herd-code/herd-service'] pit_module_args=['-pl', 'herd-code/herd-service'] test_classes=-Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled target_tests=['org.finra.herd.service.helper.SearchIndexUpdateHelperTest'] target_classes=['org.finra.herd.service.helper.SearchIndexUpdateHelper'] ast_test_method=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled ast_focal_method=modifyTagInSearchIndex excluded_mutation_methods=['getSqsQueueName', 'modifyBusinessObjectDefinitionInSearchIndex', 'modifyBusinessObjectDefinitionsInSearchIndex', 'modifyTagsInSearchIndex', 'processMessage'] timeout=900s
+[2026-03-15 23:31:19] Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+[2026-03-15 23:31:19] Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[2026-03-15 23:31:19] Starting smoke baseline-test command=mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report cwd=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039
+
+===== MAVEN BASELINE-TEST START =====
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< org.finra.herd:herd-service >---------------------
+[INFO] Building herd service 0.176.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (default-cli) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (jacoco-initialize) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- build-helper:3.0.0:add-source (default) @ herd-service ---
+[INFO] Source directory: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\generated-sources added.
+[INFO] 
+[INFO] --- resources:3.0.2:resources (default-resources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\src\main\resources
+[INFO] 
+[INFO] --- flatten:1.1.0:flatten (flatten) @ herd-service ---
+[INFO] Generating flattened POM of project org.finra.herd:herd-service:jar:0.176.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.7.0:compile (default-compile) @ herd-service ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 359 source files to C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\classes
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/BusinessObjectDataDdlPartitionsHelper.java: Some input files use unchecked or unsafe operations.
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/BusinessObjectDataDdlPartitionsHelper.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- resources:3.0.2:testResources (default-testResources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 17 resources
+[INFO] 
+[INFO] --- compiler:3.7.0:testCompile (default-testCompile) @ herd-service ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- surefire:2.22.2:test (default-test) @ herd-service ---
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running org.finra.herd.service.helper.SearchIndexUpdateHelperTest
+Using Log4J configuration location "classpath:herd-log4j-test.xml".
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 30.716 s <<< FAILURE! - in org.finra.herd.service.helper.SearchIndexUpdateHelperTest
+[ERROR] testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled(org.finra.herd.service.helper.SearchIndexUpdateHelperTest)  Time elapsed: 0.875 s  <<< FAILURE!
+org.mockito.exceptions.verification.junit.ArgumentsAreDifferent: 
+
+Argument(s) are different! Wanted:
+jsonHelper.objectToJson(
+    SearchIndexUpdateDto{businessObjectDefinitionIds=null, messageType='TAG', modificationType='UPDATE', tagIds=[1]}
+);
+-> at org.finra.herd.dao.helper.JsonHelper.objectToJson(JsonHelper.java:71)
+Actual invocation has different arguments:
+jsonHelper.objectToJson(
+    SearchIndexUpdateDto{businessObjectDefinitionIds=null, messageType='TAG', modificationType='UPDATE', tagIds=[999]}
+);
+-> at org.finra.herd.service.helper.SearchIndexUpdateHelper.modifyTagInSearchIndex(SearchIndexUpdateHelper.java:100)
+
+	at org.finra.herd.service.helper.SearchIndexUpdateHelperTest.testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled(SearchIndexUpdateHelperTest.java:393)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   SearchIndexUpdateHelperTest.testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled:393 
+Argument(s) are different! Wanted:
+jsonHelper.objectToJson(
+    SearchIndexUpdateDto{businessObjectDefinitionIds=null, messageType='TAG', modificationType='UPDATE', tagIds=[1]}
+);
+-> at org.finra.herd.dao.helper.JsonHelper.objectToJson(JsonHelper.java:71)
+Actual invocation has different arguments:
+jsonHelper.objectToJson(
+    SearchIndexUpdateDto{businessObjectDefinitionIds=null, messageType='TAG', modificationType='UPDATE', tagIds=[999]}
+);
+-> at org.finra.herd.service.helper.SearchIndexUpdateHelper.modifyTagInSearchIndex(SearchIndexUpdateHelper.java:100)
+
+[INFO] 
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[ERROR] There are test failures.
+
+Please refer to C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\surefire-reports for the individual test results.
+Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[INFO] 
+[INFO] --- jacoco:0.8.7:report (jacoco-site) @ herd-service ---
+[INFO] Loading execution data file C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\jacoco.exec
+[INFO] Analyzed bundle 'herd service' with 1 classes
+[INFO] 
+[INFO] --- jacoco:0.8.7:report (default-cli) @ herd-service ---
+[INFO] Loading execution data file C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\jacoco.exec
+[INFO] Analyzed bundle 'herd service' with 1 classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:03 min
+[INFO] Finished at: 2026-03-15T23:32:25-04:00
+[INFO] ------------------------------------------------------------------------
+
+===== MAVEN BASELINE-TEST END returncode=0 =====
+[2026-03-15 23:32:26] Finished smoke baseline-test in 66.33s with returncode=0
+[2026-03-15 23:32:26] Detected explicit Surefire failure markers despite successful Maven exit code.
+[2026-03-15 23:32:26] Baseline failure log captured at C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\latest_failure_log.txt
+[2026-03-15 23:32:26] [MutationLiveGate] Retry 1 activated a live mutation.
+[2026-03-15 23:32:26] [IterativeHealing] Baseline failed for SearchIndexUpdateHelperTest; starting retry loop (max_retries=3).
+[2026-03-15 23:32:26] [IterativeHealing] Retry 1/3 for SearchIndexUpdateHelperTest on focal SearchIndexUpdateHelper.
+[2026-03-15 23:32:51] Smoke execution started. baseline_module_args=['-pl', 'herd-code/herd-service'] pit_module_args=['-pl', 'herd-code/herd-service'] test_classes=-Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled target_tests=['org.finra.herd.service.helper.SearchIndexUpdateHelperTest'] target_classes=['org.finra.herd.service.helper.SearchIndexUpdateHelper'] ast_test_method=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled ast_focal_method=modifyTagInSearchIndex excluded_mutation_methods=['getSqsQueueName', 'modifyBusinessObjectDefinitionInSearchIndex', 'modifyBusinessObjectDefinitionsInSearchIndex', 'modifyTagsInSearchIndex', 'processMessage'] timeout=900s
+[2026-03-15 23:32:51] Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+[2026-03-15 23:32:51] Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[2026-03-15 23:32:51] Starting smoke baseline-test command=mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report cwd=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039
+
+===== MAVEN BASELINE-TEST START =====
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< org.finra.herd:herd-service >---------------------
+[INFO] Building herd service 0.176.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (default-cli) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (jacoco-initialize) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- build-helper:3.0.0:add-source (default) @ herd-service ---
+[INFO] Source directory: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\generated-sources added.
+[INFO] 
+[INFO] --- resources:3.0.2:resources (default-resources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\src\main\resources
+[INFO] 
+[INFO] --- flatten:1.1.0:flatten (flatten) @ herd-service ---
+[INFO] Generating flattened POM of project org.finra.herd:herd-service:jar:0.176.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.7.0:compile (default-compile) @ herd-service ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.0.2:testResources (default-testResources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 17 resources
+[INFO] 
+[INFO] --- compiler:3.7.0:testCompile (default-testCompile) @ herd-service ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 285 source files to C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\test-classes
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/BusinessObjectDataServiceTestHelper.java: Some input files use unchecked or unsafe operations.
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/BusinessObjectDataServiceTestHelper.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- surefire:2.22.2:test (default-test) @ herd-service ---
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running org.finra.herd.service.helper.SearchIndexUpdateHelperTest
+Using Log4J configuration location "classpath:herd-log4j-test.xml".
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 30.454 s - in org.finra.herd.service.helper.SearchIndexUpdateHelperTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jacoco:0.8.7:report (jacoco-site) @ herd-service ---
+[INFO] Loading execution data file C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\jacoco.exec
+[INFO] Analyzed bundle 'herd service' with 1 classes
+[INFO] 
+[INFO] --- jacoco:0.8.7:report (default-cli) @ herd-service ---
+[INFO] Loading execution data file C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\jacoco.exec
+[INFO] Analyzed bundle 'herd service' with 1 classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:07 min
+[INFO] Finished at: 2026-03-15T23:34:01-04:00
+[INFO] ------------------------------------------------------------------------
+
+===== MAVEN BASELINE-TEST END returncode=0 =====
+[2026-03-15 23:34:02] Finished smoke baseline-test in 71.34s with returncode=0
+[2026-03-15 23:34:02] [IterativeHealing] Baseline passed on retry 1 for SearchIndexUpdateHelperTest; running targeted PIT.
+[2026-03-15 23:34:02] Smoke execution started. baseline_module_args=['-pl', 'herd-code/herd-service'] pit_module_args=['-pl', 'herd-code/herd-service'] test_classes=-Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled target_tests=['org.finra.herd.service.helper.SearchIndexUpdateHelperTest'] target_classes=['org.finra.herd.service.helper.SearchIndexUpdateHelper'] ast_test_method=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled ast_focal_method=modifyTagInSearchIndex excluded_mutation_methods=['getSqsQueueName', 'modifyBusinessObjectDefinitionInSearchIndex', 'modifyBusinessObjectDefinitionsInSearchIndex', 'modifyTagsInSearchIndex', 'processMessage'] timeout=900s
+[2026-03-15 23:34:02] Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+[2026-03-15 23:34:02] Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[2026-03-15 23:34:02] Starting smoke pit-targeted command=mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage cwd=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039
+
+===== MAVEN PIT-TARGETED START =====
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< org.finra.herd:herd-service >---------------------
+[INFO] Building herd service 0.176.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- pitest:1.16.0:mutationCoverage (default-cli) @ herd-service ---
+[INFO] Root dir is : C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039
+[INFO] Found plugin : Default csv report plugin
+[INFO] Found plugin : Default xml report plugin
+[INFO] Found plugin : Default html report plugin
+[INFO] Found plugin : Static initializer code detector plugin
+[INFO] Found plugin : Excluded annotations plugin
+[INFO] Found plugin : Try with resources filter
+[INFO] Found plugin : Inlined finally block filter plugin
+[INFO] Found plugin : Implicit null check filter
+[INFO] Found plugin : Method reference null check filter
+[INFO] Found plugin : For each loop filter
+[INFO] Found plugin : Enum junk filter
+[INFO] Found plugin : Record junk mutation filter
+[INFO] Found plugin : String switch filter
+[INFO] Found plugin : Assertions filter
+[INFO] Found plugin : Enum switch filter
+[INFO] Found plugin : Logging calls filter
+[INFO] Found plugin : Infinite for loop filter
+[INFO] Found plugin : Long running iterator loop filter
+[INFO] Found plugin : For loop counter filter
+[INFO] Found plugin : Kotlin junk mutations filter
+[INFO] Found plugin : Groovy junk mutations filter
+[INFO] Found plugin : Max mutations per class limit
+[INFO] Found plugin : Equals shortcut equivalent mutant filter
+[INFO] Found plugin : Trivial return vals equivalence filter
+[INFO] Found plugin : Filters mutants with line number <= 1
+[INFO] Found plugin : Division by one equivalent mutant filter
+[INFO] Found plugin : Lombok junk mutations filter
+[INFO] Found plugin : Filter mutations to defensive wrappers such as unmodifiableCollection on return or field write
+[INFO] Found plugin : Mutant export plugin
+[INFO] Found plugin : Auto add java.awt.headless=true to keep keyboard focus on Mac OS
+[INFO] Found plugin : Auto set number of threads based on machine
+[INFO] Found plugin : Automatically add -ea to launch args to enable assertions
+[INFO] Found plugin : Default build verifier
+[INFO] Found plugin : Detect missing JUnit5 plugin
+[INFO] Found plugin : Detect missing TestNG plugin
+[INFO] Found plugin : Detect missing kotlin plugin
+[INFO] Found plugin : Detect missing spring plugin
+[INFO] Found plugin : Default coverage exporter
+[INFO] Found shared classpath plugin : Default mutation engine
+[INFO] Found shared classpath plugin : JUnit plugin
+[INFO] Available mutators : EXPERIMENTAL_ARGUMENT_PROPAGATION,FALSE_RETURNS,TRUE_RETURNS,CONDITIONALS_BOUNDARY,CONSTRUCTOR_CALLS,EMPTY_RETURNS,INCREMENTS,INLINE_CONSTS,INVERT_NEGS,MATH,NEGATE_CONDITIONALS,NON_VOID_METHOD_CALLS,NULL_RETURNS,PRIMITIVE_RETURNS,REMOVE_CONDITIONALS_EQUAL_IF,REMOVE_CONDITIONALS_EQUAL_ELSE,REMOVE_CONDITIONALS_ORDER_IF,REMOVE_CONDITIONALS_ORDER_ELSE,VOID_METHOD_CALLS,EXPERIMENTAL_BIG_DECIMAL,EXPERIMENTAL_BIG_INTEGER,EXPERIMENTAL_MEMBER_VARIABLE,EXPERIMENTAL_NAKED_RECEIVER,REMOVE_INCREMENTS,EXPERIMENTAL_SWITCH,EXPERIMENTAL_BIG_DECIMAL,EXPERIMENTAL_BIG_INTEGER
+[INFO] Adding org.pitest:pitest to SUT classpath
+[INFO] Mutating from C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\classes
+11:34:18 PM PIT >> INFO : Verbose logging is disabled. If you encounter a problem, please enable it before reporting an issue.
+11:34:18 PM PIT >> INFO : Created 1 mutation test units in pre scan
+11:34:20 PM PIT >> INFO : Sending 1 test classes to minion
+11:34:20 PM PIT >> INFO : Sent tests to minion
+/11:34:49 PM PIT >> INFO : Calculated coverage in 31 seconds.
+11:34:50 PM PIT >> INFO : Created 1 mutation test units
+/11:35:21 PM PIT >> INFO : Completed in 62 seconds
+================================================================================
+- Mutators
+================================================================================
+> org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator
+>> Generated 1 Killed 1 (100%)
+> KILLED 1 SURVIVED 0 TIMED_OUT 0 NON_VIABLE 0 
+> MEMORY_ERROR 0 NOT_STARTED 0 STARTED 0 RUN_ERROR 0 
+> NO_COVERAGE 0 
+--------------------------------------------------------------------------------
+================================================================================
+- Timings
+================================================================================
+> pre-scan for mutations : < 1 second
+> scan classpath : < 1 second
+> coverage and dependency analysis : 30 seconds
+> build mutation tests : < 1 second
+> run mutation analysis : 31 seconds
+--------------------------------------------------------------------------------
+> Total  : 1 minutes and 2 seconds
+--------------------------------------------------------------------------------
+================================================================================
+- Statistics
+================================================================================
+>> Line Coverage (for mutated classes only): 11/41 (27%)
+>> Generated 1 mutations Killed 1 (100%)
+>> Mutations with no coverage 0. Test strength 100%
+>> Ran 1 tests (1 tests per mutation)
+Enhanced functionality available at https://www.arcmutate.com/
+
+Build messages:- 
+* Project uses Spring, but the Arcmutate Spring plugin is not present. (https://docs.arcmutate.com/docs/spring.html)
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:15 min
+[INFO] Finished at: 2026-03-15T23:35:21-04:00
+[INFO] ------------------------------------------------------------------------
+
+===== MAVEN PIT-TARGETED END returncode=0 =====
+[2026-03-15 23:35:21] Finished smoke pit-targeted in 79.24s with returncode=0
+[2026-03-15 23:35:23] Smoke execution started. baseline_module_args=['-pl', 'herd-code/herd-service'] pit_module_args=['-pl', 'herd-code/herd-service'] test_classes=-Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled target_tests=['org.finra.herd.service.helper.SearchIndexUpdateHelperTest'] target_classes=['org.finra.herd.service.helper.SearchIndexUpdateHelper'] ast_test_method=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled ast_focal_method=modifyTagInSearchIndex excluded_mutation_methods=['getSqsQueueName', 'modifyBusinessObjectDefinitionInSearchIndex', 'modifyBusinessObjectDefinitionsInSearchIndex', 'modifyTagsInSearchIndex', 'processMessage'] timeout=900s
+[2026-03-15 23:35:23] Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+[2026-03-15 23:35:23] Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[2026-03-15 23:35:23] Starting smoke baseline-test command=mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report cwd=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039
+
+===== MAVEN BASELINE-TEST START =====
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< org.finra.herd:herd-service >---------------------
+[INFO] Building herd service 0.176.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (default-cli) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (jacoco-initialize) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- build-helper:3.0.0:add-source (default) @ herd-service ---
+[INFO] Source directory: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\generated-sources added.
+[INFO] 
+[INFO] --- resources:3.0.2:resources (default-resources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\src\main\resources
+[INFO] 
+[INFO] --- flatten:1.1.0:flatten (flatten) @ herd-service ---
+[INFO] Generating flattened POM of project org.finra.herd:herd-service:jar:0.176.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.7.0:compile (default-compile) @ herd-service ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.0.2:testResources (default-testResources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 17 resources
+[INFO] 
+[INFO] --- compiler:3.7.0:testCompile (default-testCompile) @ herd-service ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 285 source files to C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\test-classes
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/BusinessObjectDataServiceTestHelper.java: Some input files use unchecked or unsafe operations.
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/BusinessObjectDataServiceTestHelper.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- surefire:2.22.2:test (default-test) @ herd-service ---
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running org.finra.herd.service.helper.SearchIndexUpdateHelperTest
+Using Log4J configuration location "classpath:herd-log4j-test.xml".
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 29.698 s <<< FAILURE! - in org.finra.herd.service.helper.SearchIndexUpdateHelperTest
+[ERROR] testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled(org.finra.herd.service.helper.SearchIndexUpdateHelperTest)  Time elapsed: 0.89 s  <<< FAILURE!
+org.mockito.exceptions.verification.junit.ArgumentsAreDifferent: 
+
+Argument(s) are different! Wanted:
+jsonHelper.objectToJson(
+    SearchIndexUpdateDto{businessObjectDefinitionIds=null, messageType='TAG', modificationType='UPDATE', tagIds=[1]}
+);
+-> at org.finra.herd.dao.helper.JsonHelper.objectToJson(JsonHelper.java:71)
+Actual invocation has different arguments:
+jsonHelper.objectToJson(
+    SearchIndexUpdateDto{businessObjectDefinitionIds=null, messageType='TAG', modificationType='UPDATE', tagIds=[999]}
+);
+-> at org.finra.herd.service.helper.SearchIndexUpdateHelper.modifyTagInSearchIndex(SearchIndexUpdateHelper.java:100)
+
+	at org.finra.herd.service.helper.SearchIndexUpdateHelperTest.testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled(SearchIndexUpdateHelperTest.java:393)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   SearchIndexUpdateHelperTest.testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled:393 
+Argument(s) are different! Wanted:
+jsonHelper.objectToJson(
+    SearchIndexUpdateDto{businessObjectDefinitionIds=null, messageType='TAG', modificationType='UPDATE', tagIds=[1]}
+);
+-> at org.finra.herd.dao.helper.JsonHelper.objectToJson(JsonHelper.java:71)
+Actual invocation has different arguments:
+jsonHelper.objectToJson(
+    SearchIndexUpdateDto{businessObjectDefinitionIds=null, messageType='TAG', modificationType='UPDATE', tagIds=[999]}
+);
+-> at org.finra.herd.service.helper.SearchIndexUpdateHelper.modifyTagInSearchIndex(SearchIndexUpdateHelper.java:100)
+
+[INFO] 
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[ERROR] There are test failures.
+
+Please refer to C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\surefire-reports for the individual test results.
+Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[INFO] 
+[INFO] --- jacoco:0.8.7:report (jacoco-site) @ herd-service ---
+[INFO] Loading execution data file C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\jacoco.exec
+[INFO] Analyzed bundle 'herd service' with 1 classes
+[INFO] 
+[INFO] --- jacoco:0.8.7:report (default-cli) @ herd-service ---
+[INFO] Loading execution data file C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\jacoco.exec
+[INFO] Analyzed bundle 'herd service' with 1 classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:07 min
+[INFO] Finished at: 2026-03-15T23:36:33-04:00
+[INFO] ------------------------------------------------------------------------
+
+===== MAVEN BASELINE-TEST END returncode=0 =====
+[2026-03-15 23:36:33] Finished smoke baseline-test in 70.31s with returncode=0
+[2026-03-15 23:36:33] Detected explicit Surefire failure markers despite successful Maven exit code.
+[2026-03-15 23:36:33] Baseline failure log captured at C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\latest_failure_log.txt
+[2026-03-15 23:36:33] [RegenerativeSync] Starting primary generation pass for SearchIndexUpdateHelperTest on focal SearchIndexUpdateHelper.
+[2026-03-15 23:41:41] Smoke execution started. baseline_module_args=['-pl', 'herd-code/herd-service'] pit_module_args=['-pl', 'herd-code/herd-service'] test_classes=-Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled target_tests=['org.finra.herd.service.helper.SearchIndexUpdateHelperTest'] target_classes=['org.finra.herd.service.helper.SearchIndexUpdateHelper'] ast_test_method=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled ast_focal_method=modifyTagInSearchIndex excluded_mutation_methods=['getSqsQueueName', 'modifyBusinessObjectDefinitionInSearchIndex', 'modifyBusinessObjectDefinitionsInSearchIndex', 'modifyTagsInSearchIndex', 'processMessage'] timeout=900s
+[2026-03-15 23:41:41] Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+[2026-03-15 23:41:41] Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[2026-03-15 23:41:41] Starting smoke baseline-test command=mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report cwd=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039
+
+===== MAVEN BASELINE-TEST START =====
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< org.finra.herd:herd-service >---------------------
+[INFO] Building herd service 0.176.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (default-cli) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (jacoco-initialize) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- build-helper:3.0.0:add-source (default) @ herd-service ---
+[INFO] Source directory: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\generated-sources added.
+[INFO] 
+[INFO] --- resources:3.0.2:resources (default-resources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\src\main\resources
+[INFO] 
+[INFO] --- flatten:1.1.0:flatten (flatten) @ herd-service ---
+[INFO] Generating flattened POM of project org.finra.herd:herd-service:jar:0.176.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.7.0:compile (default-compile) @ herd-service ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.0.2:testResources (default-testResources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 17 resources
+[INFO] 
+[INFO] --- compiler:3.7.0:testCompile (default-testCompile) @ herd-service ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 285 source files to C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\test-classes
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/BusinessObjectDataServiceTestHelper.java: Some input files use unchecked or unsafe operations.
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/BusinessObjectDataServiceTestHelper.java: Recompile with -Xlint:unchecked for details.
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java:[375,31] cannot find symbol
+  symbol:   class JsonHelper
+  location: package org.finra.herd.core.helper
+[ERROR] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java:[375,112] cannot find symbol
+  symbol:   class JsonHelper
+  location: package org.finra.herd.core.helper
+[INFO] 2 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  30.923 s
+[INFO] Finished at: 2026-03-15T23:42:14-04:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.7.0:testCompile (default-testCompile) on project herd-service: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java:[375,31] cannot find symbol
+[ERROR]   symbol:   class JsonHelper
+[ERROR]   location: package org.finra.herd.core.helper
+[ERROR] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java:[375,112] cannot find symbol
+[ERROR]   symbol:   class JsonHelper
+[ERROR]   location: package org.finra.herd.core.helper
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+
+===== MAVEN BASELINE-TEST END returncode=1 =====
+[2026-03-15 23:42:15] Finished smoke baseline-test in 34.16s with returncode=1
+[2026-03-15 23:42:15] Baseline failure log captured at C:\Users\osart\ATR_ProjectV2\output\worker_a\42949039\latest_failure_log.txt
+[2026-03-15 23:42:15] [RegenerativeSync] Compile retry 1/1 for SearchIndexUpdateHelperTest.
+[2026-03-15 23:45:11] [RegenerativeSync] Generation failed on compile retry 1 for SearchIndexUpdateHelperTest.
+[2026-03-15 23:45:11] [RegenerativeSync] Compile retry exhausted for SearchIndexUpdateHelperTest.
+[2026-03-15 23:45:13] Smoke execution started. baseline_module_args=['-pl', 'herd-code/herd-service'] pit_module_args=['-pl', 'herd-code/herd-service'] test_classes=-Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled target_tests=['org.finra.herd.service.helper.SearchIndexUpdateHelperTest'] target_classes=['org.finra.herd.service.helper.SearchIndexUpdateHelper'] ast_test_method=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled ast_focal_method=modifyTagInSearchIndex excluded_mutation_methods=['getSqsQueueName', 'modifyBusinessObjectDefinitionInSearchIndex', 'modifyBusinessObjectDefinitionsInSearchIndex', 'modifyTagsInSearchIndex', 'processMessage'] timeout=900s
+[2026-03-15 23:45:13] Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+[2026-03-15 23:45:13] Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[2026-03-15 23:45:13] Starting smoke baseline-test command=mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report cwd=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039
+
+===== MAVEN BASELINE-TEST START =====
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< org.finra.herd:herd-service >---------------------
+[INFO] Building herd service 0.176.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (default-cli) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (jacoco-initialize) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_a\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/SearchIndexUpdateHelper*,output=file
+[INFO] 
+[INFO] --- build-helper:3.0.0:add-source (default) @ herd-service ---
+[INFO] Source directory: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\generated-sources added.
+[INFO] 
+[INFO] --- resources:3.0.2:resources (default-resources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\src\main\resources
+[INFO] 
+[INFO] --- flatten:1.1.0:flatten (flatten) @ herd-service ---
+[INFO] Generating flattened POM of project org.finra.herd:herd-service:jar:0.176.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.7.0:compile (default-compile) @ herd-service ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.0.2:testResources (default-testResources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 17 resources
+[INFO] 
+[INFO] --- compiler:3.7.0:testCompile (default-testCompile) @ herd-service ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 285 source files to C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_a\42949039\herd-code\herd-service\target\test-classes
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/BusinessObjectDataServiceTestHelper.java: Some input files use unchecked or unsafe operations.
+[INFO] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/BusinessObjectDataServiceTestHelper.java: Recompile with -Xlint:unchecked for details.
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java:[375,31] cannot find symbol
+  symbol:   class JsonHelper
+  location: package org.finra.herd.core.helper
+[ERROR] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java:[375,112] cannot find symbol
+  symbol:   class JsonHelper
+  location: package org.finra.herd.core.helper
+[INFO] 2 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  57.113 s
+[INFO] Finished at: 2026-03-15T23:46:15-04:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.7.0:testCompile (default-testCompile) on project herd-service: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java:[375,31] cannot find symbol
+[ERROR]   symbol:   class JsonHelper
+[ERROR]   location: package org.finra.herd.core.helper
+[ERROR] /C:/Users/osart/ATR_ProjectV2/compiledrepos/worker_a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java:[375,112] cannot find symbol
+[ERROR]   symbol:   class JsonHelper
+[ERROR]   location: package org.finra.herd.core.helper
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

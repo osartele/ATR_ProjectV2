@@ -1,0 +1,28 @@
+[2026-03-16 00:40:01] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/1/src/main/java/demo/SampleService.java; starting prioritized retries (limit=2).
+[2026-03-16 00:40:01] [MutationLiveGate] Retry 1 applied mutation type=logical class=-.
+[2026-03-16 00:40:01] [MutationLiveGate] Retry 2 applied mutation type=signature class=-.
+[2026-03-16 00:40:01] [MutationLiveGate] Mutation remained quiet after 3 attempts for focal=compiledrepos/1/src/main/java/demo/SampleService.java.
+[2026-03-16 00:40:01] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/1/src/main/java/demo/SampleService.java; starting prioritized retries (limit=2).
+[2026-03-16 00:40:01] [MutationLiveGate] Retry 1 applied mutation type=logical class=-.
+[2026-03-16 00:40:01] [MutationLiveGate] Retry 1 activated a live mutation.
+[2026-03-16 01:46:18] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/1/src/main/java/demo/SampleService.java; starting prioritized retries (limit=2).
+[2026-03-16 01:46:18] [MutationLiveGate] Retry 1 applied mutation type=logical class=-.
+[2026-03-16 01:46:18] [MutationLiveGate] Retry 2 applied mutation type=signature class=-.
+[2026-03-16 01:46:18] [MutationLiveGate] Mutation remained quiet after 3 attempts for focal=compiledrepos/1/src/main/java/demo/SampleService.java.
+[2026-03-16 01:46:18] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/1/src/main/java/demo/SampleService.java; starting prioritized retries (limit=2).
+[2026-03-16 01:46:18] [MutationLiveGate] Retry 1 applied mutation type=logical class=-.
+[2026-03-16 01:46:18] [MutationLiveGate] Retry 1 activated a live mutation.
+[2026-03-16 01:58:35] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/1/src/main/java/demo/SampleService.java; starting prioritized retries (limit=2).
+[2026-03-16 01:58:35] [MutationLiveGate] Retry 1 applied mutation type=logical class=-.
+[2026-03-16 01:58:35] [MutationLiveGate] Retry 2 applied mutation type=signature class=-.
+[2026-03-16 01:58:35] [MutationLiveGate] Mutation remained quiet after 3 attempts for focal=compiledrepos/1/src/main/java/demo/SampleService.java.
+[2026-03-16 01:58:35] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/1/src/main/java/demo/SampleService.java; starting prioritized retries (limit=2).
+[2026-03-16 01:58:35] [MutationLiveGate] Retry 1 applied mutation type=logical class=-.
+[2026-03-16 01:58:35] [MutationLiveGate] Retry 1 activated a live mutation.
+[2026-03-16 02:00:36] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/1/src/main/java/demo/SampleService.java; starting prioritized retries (limit=2).
+[2026-03-16 02:00:36] [MutationLiveGate] Retry 1 applied mutation type=logical class=-.
+[2026-03-16 02:00:36] [MutationLiveGate] Retry 2 applied mutation type=signature class=-.
+[2026-03-16 02:00:36] [MutationLiveGate] Mutation remained quiet after 3 attempts for focal=compiledrepos/1/src/main/java/demo/SampleService.java.
+[2026-03-16 02:00:36] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/1/src/main/java/demo/SampleService.java; starting prioritized retries (limit=2).
+[2026-03-16 02:00:36] [MutationLiveGate] Retry 1 applied mutation type=logical class=-.
+[2026-03-16 02:00:36] [MutationLiveGate] Retry 1 activated a live mutation.

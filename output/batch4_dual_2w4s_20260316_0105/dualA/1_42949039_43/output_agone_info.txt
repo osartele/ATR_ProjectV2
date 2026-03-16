@@ -1,0 +1,17 @@
+
+PROJECTS
+Total number of projects processed: 1
+Total number of projects processed with human: 1
+Total number of projects processed with codex-cli: 0
+Total number of projects processed with codex-cli iterative-healing: 0
+Total number of projects processed with codex-cli regenerative-sync: 0
+Total number of projects that have been processed with all the test types and techniques selected by the user: 0
+-------------------------------
+
+CLASSES
+Total number of classes processed: 1
+Total number of classes processed with human: 1
+Total number of classes processed with codex-cli: 0
+Total number of classes processed with codex-cli iterative-healing: 0
+Total number of classes processed with codex-cli regenerative-sync: 0
+Total number of classes that have been processed with all the test types and techniques selected by the user: 0

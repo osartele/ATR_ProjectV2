@@ -16,6 +16,7 @@ import mavenLib
 from dotenv import load_dotenv
 from execution_manager import ExecutionManager
 import project_structure_analyzer as psa
+from path_context import get_path_context
 
 load_dotenv()
 
@@ -65,6 +66,15 @@ ITERATIVE_STYLE_ALLOWED_UNQUALIFIED_CALLS = {
 IMMUTABLE_SOURCE_ROOTS = {"repos", "Classes2Test"}
 PROJECT_WORKSPACE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SMOKE_TARGET_CACHE = {}
+PATH_CONTEXT = get_path_context()
+
+
+def _worker_output_path(*parts):
+    return os.path.join(PATH_CONTEXT.get_output_path(), *[str(part) for part in parts])
+
+
+def _worker_project_output_path(project, *parts):
+    return os.path.join(PATH_CONTEXT.get_project_output_path(project), *[str(part) for part in parts])
 
 
 def _normalize_workspace_path(file_path):
@@ -201,7 +211,7 @@ def verify_if_folder_has_already_been_processed(folder):
         Returns:
                     :'True' if the folder has already been processed, False otherwise
     """
-    compiled_path = f'compiledrepos/{folder}'
+    compiled_path = PATH_CONTEXT.get_compiled_repo_path(folder)
     failed_path = f'failedrepos/{folder}'
     if os.path.exists(compiled_path):
         return True
@@ -244,12 +254,12 @@ def remove_missing_files_from_dataframe(project_df):
     # If a test_path or a focal_path of the project_df (that is output/classes.csv filtered with the current project) doesn't exist in the repository, it will be removed from the dataframe
     for index, row in project_df.iterrows():
         if "repos/" in row['Test_Path']:
-            test_path = row['Test_Path'].replace("repos/", "compiledrepos/")
-            focal_path = row['Focal_Path'].replace("repos/", "compiledrepos/")
+            test_path = PATH_CONTEXT.to_worker_compiled_path(row.get('Project'), row['Test_Path'])
+            focal_path = PATH_CONTEXT.to_worker_compiled_path(row.get('Project'), row['Focal_Path'])
         else:
             project = row['Project']
-            test_path = f"compiledrepos/{project}/" + row['Test_Path']
-            focal_path = f"compiledrepos/{project}/" + row['Focal_Path']
+            test_path = PATH_CONTEXT.to_worker_compiled_path(project, row['Test_Path'])
+            focal_path = PATH_CONTEXT.to_worker_compiled_path(project, row['Focal_Path'])
         if not (os.path.isfile(test_path) and os.path.isfile(focal_path)):
             index_to_remove.add(index)
     project_df = project_df.drop(index=index_to_remove)
@@ -271,18 +281,10 @@ def configure_test_smell_detector(project_dataframe, project):
     def normalize_compiled_path(raw_path):
         if raw_path is None or pd.isna(raw_path):
             return None
-        normalized_path = str(raw_path).strip().replace("\\", "/")
-        if not normalized_path or normalized_path.lower() == "nan":
+        normalized_path = PATH_CONTEXT.to_worker_compiled_path(project, raw_path)
+        if normalized_path is None:
             return None
-        if os.path.isabs(normalized_path):
-            return os.path.abspath(normalized_path)
-        if normalized_path.startswith("compiledrepos/"):
-            return os.path.abspath(normalized_path)
-        if normalized_path.startswith("repos/"):
-            return os.path.abspath(normalized_path.replace("repos/", "compiledrepos/", 1))
-        return os.path.abspath(
-            os.path.join("compiledrepos", str(project), normalized_path.lstrip("/"))
-        )
+        return os.path.abspath(normalized_path)
 
     data = []
     project_df = project_dataframe.copy()
@@ -291,7 +293,8 @@ def configure_test_smell_detector(project_dataframe, project):
         focal_path_absolute = normalize_compiled_path(row.get("Focal_Path"))
         data.append([project, test_path_absolute, focal_path_absolute])
     df = pd.DataFrame(data)
-    csv_path = f"output/{project}/pathToInputFile.csv"
+    csv_path = _worker_project_output_path(project, "pathToInputFile.csv")
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
     df.to_csv(csv_path, index=False, header=False, na_rep="-")
     return csv_path
 
@@ -344,10 +347,11 @@ def run_test_smell_detector(csv_path, project, test_type, technique, module=None
             if os.path.exists(f'{new_name}'):
                 os.remove(f'{new_name}')
             os.rename(file, new_name)  
-            result_path = f'output/{project}/{new_name}'
+            result_path = _worker_project_output_path(project, new_name)
             if os.path.exists(result_path):
                 os.remove(result_path)
-            shutil.move(new_name, f'output/{project}')
+            os.makedirs(PATH_CONTEXT.get_project_output_path(project), exist_ok=True)
+            shutil.move(new_name, PATH_CONTEXT.get_project_output_path(project))
             break
     return result_path
 
@@ -453,7 +457,7 @@ def snapshot_coverage_reports(
         modules = [module]
 
     snapshot_key = build_coverage_snapshot_key(test_type, technique)
-    snapshot_root = os.path.join("output", str(project_id), "coverage_snapshots", snapshot_key)
+    snapshot_root = _worker_project_output_path(project_id, "coverage_snapshots", snapshot_key)
     os.makedirs(snapshot_root, exist_ok=True)
     copied_module_count = 0
 
@@ -533,7 +537,12 @@ def retrieve_code_coverage_and_cyclomatic_complexity(
         path = os.path.join(project_path, module)
         if snapshot_key is not None:
             module_relative_path = str(module).replace("\\", "/")
-            snapshot_module_path = os.path.join("output", str(project_id), "coverage_snapshots", snapshot_key, module_relative_path)
+            snapshot_module_path = _worker_project_output_path(
+                project_id,
+                "coverage_snapshots",
+                snapshot_key,
+                module_relative_path,
+            )
             jacoco_snapshot_path = os.path.join(snapshot_module_path, "jacoco.csv")
             pitest_snapshot_path = os.path.join(snapshot_module_path, "mutations.csv")
             if os.path.exists(jacoco_snapshot_path):
@@ -731,21 +740,22 @@ def generate_output_csv_test_type(project_id, test_type, technique, measures_df,
 
     # replace /repos with /compiledrepos in Focal_path e Test_Path
     for index, row in measures_df.iterrows():
-        measures_df.at[index, 'Focal_Path'] = row['Focal_Path'].replace('repos/', 'compiledrepos/')
-        measures_df.at[index, 'Test_Path'] = row['Test_Path'].replace('repos/', 'compiledrepos/')
+        measures_df.at[index, 'Focal_Path'] = PATH_CONTEXT.to_worker_compiled_path(project_id, row['Focal_Path'])
+        measures_df.at[index, 'Test_Path'] = PATH_CONTEXT.to_worker_compiled_path(project_id, row['Test_Path'])
 
     csv_path = None
     if module is None:
         if technique is not None:
-            csv_path = f'./output/{project_id}/TestClasses_{project_id}_{test_type}_{technique}.csv'
+            csv_path = _worker_project_output_path(project_id, f"TestClasses_{project_id}_{test_type}_{technique}.csv")
         else:
-            csv_path = f'./output/{project_id}/TestClasses_{project_id}_{test_type}.csv'
+            csv_path = _worker_project_output_path(project_id, f"TestClasses_{project_id}_{test_type}.csv")
     else:
         if technique is not None:
-            csv_path = f'./output/{project_id}/TestClasses_{project_id}_{module}_{test_type}_{technique}.csv'
+            csv_path = _worker_project_output_path(project_id, f"TestClasses_{project_id}_{module}_{test_type}_{technique}.csv")
         else:
-            csv_path = f'./output/{project_id}/TestClasses_{project_id}_{module}_{test_type}.csv'
+            csv_path = _worker_project_output_path(project_id, f"TestClasses_{project_id}_{module}_{test_type}.csv")
     try:
+        os.makedirs(os.path.dirname(csv_path), exist_ok=True)
         measures_df.to_csv(csv_path, index=False, na_rep="-")
     except Exception as e:
         return None
@@ -1981,11 +1991,7 @@ def _normalize_method_name(method_name):
 
 
 def _resolve_project_id_from_path(file_path):
-    normalized_path = os.path.abspath(str(file_path)).replace("\\", "/")
-    match = re.search(r"/(?:compiledrepos|repos)/(\d+)(?:/|$)", normalized_path)
-    if match:
-        return match.group(1)
-    return None
+    return PATH_CONTEXT.extract_project_id(file_path)
 
 
 def _load_smoke_target_for_path(file_path):
@@ -1996,7 +2002,7 @@ def _load_smoke_target_for_path(file_path):
         return {}
     if project_id in SMOKE_TARGET_CACHE:
         return SMOKE_TARGET_CACHE[project_id]
-    target_path = os.path.join("output", project_id, "smoke_target.json")
+    target_path = _worker_project_output_path(project_id, "smoke_target.json")
     if not os.path.exists(target_path):
         SMOKE_TARGET_CACHE[project_id] = {}
         return {}
@@ -2314,16 +2320,15 @@ def _is_smoke_test_mode_enabled():
 def _resolve_codex_diagnostic_log_path(target_files_list):
     project_id = None
     for file_path in target_files_list or []:
-        normalized_path = os.path.abspath(file_path).replace("\\", "/")
-        match = re.search(r"/(?:compiledrepos|repos)/(\d+)(?:/|$)", normalized_path)
-        if match:
-            project_id = match.group(1)
+        detected_project = PATH_CONTEXT.extract_project_id(file_path)
+        if detected_project is not None:
+            project_id = detected_project
             break
 
     if project_id is not None:
-        output_directory = os.path.join("output", project_id)
+        output_directory = PATH_CONTEXT.get_project_output_path(project_id)
     else:
-        output_directory = "output"
+        output_directory = PATH_CONTEXT.get_output_path()
     os.makedirs(output_directory, exist_ok=True)
     return os.path.join(output_directory, "codex_cli_diagnostics.log")
 
@@ -2331,27 +2336,25 @@ def _resolve_codex_diagnostic_log_path(target_files_list):
 def _resolve_codex_last_message_path(target_files_list):
     project_id = None
     for file_path in target_files_list or []:
-        normalized_path = os.path.abspath(file_path).replace("\\", "/")
-        match = re.search(r"/(?:compiledrepos|repos)/(\d+)(?:/|$)", normalized_path)
-        if match:
-            project_id = match.group(1)
+        detected_project = PATH_CONTEXT.extract_project_id(file_path)
+        if detected_project is not None:
+            project_id = detected_project
             break
 
     if project_id is not None:
-        output_directory = os.path.join("output", project_id)
+        output_directory = PATH_CONTEXT.get_project_output_path(project_id)
     else:
-        output_directory = "output"
+        output_directory = PATH_CONTEXT.get_output_path()
     os.makedirs(output_directory, exist_ok=True)
     return os.path.join(output_directory, "codex_last_message.txt")
 
 
 def _resolve_failure_log_path_for_file(file_path):
-    normalized_path = os.path.abspath(str(file_path or "")).replace("\\", "/")
-    match = re.search(r"/(?:compiledrepos|repos)/(\d+)(?:/|$)", normalized_path)
-    if match:
-        output_directory = os.path.join("output", match.group(1))
+    project_id = PATH_CONTEXT.extract_project_id(file_path)
+    if project_id:
+        output_directory = PATH_CONTEXT.get_project_output_path(project_id)
     else:
-        output_directory = "output"
+        output_directory = PATH_CONTEXT.get_output_path()
     os.makedirs(output_directory, exist_ok=True)
     return os.path.join(output_directory, "latest_failure_log.txt")
 
@@ -3102,26 +3105,16 @@ def generate_output_csv_project(project, project_dataframe, test_types, techniqu
     def normalize_test_path(test_path_value):
         if test_path_value is None or pd.isna(test_path_value):
             return None
-        normalized_path = str(test_path_value)
-        if normalized_path.startswith("compiledrepos/"):
-            return normalized_path
-        if normalized_path.startswith("repos/"):
-            return normalized_path.replace("repos/", "compiledrepos/")
-        return f"compiledrepos/{project}/" + normalized_path
+        return PATH_CONTEXT.to_worker_compiled_path(project, test_path_value)
 
     def normalize_focal_path(focal_path_value):
         if focal_path_value is None or pd.isna(focal_path_value):
             return None
-        normalized_path = str(focal_path_value)
-        if normalized_path.startswith("compiledrepos/"):
-            return normalized_path
-        if normalized_path.startswith("repos/"):
-            return normalized_path.replace("repos/", "compiledrepos/")
-        return f"compiledrepos/{project}/" + normalized_path
+        return PATH_CONTEXT.to_worker_compiled_path(project, focal_path_value)
 
     def load_mutation_lookup():
         mutation_lookup = {}
-        mutation_file_path = os.path.join("output", str(project), "focal_mutations.json")
+        mutation_file_path = _worker_project_output_path(project, "focal_mutations.json")
         if not os.path.exists(mutation_file_path):
             return mutation_lookup
         try:
@@ -3189,7 +3182,8 @@ def generate_output_csv_project(project, project_dataframe, test_types, techniqu
         if "Post_Repair_Mutation_Coverage" in df_output.columns and "Mutation_Coverage" in df_output.columns:
             df_output.at[output_index, "Post_Repair_Mutation_Coverage"] = df_output.at[output_index, "Mutation_Coverage"]
     project_df = project_dataframe.copy()
-    files = os.listdir(f'output/{project}')
+    project_output_dir = PATH_CONTEXT.get_project_output_path(project)
+    files = os.listdir(project_output_dir) if os.path.isdir(project_output_dir) else []
     # dictionary where the keys are the dataframes label and the values are the dataframes. There is a dataframe for each TestClasses file
     dataframes = dict()
     for test_type in test_types:
@@ -3199,35 +3193,44 @@ def generate_output_csv_project(project, project_dataframe, test_types, techniqu
             for technique in techniques:
                 dataframes[f'{test_type}_{technique}'] = pd.DataFrame()
 
+    def resolve_testclasses_dataframe(key, module_name=None):
+        if module_name is None:
+            token = f"TestClasses_{project}_{key}"
+        else:
+            token = f"TestClasses_{project}_{module_name}_{key}"
+
+        matching_files = [file for file in files if token in file]
+        if not matching_files:
+            return None
+
+        try:
+            matching_files = sorted(
+                matching_files,
+                key=lambda file: os.path.getmtime(os.path.join(project_output_dir, file)),
+                reverse=True,
+            )
+        except OSError:
+            pass
+
+        selected_file = matching_files[0]
+        selected_path = os.path.join(project_output_dir, selected_file)
+        if selected_file.endswith(".csv"):
+            return pd.read_csv(selected_path)
+        if selected_file.endswith(".mavenfailed"):
+            return pd.DataFrame()
+        if selected_file.endswith(".failed"):
+            return None
+        return None
+
     # if the TestClasses file is maven failed or gradle failed (all the test classes failed during the maven execution), then leave the corresponding dataframe empty
     # if the TestClasses file is failed (generic error in AgoneTest.py) or not found, then set the corresponding dataframe to None
     # if the TestClasses file is a csv, then set the dataframe to the content of the csv
     if module is None:
         for key in dataframes.keys():
-            find = False
-            for file in files:
-                if file.__contains__(f"TestClasses_{project}_{key}"):
-                    find = True
-                    if file.endswith(".csv"):
-                        dataframes[key] = pd.read_csv(f'output/{project}/{file}')
-                    elif file.endswith('.failed'):
-                        dataframes[key] = None     
-                    break
-            if find == False:
-                dataframes[key] = None
+            dataframes[key] = resolve_testclasses_dataframe(key)
     else:
          for key in dataframes.keys():
-            find = False
-            for file in files:
-                if file.__contains__(f"TestClasses_{project}_{module}_{key}"):
-                    find = True
-                    if file.endswith(".csv"):
-                        dataframes[key] = pd.read_csv(f'output/{project}/{file}')
-                    elif file.endswith('.failed'):
-                        dataframes[key] = None
-                    break
-            if find == False:
-                dataframes[key] = None
+            dataframes[key] = resolve_testclasses_dataframe(key, module_name=module)
         
 
     # Remove from the dictionary the keys associated to a dataframe setted to None
@@ -3376,9 +3379,9 @@ def generate_output_csv_project(project, project_dataframe, test_types, techniqu
         return previous_df[keep_mask].copy()
 
     if module is None:
-        df_output_path = f"output/{project}/{project}_Output.csv"
+        df_output_path = _worker_project_output_path(project, f"{project}_Output.csv")
     else:
-        df_output_path = f"output/{project}/{project}_{module}_Output.csv"
+        df_output_path = _worker_project_output_path(project, f"{project}_{module}_Output.csv")
 
     df_new_execution = pd.DataFrame()
     if os.path.exists(df_output_path):
@@ -3479,7 +3482,7 @@ def remove_dot_evosuite_dir(project, module):
                     module: the project module containing the .evosuite directory
     """
     if module is not None:
-        dot_evosuite_to_remove = f'compiledrepos/{project}/{module}/.evosuite'
+        dot_evosuite_to_remove = os.path.join(PATH_CONTEXT.get_compiled_repo_path(project), module, ".evosuite")
         try:
             if os.path.exists(dot_evosuite_to_remove):
                 shutil.rmtree(dot_evosuite_to_remove)

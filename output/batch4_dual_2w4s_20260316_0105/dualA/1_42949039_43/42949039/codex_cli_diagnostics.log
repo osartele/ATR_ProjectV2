@@ -1,0 +1,1338 @@
+[2026-03-16 01:06:59] Resolved Codex executable to C:\Users\osart\.codex\.sandbox-bin\codex.exe
+[2026-03-16 01:06:59] Codex working_root=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core timeout=420s prompt_length=9622 target_files=['C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core\\src\\test\\java\\org\\finra\\herd\\core\\helper\\ConfigurationHelperTest.java', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core\\src\\main\\java\\org\\finra\\herd\\core\\helper\\ConfigurationHelper.java'] last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_dualA\42949039\codex_last_message.txt
+[2026-03-16 01:06:59] Starting Codex version preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '--version'] timeout=20s
+codex-cli 0.115.0-alpha.11
+[2026-03-16 01:06:59] Finished Codex version preflight in 0.22s with returncode=0.
+[2026-03-16 01:06:59] Starting Codex exec preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core', '-'] timeout=20s
+2026-03-16T05:07:00.628318Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf50a-5365-78a2-9b0d-7a8c9481005c
+--------
+user
+Reply with the single word OK. Do not modify any files.
+mcp startup: no servers
+codex
+OK
+tokens used
+1,108
+OK
+[2026-03-16 01:07:03] Finished Codex exec preflight in 4.03s with returncode=0.
+[2026-03-16 01:07:03] Starting Codex subprocess. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core', '-o', 'C:\\Users\\osart\\ATR_ProjectV2\\output\\worker_dualA\\42949039\\codex_last_message.txt', '-']
+2026-03-16T05:07:04.082169Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf50a-60fb-7ef1-8e52-e0028a5575aa
+--------
+user
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+
+SYSTEM:
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+You are an expert Java developer tasked with repairing a failing test suite. Your strictly defined goal is to heal the provided JUnit test methods so they pass against the updated focal class.
+
+CRITICAL CONSTRAINTS:
+1. Modify ONLY the specific @Test method explicitly identified in the AST mapping.
+2. Preserve the mapped method declaration lock exactly: method name, modifiers, annotations, and return type must match the original mapped method.
+3. Parameters and throws may change only when required by the evolved focal behavior.
+4. Use only the existing class-level collaborators/fields already present in the test class context. Do not instantiate the focal class or create local mocks inside the target method.
+5. DO NOT create, generate, or hallucinate any new @Test methods, helper methods, fields, imports, or annotations.
+6. Update only the necessary setup, mocks, inputs, or assertions within the target method body to resolve the failure log.
+7. Reply with only the full mapped @Test method block (annotation + signature + body). Do not output the whole class.
+You can use the Mockito framework. You must declare the test class and all the test methods with the public access modifier.
+
+USER:
+The project uses Junit version 4.12 and Java 1.8. 
+Analyze the focal modifications and repair the existing test class.
+
+// --- UPDATED FOCAL CLASS ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.core.helper;
+
+import java.math.BigDecimal;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomBooleanEditor;
+import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
+import org.finra.herd.model.dto.ConfigurationValue;
+
+/**
+ * A helper for {@link ConfigurationValue}. Mainly used to facilitate access to current 
+...[truncated to 1200 chars for smoke mode]...
+</code>
+
+// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.core.helper;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.
+...[truncated to 700 chars for smoke mode]...
+</code>
+
+// --- ORIGINAL MAPPED TEST METHOD STYLE ANCHOR ---
+<code>
+@Test
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+        Integer expectedValue = (Integer) configurationValue.getDefaultValue();
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+        executeWithoutLogging(ConfigurationHelper.class, () ->
+        {
+            Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+            assertNotNull("value", value);
+            assertEquals("value", expectedValue, value);
+        });
+    }
+</code>
+
+// --- AST MAPPING & CONTEXT ---
+Test to Focal Method Mapping:
+<code>
+{
+  "testGetPropertyReturnDefaultWhenValueConversionFails": [
+    "getProperty"
+  ]
+}
+</code>
+Relevant Focal Method Implementations:
+<code>
+Focal method getProperty:
+public static String getProperty(ConfigurationValue configurationValue, Environment environment)
+    {
+        return getProperty(configurationValue, String.class, environment);
+    }
+
+    /**
+     * Wrapper for {@link Environment#getProperty(String, Class, Object)} using the given {@link ConfigurationValue} as the key and default value. Optionally,
+     * uses the configured default value if the property is not found in the environment. The configured default value must be of the same class, or must be a
+     * sub-class of the given targetType.
+     *
+     * @param <T> The return type
+     * @param configurationValue The {@link ConfigurationValue} with property key and default value.
+     * @param targetType The returned object's type
+     * @param environment The {@link Environment} containing the property
+     *
+     * @return The property value
+     */
+
+Foc
+...[truncated to 900 chars for smoke mode]...
+</code>
+
+// --- TEST FAILURE LOG ---
+The baseline test execution failed with the following output:
+<code>
+[Surefire Report] C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core\target\surefire-reports\org.finra.herd.core.helper.ConfigurationHelperTest.txt
+-------------------------------------------------------------------------------
+Test set: org.finra.herd.core.helper.ConfigurationHelperTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 3.016 s <<< FAILURE! - in org.finra.herd.core.helper.ConfigurationHelperTest
+testGetPropertyReturnDefaultWhenValueConversionFails(org.finra.herd.core.helper.ConfigurationHelperTest)  Time elapsed: 0.004 s  <<< ERROR!
+java.lang.IllegalStateException: Failed to load ApplicationContext
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'org.springframework.scheduling.annotation.ProxyAsy
+...[truncated to 900 chars for smoke mode]...
+</code>
+Analyze this failure trace to pinpoint the exact assertion or mock configuration that broke.
+
+// --- PROJECT ENVIRONMENT ---
+Project Structure:
+<code>
+Smoke mode: full project structure omitted for speed. Infer imports and collaborators from the provided focal/test files and direct file inspection.
+</code>
+Project Dependencies:
+<code>
+Smoke mode: full dependency list omitted for speed. Use existing imports, test base classes, and local file inspection as the source of truth.
+</code>
+
+Use the provided focal class and AST mapping as the source of truth.
+
+Repair only the mapped @Test method `testGetPropertyReturnDefaultWhenValueConversionFails`.
+
+Preserve the mapped method declaration lock exactly: name, modifiers, annotations, and return type must match the original mapped method.
+
+You may change parameters and throws only if needed to align with evolved focal behavior.
+
+Use existing class-level fields/collaborators only; do not instantiate the focal class locally and do not create local mocks.
+
+Do not modify any other method in the class.
+
+Do not add helpers, fields, imports, or annotations.
+
+Preserve this method style anchor exactly (except for the minimal assertion/setup edits needed to resolve the failure):
+<code>
+@Test
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+        Integer expectedValue = (Integer) configurationValue.getDefaultValue();
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+        executeWithoutLogging(ConfigurationHelper.class, () ->
+        {
+            Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+            assertNotNull("value", value);
+            assertEquals("value", expectedValue, value);
+        });
+    }
+</code>
+
+AST target mapping: testGetPropertyReturnDefaultWhenValueConversionFails -> getProperty.
+
+Keep or add this package declaration: package org.finra.herd.core.helper;
+
+Smoke mode: prefer the provided focal and test files, avoid exploring unrelated modules, and make the minimal direct edit needed to restore compilation or coverage.
+
+Return only the full mapped @Test method block (annotations + signature + body).
+
+Do not return the entire class, and do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java
+- src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java
+Return only the final Java source code.
+mcp startup: no servers
+codex
+@Test
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+        Integer expectedValue = (Integer) configurationValue.getDefaultValue();
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+        Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+        assertNotNull("value", value);
+        assertEquals("value", expectedValue, value);
+    }
+tokens used
+7,402
+@Test
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+        Integer expectedValue = (Integer) configurationValue.getDefaultValue();
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+        Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+        assertNotNull("value", value);
+        assertEquals("value", expectedValue, value);
+    }
+[2026-03-16 01:08:44] Finished Codex subprocess in 100.63s with returncode=0.
+[2026-03-16 01:09:14] Resolved Codex executable to C:\Users\osart\.codex\.sandbox-bin\codex.exe
+[2026-03-16 01:09:14] Codex working_root=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core timeout=420s prompt_length=9428 target_files=['C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core\\src\\test\\java\\org\\finra\\herd\\core\\helper\\ConfigurationHelperTest.java', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core\\src\\main\\java\\org\\finra\\herd\\core\\helper\\ConfigurationHelper.java'] last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_dualA\42949039\codex_last_message.txt
+[2026-03-16 01:09:14] Starting Codex version preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '--version'] timeout=20s
+codex-cli 0.115.0-alpha.11
+[2026-03-16 01:09:15] Finished Codex version preflight in 0.05s with returncode=0.
+[2026-03-16 01:09:15] Starting Codex exec preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core', '-'] timeout=20s
+2026-03-16T05:09:15.163367Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf50c-6104-7513-983a-b0541974a08f
+--------
+user
+Reply with the single word OK. Do not modify any files.
+mcp startup: no servers
+codex
+OK
+tokens used
+1,096
+OK
+[2026-03-16 01:09:16] Finished Codex exec preflight in 1.95s with returncode=0.
+[2026-03-16 01:09:16] Starting Codex subprocess. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core', '-o', 'C:\\Users\\osart\\ATR_ProjectV2\\output\\worker_dualA\\42949039\\codex_last_message.txt', '-']
+2026-03-16T05:09:17.119254Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf50c-68ae-7c00-8d80-5b2f24f5e0cf
+--------
+user
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+
+SYSTEM:
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+You are an expert Java developer tasked with repairing a failing test suite. Your strictly defined goal is to heal the provided JUnit test methods so they pass against the updated focal class.
+
+CRITICAL CONSTRAINTS:
+1. Modify ONLY the specific @Test method explicitly identified in the AST mapping.
+2. Preserve the mapped method declaration lock exactly: method name, modifiers, annotations, and return type must match the original mapped method.
+3. Parameters and throws may change only when required by the evolved focal behavior.
+4. Use only the existing class-level collaborators/fields already present in the test class context. Do not instantiate the focal class or create local mocks inside the target method.
+5. DO NOT create, generate, or hallucinate any new @Test methods, helper methods, fields, imports, or annotations.
+6. Update only the necessary setup, mocks, inputs, or assertions within the target method body to resolve the failure log.
+7. Reply with only the full mapped @Test method block (annotation + signature + body). Do not output the whole class.
+You can use the Mockito framework. You must declare the test class and all the test methods with the public access modifier.
+
+USER:
+The project uses Junit version 4.12 and Java 1.8. 
+Analyze the focal modifications and repair the existing test class.
+
+// --- UPDATED FOCAL CLASS ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.core.helper;
+
+import java.math.BigDecimal;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomBooleanEditor;
+import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
+import org.finra.herd.model.dto.ConfigurationValue;
+
+/**
+ * A helper for {@link ConfigurationValue}. Mainly used to facilitate access to current 
+...[truncated to 1200 chars for smoke mode]...
+</code>
+
+// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.core.helper;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.
+...[truncated to 700 chars for smoke mode]...
+</code>
+
+// --- ORIGINAL MAPPED TEST METHOD STYLE ANCHOR ---
+<code>
+@Test
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+        Integer expectedValue = (Integer) configurationValue.getDefaultValue();
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+        Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+        assertNotNull("value", value);
+        assertEquals("value", expectedValue, value);
+    }
+</code>
+
+// --- AST MAPPING & CONTEXT ---
+Test to Focal Method Mapping:
+<code>
+{
+  "testGetPropertyReturnDefaultWhenValueConversionFails": [
+    "getProperty"
+  ]
+}
+</code>
+Relevant Focal Method Implementations:
+<code>
+Focal method getProperty:
+public static String getProperty(ConfigurationValue configurationValue, Environment environment)
+    {
+        return getProperty(configurationValue, String.class, environment);
+    }
+
+    /**
+     * Wrapper for {@link Environment#getProperty(String, Class, Object)} using the given {@link ConfigurationValue} as the key and default value. Optionally,
+     * uses the configured default value if the property is not found in the environment. The configured default value must be of the same class, or must be a
+     * sub-class of the given targetType.
+     *
+     * @param <T> The return type
+     * @param configurationValue The {@link ConfigurationValue} with property key and default value.
+     * @param targetType The returned object's type
+     * @param environment The {@link Environment} containing the property
+     *
+     * @return The property value
+     */
+
+Foc
+...[truncated to 900 chars for smoke mode]...
+</code>
+
+// --- TEST FAILURE LOG ---
+The baseline test execution failed with the following output:
+<code>
+[Surefire Report] C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core\target\surefire-reports\org.finra.herd.core.helper.ConfigurationHelperTest.txt
+-------------------------------------------------------------------------------
+Test set: org.finra.herd.core.helper.ConfigurationHelperTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 2.174 s <<< FAILURE! - in org.finra.herd.core.helper.ConfigurationHelperTest
+testGetPropertyReturnDefaultWhenValueConversionFails(org.finra.herd.core.helper.ConfigurationHelperTest)  Time elapsed: 0.022 s  <<< ERROR!
+java.lang.IllegalStateException: Failed to load ApplicationContext
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'org.springframework.scheduling.annotation.ProxyAsy
+...[truncated to 900 chars for smoke mode]...
+</code>
+Analyze this failure trace to pinpoint the exact assertion or mock configuration that broke.
+
+// --- PROJECT ENVIRONMENT ---
+Project Structure:
+<code>
+Smoke mode: full project structure omitted for speed. Infer imports and collaborators from the provided focal/test files and direct file inspection.
+</code>
+Project Dependencies:
+<code>
+Smoke mode: full dependency list omitted for speed. Use existing imports, test base classes, and local file inspection as the source of truth.
+</code>
+
+Use the provided focal class and AST mapping as the source of truth.
+
+Repair only the mapped @Test method `testGetPropertyReturnDefaultWhenValueConversionFails`.
+
+Preserve the mapped method declaration lock exactly: name, modifiers, annotations, and return type must match the original mapped method.
+
+You may change parameters and throws only if needed to align with evolved focal behavior.
+
+Use existing class-level fields/collaborators only; do not instantiate the focal class locally and do not create local mocks.
+
+Do not modify any other method in the class.
+
+Do not add helpers, fields, imports, or annotations.
+
+Preserve this method style anchor exactly (except for the minimal assertion/setup edits needed to resolve the failure):
+<code>
+@Test
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+        Integer expectedValue = (Integer) configurationValue.getDefaultValue();
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+        Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+        assertNotNull("value", value);
+        assertEquals("value", expectedValue, value);
+    }
+</code>
+
+AST target mapping: testGetPropertyReturnDefaultWhenValueConversionFails -> getProperty.
+
+Keep or add this package declaration: package org.finra.herd.core.helper;
+
+Smoke mode: prefer the provided focal and test files, avoid exploring unrelated modules, and make the minimal direct edit needed to restore compilation or coverage.
+
+Return only the full mapped @Test method block (annotations + signature + body).
+
+Do not return the entire class, and do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java
+- src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java
+Return only the final Java source code.
+mcp startup: no servers
+codex
+@Test
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+        Integer expectedValue = (Integer) configurationValue.getDefaultValue();
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+        Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+        assertNotNull("value", value);
+        assertEquals("value", expectedValue, value);
+    }
+tokens used
+5,755
+@Test
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+        Integer expectedValue = (Integer) configurationValue.getDefaultValue();
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+        Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+        assertNotNull("value", value);
+        assertEquals("value", expectedValue, value);
+    }
+[2026-03-16 01:10:09] Finished Codex subprocess in 52.59s with returncode=0.
+[2026-03-16 01:10:28] Resolved Codex executable to C:\Users\osart\.codex\.sandbox-bin\codex.exe
+[2026-03-16 01:10:28] Codex working_root=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core timeout=420s prompt_length=9428 target_files=['C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core\\src\\test\\java\\org\\finra\\herd\\core\\helper\\ConfigurationHelperTest.java', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core\\src\\main\\java\\org\\finra\\herd\\core\\helper\\ConfigurationHelper.java'] last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_dualA\42949039\codex_last_message.txt
+[2026-03-16 01:10:28] Starting Codex version preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '--version'] timeout=20s
+codex-cli 0.115.0-alpha.11
+[2026-03-16 01:10:28] Finished Codex version preflight in 0.04s with returncode=0.
+[2026-03-16 01:10:28] Starting Codex exec preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core', '-'] timeout=20s
+2026-03-16T05:10:28.895569Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf50d-8110-7b93-aeca-4c147a6be7c9
+--------
+user
+Reply with the single word OK. Do not modify any files.
+mcp startup: no servers
+codex
+OK
+tokens used
+1,107
+OK
+[2026-03-16 01:10:30] Finished Codex exec preflight in 2.06s with returncode=0.
+[2026-03-16 01:10:30] Starting Codex subprocess. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core', '-o', 'C:\\Users\\osart\\ATR_ProjectV2\\output\\worker_dualA\\42949039\\codex_last_message.txt', '-']
+2026-03-16T05:10:30.944364Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf50d-8911-7681-8935-cbe1fb614240
+--------
+user
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+
+SYSTEM:
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+You are an expert Java developer tasked with repairing a failing test suite. Your strictly defined goal is to heal the provided JUnit test methods so they pass against the updated focal class.
+
+CRITICAL CONSTRAINTS:
+1. Modify ONLY the specific @Test method explicitly identified in the AST mapping.
+2. Preserve the mapped method declaration lock exactly: method name, modifiers, annotations, and return type must match the original mapped method.
+3. Parameters and throws may change only when required by the evolved focal behavior.
+4. Use only the existing class-level collaborators/fields already present in the test class context. Do not instantiate the focal class or create local mocks inside the target method.
+5. DO NOT create, generate, or hallucinate any new @Test methods, helper methods, fields, imports, or annotations.
+6. Update only the necessary setup, mocks, inputs, or assertions within the target method body to resolve the failure log.
+7. Reply with only the full mapped @Test method block (annotation + signature + body). Do not output the whole class.
+You can use the Mockito framework. You must declare the test class and all the test methods with the public access modifier.
+
+USER:
+The project uses Junit version 4.12 and Java 1.8. 
+Analyze the focal modifications and repair the existing test class.
+
+// --- UPDATED FOCAL CLASS ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.core.helper;
+
+import java.math.BigDecimal;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomBooleanEditor;
+import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
+import org.finra.herd.model.dto.ConfigurationValue;
+
+/**
+ * A helper for {@link ConfigurationValue}. Mainly used to facilitate access to current 
+...[truncated to 1200 chars for smoke mode]...
+</code>
+
+// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.core.helper;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.
+...[truncated to 700 chars for smoke mode]...
+</code>
+
+// --- ORIGINAL MAPPED TEST METHOD STYLE ANCHOR ---
+<code>
+@Test
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+        Integer expectedValue = (Integer) configurationValue.getDefaultValue();
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+        Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+        assertNotNull("value", value);
+        assertEquals("value", expectedValue, value);
+    }
+</code>
+
+// --- AST MAPPING & CONTEXT ---
+Test to Focal Method Mapping:
+<code>
+{
+  "testGetPropertyReturnDefaultWhenValueConversionFails": [
+    "getProperty"
+  ]
+}
+</code>
+Relevant Focal Method Implementations:
+<code>
+Focal method getProperty:
+public static String getProperty(ConfigurationValue configurationValue, Environment environment)
+    {
+        return getProperty(configurationValue, String.class, environment);
+    }
+
+    /**
+     * Wrapper for {@link Environment#getProperty(String, Class, Object)} using the given {@link ConfigurationValue} as the key and default value. Optionally,
+     * uses the configured default value if the property is not found in the environment. The configured default value must be of the same class, or must be a
+     * sub-class of the given targetType.
+     *
+     * @param <T> The return type
+     * @param configurationValue The {@link ConfigurationValue} with property key and default value.
+     * @param targetType The returned object's type
+     * @param environment The {@link Environment} containing the property
+     *
+     * @return The property value
+     */
+
+Foc
+...[truncated to 900 chars for smoke mode]...
+</code>
+
+// --- TEST FAILURE LOG ---
+The baseline test execution failed with the following output:
+<code>
+[Surefire Report] C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core\target\surefire-reports\org.finra.herd.core.helper.ConfigurationHelperTest.txt
+-------------------------------------------------------------------------------
+Test set: org.finra.herd.core.helper.ConfigurationHelperTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 2.152 s <<< FAILURE! - in org.finra.herd.core.helper.ConfigurationHelperTest
+testGetPropertyReturnDefaultWhenValueConversionFails(org.finra.herd.core.helper.ConfigurationHelperTest)  Time elapsed: 0.01 s  <<< ERROR!
+java.lang.IllegalStateException: Failed to load ApplicationContext
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'org.springframework.scheduling.annotation.ProxyAsyn
+...[truncated to 900 chars for smoke mode]...
+</code>
+Analyze this failure trace to pinpoint the exact assertion or mock configuration that broke.
+
+// --- PROJECT ENVIRONMENT ---
+Project Structure:
+<code>
+Smoke mode: full project structure omitted for speed. Infer imports and collaborators from the provided focal/test files and direct file inspection.
+</code>
+Project Dependencies:
+<code>
+Smoke mode: full dependency list omitted for speed. Use existing imports, test base classes, and local file inspection as the source of truth.
+</code>
+
+Use the provided focal class and AST mapping as the source of truth.
+
+Repair only the mapped @Test method `testGetPropertyReturnDefaultWhenValueConversionFails`.
+
+Preserve the mapped method declaration lock exactly: name, modifiers, annotations, and return type must match the original mapped method.
+
+You may change parameters and throws only if needed to align with evolved focal behavior.
+
+Use existing class-level fields/collaborators only; do not instantiate the focal class locally and do not create local mocks.
+
+Do not modify any other method in the class.
+
+Do not add helpers, fields, imports, or annotations.
+
+Preserve this method style anchor exactly (except for the minimal assertion/setup edits needed to resolve the failure):
+<code>
+@Test
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+        Integer expectedValue = (Integer) configurationValue.getDefaultValue();
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+        Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+        assertNotNull("value", value);
+        assertEquals("value", expectedValue, value);
+    }
+</code>
+
+AST target mapping: testGetPropertyReturnDefaultWhenValueConversionFails -> getProperty.
+
+Keep or add this package declaration: package org.finra.herd.core.helper;
+
+Smoke mode: prefer the provided focal and test files, avoid exploring unrelated modules, and make the minimal direct edit needed to restore compilation or coverage.
+
+Return only the full mapped @Test method block (annotations + signature + body).
+
+Do not return the entire class, and do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java
+- src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java
+Return only the final Java source code.
+mcp startup: no servers
+codex
+@Test
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+        Integer expectedValue = (Integer) configurationValue.getDefaultValue();
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+        Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+        assertNotNull("value", value);
+        assertEquals("value", expectedValue, value);
+    }
+tokens used
+8,978
+@Test
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT;
+        Integer expectedValue = (Integer) configurationValue.getDefaultValue();
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
+
+        Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+        assertNotNull("value", value);
+        assertEquals("value", expectedValue, value);
+    }
+[2026-03-16 01:13:08] Finished Codex subprocess in 158.04s with returncode=0.
+[2026-03-16 01:13:53] Resolved Codex executable to C:\Users\osart\.codex\.sandbox-bin\codex.exe
+[2026-03-16 01:13:53] Codex working_root=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core timeout=420s prompt_length=6400 target_files=['C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core\\src\\test\\java\\org\\finra\\herd\\core\\helper\\ConfigurationHelperTest.java', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core\\src\\main\\java\\org\\finra\\herd\\core\\helper\\ConfigurationHelper.java'] last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_dualA\42949039\codex_last_message.txt
+[2026-03-16 01:13:53] Starting Codex version preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '--version'] timeout=20s
+codex-cli 0.115.0-alpha.11
+[2026-03-16 01:13:53] Finished Codex version preflight in 0.04s with returncode=0.
+[2026-03-16 01:13:53] Starting Codex exec preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core', '-'] timeout=20s
+2026-03-16T05:13:53.636694Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf510-a0d6-7720-accc-7c0855f316ba
+--------
+user
+Reply with the single word OK. Do not modify any files.
+mcp startup: no servers
+codex
+OK
+tokens used
+1,101
+OK
+[2026-03-16 01:14:05] Finished Codex exec preflight in 11.93s with returncode=0.
+[2026-03-16 01:14:05] Starting Codex subprocess. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core', '-o', 'C:\\Users\\osart\\ATR_ProjectV2\\output\\worker_dualA\\42949039\\codex_last_message.txt', '-']
+2026-03-16T05:14:05.566679Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf510-cf73-7e51-9883-a9478a4e9bc4
+--------
+user
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+
+SYSTEM:
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+You are an expert Java software engineer synchronizing an outdated JUnit test suite with a newly modified focal class. Your strictly defined goal is to update the existing test method's logic to account for new exceptions, new return types, or modified control flow in the focal class.
+
+CRITICAL CONSTRAINTS:
+1. You must update the specific mapped @Test method identified in the AST mapping.
+2. You may include additional brand-new @Test methods only when new focal logic paths require coverage.
+3. Preserve all unmapped existing tests exactly as they are. Do not alter or delete them.
+4. Do not output package declarations, class declarations, imports, fields, helper methods, or non-@Test methods.
+5. Reply with method blocks only: mapped repaired @Test method first, then optional new @Test method blocks.
+You can use the Mockito framework. You must declare the test class and all the test methods with the public access modifier.
+
+USER:
+The project uses Junit version 4.12 and Java 1.8. 
+Analyze the focal modifications and repair the existing test class.
+
+// --- UPDATED FOCAL CLASS ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.core.helper;
+
+import java.math.BigDecimal;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomBooleanEditor;
+import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
+import org.finra.herd.model.dto.ConfigurationValue;
+
+/**
+ * A helper for {@link ConfigurationValue}. Mainly used to facilitate access to current 
+...[truncated to 1200 chars for smoke mode]...
+</code>
+
+// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.core.helper;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.
+...[truncated to 700 chars for smoke mode]...
+</code>
+
+// --- AST MAPPING & CONTEXT ---
+Test to Focal Method Mapping:
+<code>
+{
+  "testGetPropertyReturnDefaultWhenValueConversionFails": [
+    "getProperty"
+  ]
+}
+</code>
+Relevant Focal Method Implementations:
+<code>
+Focal method getProperty:
+public static String getProperty(ConfigurationValue configurationValue, Environment environment)
+    {
+        return getProperty(configurationValue, String.class, environment);
+    }
+
+    /**
+     * Wrapper for {@link Environment#getProperty(String, Class, Object)} using the given {@link ConfigurationValue} as the key and default value. Optionally,
+     * uses the configured default value if the property is not found in the environment. The configured default value must be of the same class, or must be a
+     * sub-class of the given targetType.
+     *
+     * @param <T> The return type
+     * @param configurationValue The {@link ConfigurationValue} with property key and default value.
+     * @param targetType The returned object's type
+     * @param environment The {@link Environment} containing the property
+     *
+     * @return The property value
+     */
+
+Foc
+...[truncated to 900 chars for smoke mode]...
+</code>
+
+// --- PROJECT ENVIRONMENT ---
+Project Structure:
+<code>
+Smoke mode: full project structure omitted for speed. Infer imports and collaborators from the provided focal/test files and direct file inspection.
+</code>
+Project Dependencies:
+<code>
+Smoke mode: full dependency list omitted for speed. Use existing imports, test base classes, and local file inspection as the source of truth.
+</code>
+
+Use the provided focal class and AST mapping as the source of truth.
+
+Update the mapped @Test method `testGetPropertyReturnDefaultWhenValueConversionFails` first.
+
+Preserve all existing unmapped @Test methods exactly as they are.
+
+You may add new @Test methods only if the focal change requires extra coverage.
+
+Do not rewrite package/class declarations, imports, fields, or helper methods.
+
+AST target mapping: testGetPropertyReturnDefaultWhenValueConversionFails -> getProperty.
+
+Keep or add this package declaration: package org.finra.herd.core.helper;
+
+Smoke mode: prefer the provided focal and test files, avoid exploring unrelated modules, and make the minimal direct edit needed to restore compilation or coverage.
+
+Return method blocks only: the mapped @Test method block is required, and optional brand-new @Test method blocks may follow.
+
+Do not return a full class, package declaration, imports, fields, or helper methods.
+
+Do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java
+- src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java
+Return only the final Java source code.
+mcp startup: no servers
+codex
+@Test
+public void testGetPropertyReturnDefaultWhenValueConversionFails()
+{
+    org.finra.herd.model.dto.ConfigurationValue configurationValueWithStringDefault = null;
+    String defaultValue = null;
+
+    Object[] enumConstants = org.finra.herd.model.dto.ConfigurationValue.class.getEnumConstants();
+    org.junit.Assert.assertNotNull("ConfigurationValue is expected to be an enum.", enumConstants);
+
+    for (Object enumConstant : enumConstants)
+    {
+        org.finra.herd.model.dto.ConfigurationValue configurationValue = (org.finra.herd.model.dto.ConfigurationValue) enumConstant;
+        Object candidateDefaultValue = configurationValue.getDefaultValue();
+        if (candidateDefaultValue instanceof String)
+        {
+            configurationValueWithStringDefault = configurationValue;
+            defaultValue = (String) candidateDefaultValue;
+            break;
+        }
+    }
+
+    org.junit.Assert.assertNotNull("Expected at least one configuration value with a String default.", configurationValueWithStringDefault);
+
+    org.springframework.core.env.Environment environment = org.mockito.Mockito.mock(org.springframework.core.env.Environment.class);
+
+    org.springframework.core.convert.ConversionFailedException conversionFailedException =
+        new org.springframework.core.convert.ConversionFailedException(org.springframework.core.convert.TypeDescriptor.valueOf(String.class),
+            org.springframework.core.convert.TypeDescriptor.valueOf(String.class), "bad-value", new IllegalArgumentException("conversion failed"));
+
+    org.mockito.Mockito.doThrow(conversionFailedException)
+        .when(environment)
+        .getProperty(configurationValueWithStringDefault.getKey(), String.class, defaultValue);
+    org.mockito.Mockito.doThrow(conversionFailedException)
+        .when(environment)
+        .getProperty(configurationValueWithStringDefault.getKey(), String.class);
+
+    org.mockito.Mockito.when(environment.getProperty(configurationValueWithStringDefault.getKey(), defaultValue)).thenReturn(defaultValue);
+    org.mockito.Mockito.when(environment.getProperty(configurationValueWithStringDefault.getKey())).thenReturn(null);
+
+    org.junit.Assert.assertEquals(defaultValue, org.finra.herd.core.helper.ConfigurationHelper.getProperty(configurationValueWithStringDefault, environment));
+}
+tokens used
+11,647
+@Test
+public void testGetPropertyReturnDefaultWhenValueConversionFails()
+{
+    org.finra.herd.model.dto.ConfigurationValue configurationValueWithStringDefault = null;
+    String defaultValue = null;
+
+    Object[] enumConstants = org.finra.herd.model.dto.ConfigurationValue.class.getEnumConstants();
+    org.junit.Assert.assertNotNull("ConfigurationValue is expected to be an enum.", enumConstants);
+
+    for (Object enumConstant : enumConstants)
+    {
+        org.finra.herd.model.dto.ConfigurationValue configurationValue = (org.finra.herd.model.dto.ConfigurationValue) enumConstant;
+        Object candidateDefaultValue = configurationValue.getDefaultValue();
+        if (candidateDefaultValue instanceof String)
+        {
+            configurationValueWithStringDefault = configurationValue;
+            defaultValue = (String) candidateDefaultValue;
+            break;
+        }
+    }
+
+    org.junit.Assert.assertNotNull("Expected at least one configuration value with a String default.", configurationValueWithStringDefault);
+
+    org.springframework.core.env.Environment environment = org.mockito.Mockito.mock(org.springframework.core.env.Environment.class);
+
+    org.springframework.core.convert.ConversionFailedException conversionFailedException =
+        new org.springframework.core.convert.ConversionFailedException(org.springframework.core.convert.TypeDescriptor.valueOf(String.class),
+            org.springframework.core.convert.TypeDescriptor.valueOf(String.class), "bad-value", new IllegalArgumentException("conversion failed"));
+
+    org.mockito.Mockito.doThrow(conversionFailedException)
+        .when(environment)
+        .getProperty(configurationValueWithStringDefault.getKey(), String.class, defaultValue);
+    org.mockito.Mockito.doThrow(conversionFailedException)
+        .when(environment)
+        .getProperty(configurationValueWithStringDefault.getKey(), String.class);
+
+    org.mockito.Mockito.when(environment.getProperty(configurationValueWithStringDefault.getKey(), defaultValue)).thenReturn(defaultValue);
+    org.mockito.Mockito.when(environment.getProperty(configurationValueWithStringDefault.getKey())).thenReturn(null);
+
+    org.junit.Assert.assertEquals(defaultValue, org.finra.herd.core.helper.ConfigurationHelper.getProperty(configurationValueWithStringDefault, environment));
+}
+[2026-03-16 01:17:09] Finished Codex subprocess in 183.92s with returncode=0.
+[2026-03-16 01:17:20] Resolved Codex executable to C:\Users\osart\.codex\.sandbox-bin\codex.exe
+[2026-03-16 01:17:20] Codex working_root=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core timeout=420s prompt_length=6400 target_files=['C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core\\src\\test\\java\\org\\finra\\herd\\core\\helper\\ConfigurationHelperTest.java', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core\\src\\main\\java\\org\\finra\\herd\\core\\helper\\ConfigurationHelper.java'] last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_dualA\42949039\codex_last_message.txt
+[2026-03-16 01:17:20] Starting Codex version preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '--version'] timeout=20s
+codex-cli 0.115.0-alpha.11
+[2026-03-16 01:17:20] Finished Codex version preflight in 0.04s with returncode=0.
+[2026-03-16 01:17:20] Starting Codex exec preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core', '-'] timeout=20s
+2026-03-16T05:17:20.426376Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf513-c89e-7f72-8824-5734fa919524
+--------
+user
+Reply with the single word OK. Do not modify any files.
+mcp startup: no servers
+codex
+OK
+tokens used
+83
+OK
+[2026-03-16 01:17:22] Finished Codex exec preflight in 2.18s with returncode=0.
+[2026-03-16 01:17:22] Starting Codex subprocess. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualA\\42949039\\herd-code\\herd-core', '-o', 'C:\\Users\\osart\\ATR_ProjectV2\\output\\worker_dualA\\42949039\\codex_last_message.txt', '-']
+2026-03-16T05:17:22.606682Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualA\42949039\herd-code\herd-core
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf513-d122-77e1-8453-f6288a2cb503
+--------
+user
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+
+SYSTEM:
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+You are an expert Java software engineer synchronizing an outdated JUnit test suite with a newly modified focal class. Your strictly defined goal is to update the existing test method's logic to account for new exceptions, new return types, or modified control flow in the focal class.
+
+CRITICAL CONSTRAINTS:
+1. You must update the specific mapped @Test method identified in the AST mapping.
+2. You may include additional brand-new @Test methods only when new focal logic paths require coverage.
+3. Preserve all unmapped existing tests exactly as they are. Do not alter or delete them.
+4. Do not output package declarations, class declarations, imports, fields, helper methods, or non-@Test methods.
+5. Reply with method blocks only: mapped repaired @Test method first, then optional new @Test method blocks.
+You can use the Mockito framework. You must declare the test class and all the test methods with the public access modifier.
+
+USER:
+The project uses Junit version 4.12 and Java 1.8. 
+Analyze the focal modifications and repair the existing test class.
+
+// --- UPDATED FOCAL CLASS ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.core.helper;
+
+import java.math.BigDecimal;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomBooleanEditor;
+import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
+import org.finra.herd.model.dto.ConfigurationValue;
+
+/**
+ * A helper for {@link ConfigurationValue}. Mainly used to facilitate access to current 
+...[truncated to 1200 chars for smoke mode]...
+</code>
+
+// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.core.helper;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.
+...[truncated to 700 chars for smoke mode]...
+</code>
+
+// --- AST MAPPING & CONTEXT ---
+Test to Focal Method Mapping:
+<code>
+{
+  "testGetPropertyReturnDefaultWhenValueConversionFails": [
+    "getProperty"
+  ]
+}
+</code>
+Relevant Focal Method Implementations:
+<code>
+Focal method getProperty:
+public static String getProperty(ConfigurationValue configurationValue, Environment environment)
+    {
+        return getProperty(configurationValue, String.class, environment);
+    }
+
+    /**
+     * Wrapper for {@link Environment#getProperty(String, Class, Object)} using the given {@link ConfigurationValue} as the key and default value. Optionally,
+     * uses the configured default value if the property is not found in the environment. The configured default value must be of the same class, or must be a
+     * sub-class of the given targetType.
+     *
+     * @param <T> The return type
+     * @param configurationValue The {@link ConfigurationValue} with property key and default value.
+     * @param targetType The returned object's type
+     * @param environment The {@link Environment} containing the property
+     *
+     * @return The property value
+     */
+
+Foc
+...[truncated to 900 chars for smoke mode]...
+</code>
+
+// --- PROJECT ENVIRONMENT ---
+Project Structure:
+<code>
+Smoke mode: full project structure omitted for speed. Infer imports and collaborators from the provided focal/test files and direct file inspection.
+</code>
+Project Dependencies:
+<code>
+Smoke mode: full dependency list omitted for speed. Use existing imports, test base classes, and local file inspection as the source of truth.
+</code>
+
+Use the provided focal class and AST mapping as the source of truth.
+
+Update the mapped @Test method `testGetPropertyReturnDefaultWhenValueConversionFails` first.
+
+Preserve all existing unmapped @Test methods exactly as they are.
+
+You may add new @Test methods only if the focal change requires extra coverage.
+
+Do not rewrite package/class declarations, imports, fields, or helper methods.
+
+AST target mapping: testGetPropertyReturnDefaultWhenValueConversionFails -> getProperty.
+
+Keep or add this package declaration: package org.finra.herd.core.helper;
+
+Smoke mode: prefer the provided focal and test files, avoid exploring unrelated modules, and make the minimal direct edit needed to restore compilation or coverage.
+
+Return method blocks only: the mapped @Test method block is required, and optional brand-new @Test method blocks may follow.
+
+Do not return a full class, package declaration, imports, fields, or helper methods.
+
+Do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java
+- src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java
+Return only the final Java source code.
+mcp startup: no servers
+codex
+@Test
+public void testGetPropertyReturnDefaultWhenValueConversionFails()
+{
+    ConfigurationValue configurationValue = ConfigurationValue.class.getEnumConstants()[0];
+    Object defaultValue = configurationValue.getDefaultValue();
+    Class<?> targetType = (defaultValue == null) ? String.class : defaultValue.getClass();
+
+    Environment environment = mock(Environment.class);
+    when(environment.getProperty(configurationValue.getKey(), (Class) targetType, defaultValue)).thenThrow(
+        new org.springframework.core.convert.ConversionFailedException(
+            org.springframework.core.convert.TypeDescriptor.valueOf(String.class),
+            org.springframework.core.convert.TypeDescriptor.valueOf(Object.class),
+            "bad-value",
+            new IllegalArgumentException("conversion failed")));
+
+    Object result = ConfigurationHelper.getProperty(configurationValue, (Class) targetType, environment);
+
+    assertEquals(defaultValue, result);
+}
+tokens used
+13,832
+@Test
+public void testGetPropertyReturnDefaultWhenValueConversionFails()
+{
+    ConfigurationValue configurationValue = ConfigurationValue.class.getEnumConstants()[0];
+    Object defaultValue = configurationValue.getDefaultValue();
+    Class<?> targetType = (defaultValue == null) ? String.class : defaultValue.getClass();
+
+    Environment environment = mock(Environment.class);
+    when(environment.getProperty(configurationValue.getKey(), (Class) targetType, defaultValue)).thenThrow(
+        new org.springframework.core.convert.ConversionFailedException(
+            org.springframework.core.convert.TypeDescriptor.valueOf(String.class),
+            org.springframework.core.convert.TypeDescriptor.valueOf(Object.class),
+            "bad-value",
+            new IllegalArgumentException("conversion failed")));
+
+    Object result = ConfigurationHelper.getProperty(configurationValue, (Class) targetType, environment);
+
+    assertEquals(defaultValue, result);
+}
+[2026-03-16 01:20:48] Finished Codex subprocess in 206.37s with returncode=0.

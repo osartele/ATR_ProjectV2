@@ -1,0 +1,12 @@
+[
+  {
+    "mutation_type": "exception",
+    "method_name": "createStorageFileEntitiesFromStorageFiles",
+    "added_exception": "IllegalArgumentException",
+    "line": 54,
+    "column": 12,
+    "mutation_priority_class": "EXCEPTION_FALLBACK",
+    "focal_path": "compiledrepos/worker_pilotx2/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/StorageFileDaoHelper.java",
+    "test_path": "compiledrepos/worker_pilotx2/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/StorageFileDaoHelperTest.java"
+  }
+]

@@ -393,31 +393,36 @@ def apply_exception_mutation(file_path, target_method=None):
     source, _, contexts = _collect_method_contexts(file_path)
 
     def _can_add_exception(context):
-        header_text = source[context["parameter_close_index"]:context["body_open_index"]]
-        return "IllegalArgumentException" not in header_text
+        body_open_index = context.get("body_open_index")
+        body_close_index = context.get("body_close_index")
+        if body_open_index is None or body_close_index is None:
+            return False
+        method_body = source[body_open_index:body_close_index + 1]
+        return "AGONE_MUTATION_TRIGGER" not in method_body
 
     context = _select_method_context(contexts, target_method=target_method, predicate=_can_add_exception)
     if context is None:
-        raise ValueError("No method declaration was available for exception mutation.")
+        raise ValueError("No method body was available for exception fallback mutation.")
 
-    header_text = source[context["parameter_close_index"]:context["body_open_index"]]
-    if "throws" in header_text:
-        insertion_text = ", IllegalArgumentException "
-    else:
-        insertion_text = " throws IllegalArgumentException "
-
-    mutated_source = (
-        source[:context["body_open_index"]]
-        + insertion_text
-        + source[context["body_open_index"]:]
+    body_open_index = context["body_open_index"]
+    insertion_index = body_open_index + 1
+    line_start = source.rfind("\n", 0, body_open_index) + 1
+    method_indent = re.match(r"[ \t]*", source[line_start:body_open_index]).group(0)
+    body_indent = method_indent + "    "
+    insertion_text = (
+        f"\n{body_indent}if (System.getProperty(\"agone.mutation.trigger\") == null) "
+        "{ throw new AssertionError(\"AGONE_MUTATION_TRIGGER\"); }"
     )
+
+    mutated_source = source[:insertion_index] + insertion_text + source[insertion_index:]
     _write_source(file_path, mutated_source)
+    mutation_line, mutation_column = _line_col_from_index(source, insertion_index)
     return {
         "mutation_type": "exception",
         "method_name": context["name"],
-        "added_exception": "IllegalArgumentException",
-        "line": context["line"],
-        "column": context["column"],
+        "added_exception": "AssertionError(\"AGONE_MUTATION_TRIGGER\")",
+        "line": mutation_line,
+        "column": mutation_column,
     }
 
 

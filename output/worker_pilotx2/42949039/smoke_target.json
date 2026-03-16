@@ -1,0 +1,41 @@
+{
+  "project": "42949039",
+  "project_type": "Maven",
+  "module": "herd-code\\herd-service",
+  "focal_class": "StorageFileDaoHelper",
+  "test_class": "StorageFileDaoHelperTest",
+  "focal_method": "createStorageFileEntitiesFromStorageFiles",
+  "test_case": "testCreateStorageFileEntitiesFromStorageFiles",
+  "ast_mapping": {
+    "testCreateStorageFileEntitiesFromStorageFiles": [
+      "createStorageFileEntitiesFromStorageFiles"
+    ],
+    "testCreateStorageFileEntitiesFromStorageFilesWithNullDirectoryPath": [
+      "createStorageFileEntitiesFromStorageFiles"
+    ],
+    "testCreateStorageFileEntitiesFromStorageFilesWithS3EmptyPartition": [
+      "createStorageFileEntitiesFromStorageFiles"
+    ],
+    "testGetStorageFileEntity": [
+      "getStorageFileEntity"
+    ],
+    "testGetStorageFileEntityWithNullStorageFileEntity": [
+      "getStorageFileEntity"
+    ],
+    "testGetStorageFileEntityByStorageUnitEntityAndFilePath": [
+      "getStorageFileEntity"
+    ],
+    "testGetStorageFileEntityByStorageUnitEntityAndFilePathWithFileOnlyPrefix": [
+      "getStorageFileEntity"
+    ],
+    "testGetStorageFileEntityByStorageUnitEntityAndFilePathWithNullStorageFileEntity": [
+      "getStorageFileEntity"
+    ],
+    "testGetStorageFileEntityByStorageUnitEntityAndFilePathWithNullStorageFileEntityWithBlankDirectoryPath": [
+      "getStorageFileEntity"
+    ]
+  },
+  "target_json": "C:\\Users\\osart\\ATR_ProjectV2\\Classes2Test\\42949039_433.json",
+  "target_name": "StorageFileDaoHelperTest::testCreateStorageFileEntitiesFromStorageFiles -> StorageFileDaoHelper.createStorageFileEntitiesFromStorageFiles",
+  "repo_materialization": "copy"
+}

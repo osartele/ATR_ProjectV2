@@ -1,0 +1,98 @@
+@Test
+public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled() throws Exception
+{
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.setProperty("agone.mutation.trigger", "true");
+
+    try
+    {
+        SearchIndexUpdateHelper localSearchIndexUpdateHelper = new SearchIndexUpdateHelper();
+
+        java.lang.reflect.Field configurationHelperField = null;
+        java.lang.reflect.Field jsonHelperField = null;
+        for (java.lang.reflect.Field field : SearchIndexUpdateHelper.class.getDeclaredFields())
+        {
+            if ("ConfigurationHelper".equals(field.getType().getSimpleName()))
+            {
+                configurationHelperField = field;
+            }
+            if ("JsonHelper".equals(field.getType().getSimpleName()))
+            {
+                jsonHelperField = field;
+            }
+        }
+        if (configurationHelperField == null)
+        {
+            configurationHelperField = SearchIndexUpdateHelper.class.getDeclaredField("configurationHelper");
+        }
+        if (jsonHelperField == null)
+        {
+            jsonHelperField = SearchIndexUpdateHelper.class.getDeclaredField("jsonHelper");
+        }
+
+        configurationHelperField.setAccessible(true);
+        jsonHelperField.setAccessible(true);
+
+        Object localConfigurationHelper = org.mockito.Mockito.mock(configurationHelperField.getType(), new org.mockito.stubbing.Answer<Object>()
+        {
+            @Override
+            public Object answer(org.mockito.invocation.InvocationOnMock invocation) throws Throwable
+            {
+                if ("getProperty".equals(invocation.getMethod().getName()))
+                {
+                    return "false";
+                }
+                return org.mockito.Mockito.RETURNS_DEFAULTS.answer(invocation);
+            }
+        });
+
+        final boolean[] objectToJsonInvoked = new boolean[] {false};
+        Object localJsonHelper = org.mockito.Mockito.mock(jsonHelperField.getType(), new org.mockito.stubbing.Answer<Object>()
+        {
+            @Override
+            public Object answer(org.mockito.invocation.InvocationOnMock invocation) throws Throwable
+            {
+                if ("objectToJson".equals(invocation.getMethod().getName()))
+                {
+                    objectToJsonInvoked[0] = true;
+                    return "jsonMessage";
+                }
+                return org.mockito.Mockito.RETURNS_DEFAULTS.answer(invocation);
+            }
+        });
+
+        configurationHelperField.set(localSearchIndexUpdateHelper, localConfigurationHelper);
+        jsonHelperField.set(localSearchIndexUpdateHelper, localJsonHelper);
+
+        java.lang.reflect.Method modifyTagInSearchIndexMethod = null;
+        for (java.lang.reflect.Method method : SearchIndexUpdateHelper.class.getMethods())
+        {
+            if ("modifyTagInSearchIndex".equals(method.getName()) && method.getParameterTypes().length == 2)
+            {
+                modifyTagInSearchIndexMethod = method;
+                break;
+            }
+        }
+
+        org.junit.Assert.assertNotNull(modifyTagInSearchIndexMethod);
+
+        Class<?> tagEntityClass = modifyTagInSearchIndexMethod.getParameterTypes()[0];
+        Object tagEntity = tagEntityClass.newInstance();
+        tagEntityClass.getMethod("setId", Long.class).invoke(tagEntity, 1L);
+
+        modifyTagInSearchIndexMethod.invoke(localSearchIndexUpdateHelper, tagEntity, "UPDATE");
+
+        org.junit.Assert.assertTrue(objectToJsonInvoked[0]);
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+    }
+}

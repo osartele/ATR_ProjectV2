@@ -1,0 +1,552 @@
+[2026-03-16 01:10:48] Resolved Codex executable to C:\Users\osart\.codex\.sandbox-bin\codex.exe
+[2026-03-16 01:10:48] Codex working_root=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualB\42949039\herd-code\herd-service timeout=420s prompt_length=9313 target_files=['C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualB\\42949039\\herd-code\\herd-service\\src\\test\\java\\org\\finra\\herd\\service\\helper\\SecurityFunctionDaoHelperTest.java', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualB\\42949039\\herd-code\\herd-service\\src\\main\\java\\org\\finra\\herd\\service\\helper\\SecurityFunctionDaoHelper.java'] last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_dualB\42949039\codex_last_message.txt
+[2026-03-16 01:10:48] Starting Codex version preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '--version'] timeout=20s
+codex-cli 0.115.0-alpha.11
+[2026-03-16 01:10:48] Finished Codex version preflight in 0.04s with returncode=0.
+[2026-03-16 01:10:48] Starting Codex exec preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualB\\42949039\\herd-code\\herd-service', '-'] timeout=20s
+2026-03-16T05:10:49.033682Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualB\42949039\herd-code\herd-service
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf50d-cfbd-7f70-b798-b33a774110fe
+--------
+user
+Reply with the single word OK. Do not modify any files.
+mcp startup: no servers
+codex
+OK
+tokens used
+1,094
+OK
+[2026-03-16 01:10:50] Finished Codex exec preflight in 1.79s with returncode=0.
+[2026-03-16 01:10:50] Starting Codex subprocess. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualB\\42949039\\herd-code\\herd-service', '-o', 'C:\\Users\\osart\\ATR_ProjectV2\\output\\worker_dualB\\42949039\\codex_last_message.txt', '-']
+2026-03-16T05:10:50.822030Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualB\42949039\herd-code\herd-service
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf50d-d6ba-70f2-9426-623f674e8396
+--------
+user
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+
+SYSTEM:
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+You are an expert Java developer tasked with repairing a failing test suite. Your strictly defined goal is to heal the provided JUnit test methods so they pass against the updated focal class.
+
+CRITICAL CONSTRAINTS:
+1. Modify ONLY the specific @Test method explicitly identified in the AST mapping.
+2. Preserve the mapped method declaration lock exactly: method name, modifiers, annotations, and return type must match the original mapped method.
+3. Parameters and throws may change only when required by the evolved focal behavior.
+4. Use only the existing class-level collaborators/fields already present in the test class context. Do not instantiate the focal class or create local mocks inside the target method.
+5. DO NOT create, generate, or hallucinate any new @Test methods, helper methods, fields, imports, or annotations.
+6. Update only the necessary setup, mocks, inputs, or assertions within the target method body to resolve the failure log.
+7. Reply with only the full mapped @Test method block (annotation + signature + body). Do not output the whole class.
+You can use the Mockito framework. You must declare the test class and all the test methods with the public access modifier.
+
+USER:
+The project uses Junit version 4.12 and Java 1.8. 
+Analyze the focal modifications and repair the existing test class.
+
+// --- UPDATED FOCAL CLASS ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.service.helper;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import org.finra.herd.dao.SecurityFunctionDao;
+import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.jpa.SecurityFunctionEntity;
+
+/**
+ * Helper for security function related operations which require DAO.
+ */
+@Component
+public class SecurityFunctionDaoHelper
+{
+    @Autowired
+    private SecurityFunctionDao securityFunctionDao;
+
+    /**
+     * Gets a security function entity and ensure it exists.
+     *
+     * @param securityFuncti
+...[truncated to 1200 chars for smoke mode]...
+</code>
+
+// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---
+<code>
+package org.finra.herd.service.helper;
+
+import static org.finra.herd.dao.AbstractDaoTest.SECURITY_FUNCTION;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import org.finra.herd.dao.SecurityFunctionDao;
+import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.jpa.SecurityFunctionEntity;
+
+public class SecurityFunctionDaoHelpe
+...[truncated to 700 chars for smoke mode]...
+</code>
+
+// --- ORIGINAL MAPPED TEST METHOD STYLE ANCHOR ---
+<code>
+@Test
+    public void testGetSecurityFunctionEntity()
+    {
+        // Create a security function entity.
+        SecurityFunctionEntity securityFunctionEntity = new SecurityFunctionEntity();
+
+        // Mock the external calls.
+        when(securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION)).thenReturn(securityFunctionEntity);
+
+        // Call the method under test.
+        SecurityFunctionEntity result = securityFunctionDaoHelper.getSecurityFunctionEntity(SECURITY_FUNCTION);
+
+        // Validate the results.
+        assertEquals(securityFunctionEntity, result);
+
+        // Verify the external calls.
+        verify(securityFunctionDao).getSecurityFunctionByName(SECURITY_FUNCTION);
+        verifyNoMoreInteractionsHelper();
+    }
+</code>
+
+// --- AST MAPPING & CONTEXT ---
+Test to Focal Method Mapping:
+<code>
+{
+  "testGetSecurityFunctionEntity": [
+    "getSecurityFunctionEntity"
+  ]
+}
+</code>
+Relevant Focal Method Implementations:
+<code>
+Focal method getSecurityFunctionEntity:
+public SecurityFunctionEntity getSecurityFunctionEntity(String securityFunctionName)
+    {
+        if (System.getProperty("agone.mutation.trigger") == null) { throw new AssertionError("AGONE_MUTATION_TRIGGER"); }
+        SecurityFunctionEntity securityFunctionEntity = securityFunctionDao.getSecurityFunctionByName(securityFunctionName);
+
+        if (securityFunctionEntity == null)
+        {
+            throw new ObjectNotFoundException(String.format("Security function with name \"%s\" doesn't exist.", securityFunctionName));
+        }
+
+        return securityFunctionEntity;
+    }
+</code>
+
+// --- TEST FAILURE LOG ---
+The baseline test execution failed with the following output:
+<code>
+[Surefire Report] C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualB\42949039\herd-code\herd-service\target\surefire-reports\org.finra.herd.service.helper.SecurityFunctionDaoHelperTest.txt
+-------------------------------------------------------------------------------
+Test set: org.finra.herd.service.helper.SecurityFunctionDaoHelperTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 3.178 s <<< FAILURE! - in org.finra.herd.service.helper.SecurityFunctionDaoHelperTest
+testGetSecurityFunctionEntity(org.finra.herd.service.helper.SecurityFunctionDaoHelperTest)  Time elapsed: 3.011 s  <<< FAILURE!
+java.lang.AssertionError: AGONE_MUTATION_TRIGGER
+	at org.finra.herd.service.helper.SecurityFunctionDaoHelperTest.testGetSecurityFunctionEntity(SecurityFunctionDaoHelperTest.java:48)
+
+[Maven Output]
+
+...[truncated to 900 chars for smoke mode]...
+</code>
+Analyze this failure trace to pinpoint the exact assertion or mock configuration that broke.
+
+// --- PROJECT ENVIRONMENT ---
+Project Structure:
+<code>
+Smoke mode: full project structure omitted for speed. Infer imports and collaborators from the provided focal/test files and direct file inspection.
+</code>
+Project Dependencies:
+<code>
+Smoke mode: full dependency list omitted for speed. Use existing imports, test base classes, and local file inspection as the source of truth.
+</code>
+
+Use the provided focal class and AST mapping as the source of truth.
+
+Repair only the mapped @Test method `testGetSecurityFunctionEntity`.
+
+Preserve the mapped method declaration lock exactly: name, modifiers, annotations, and return type must match the original mapped method.
+
+You may change parameters and throws only if needed to align with evolved focal behavior.
+
+Use existing class-level fields/collaborators only; do not instantiate the focal class locally and do not create local mocks.
+
+Do not modify any other method in the class.
+
+Do not add helpers, fields, imports, or annotations.
+
+Preserve this method style anchor exactly (except for the minimal assertion/setup edits needed to resolve the failure):
+<code>
+@Test
+    public void testGetSecurityFunctionEntity()
+    {
+        // Create a security function entity.
+        SecurityFunctionEntity securityFunctionEntity = new SecurityFunctionEntity();
+
+        // Mock the external calls.
+        when(securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION)).thenReturn(securityFunctionEntity);
+
+        // Call the method under test.
+        SecurityFunctionEntity result = securityFunctionDaoHelper.getSecurityFunctionEntity(SECURITY_FUNCTION);
+
+        // Validate the results.
+        assertEquals(securityFunctionEntity, result);
+
+        // Verify the external calls.
+        verify(securityFunctionDao).getSecurityFunctionByName(SECURITY_FUNCTION);
+        verifyNoMoreInteractionsHelper();
+    }
+</code>
+
+AST target mapping: testGetSecurityFunctionEntity -> getSecurityFunctionEntity.
+
+Keep or add this package declaration: package org.finra.herd.service.helper;
+
+Smoke mode: prefer the provided focal and test files, avoid exploring unrelated modules, and make the minimal direct edit needed to restore compilation or coverage.
+
+Return only the full mapped @Test method block (annotations + signature + body).
+
+Do not return the entire class, and do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/service/helper/SecurityFunctionDaoHelperTest.java
+- src/main/java/org/finra/herd/service/helper/SecurityFunctionDaoHelper.java
+Return only the final Java source code.
+mcp startup: no servers
+codex
+@Test
+    public void testGetSecurityFunctionEntity()
+    {
+        String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+        System.setProperty("agone.mutation.trigger", "true");
+        try
+        {
+            // Create a security function entity.
+            SecurityFunctionEntity securityFunctionEntity = new SecurityFunctionEntity();
+
+            // Mock the external calls.
+            when(securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION)).thenReturn(securityFunctionEntity);
+
+            // Call the method under test.
+            SecurityFunctionEntity result = securityFunctionDaoHelper.getSecurityFunctionEntity(SECURITY_FUNCTION);
+
+            // Validate the results.
+            assertEquals(securityFunctionEntity, result);
+
+            // Verify the external calls.
+            verify(securityFunctionDao).getSecurityFunctionByName(SECURITY_FUNCTION);
+            verifyNoMoreInteractionsHelper();
+        }
+        finally
+        {
+            if (originalMutationTrigger == null)
+            {
+                System.clearProperty("agone.mutation.trigger");
+            }
+            else
+            {
+                System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+            }
+        }
+    }
+tokens used
+4,087
+@Test
+    public void testGetSecurityFunctionEntity()
+    {
+        String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+        System.setProperty("agone.mutation.trigger", "true");
+        try
+        {
+            // Create a security function entity.
+            SecurityFunctionEntity securityFunctionEntity = new SecurityFunctionEntity();
+
+            // Mock the external calls.
+            when(securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION)).thenReturn(securityFunctionEntity);
+
+            // Call the method under test.
+            SecurityFunctionEntity result = securityFunctionDaoHelper.getSecurityFunctionEntity(SECURITY_FUNCTION);
+
+            // Validate the results.
+            assertEquals(securityFunctionEntity, result);
+
+            // Verify the external calls.
+            verify(securityFunctionDao).getSecurityFunctionByName(SECURITY_FUNCTION);
+            verifyNoMoreInteractionsHelper();
+        }
+        finally
+        {
+            if (originalMutationTrigger == null)
+            {
+                System.clearProperty("agone.mutation.trigger");
+            }
+            else
+            {
+                System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+            }
+        }
+    }
+[2026-03-16 01:11:11] Finished Codex subprocess in 20.83s with returncode=0.
+[2026-03-16 01:12:50] Resolved Codex executable to C:\Users\osart\.codex\.sandbox-bin\codex.exe
+[2026-03-16 01:12:50] Codex working_root=C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualB\42949039\herd-code\herd-service timeout=420s prompt_length=6059 target_files=['C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualB\\42949039\\herd-code\\herd-service\\src\\test\\java\\org\\finra\\herd\\service\\helper\\SecurityFunctionDaoHelperTest.java', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualB\\42949039\\herd-code\\herd-service\\src\\main\\java\\org\\finra\\herd\\service\\helper\\SecurityFunctionDaoHelper.java'] last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_dualB\42949039\codex_last_message.txt
+[2026-03-16 01:12:50] Starting Codex version preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '--version'] timeout=20s
+codex-cli 0.115.0-alpha.11
+[2026-03-16 01:12:50] Finished Codex version preflight in 0.05s with returncode=0.
+[2026-03-16 01:12:50] Starting Codex exec preflight. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualB\\42949039\\herd-code\\herd-service', '-'] timeout=20s
+2026-03-16T05:12:50.952256Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualB\42949039\herd-code\herd-service
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf50f-abfb-7c92-b848-bbbd2df4f3d8
+--------
+user
+Reply with the single word OK. Do not modify any files.
+mcp startup: no servers
+codex
+OK
+tokens used
+1,094
+OK
+[2026-03-16 01:12:52] Finished Codex exec preflight in 1.79s with returncode=0.
+[2026-03-16 01:12:52] Starting Codex subprocess. command=['C:\\Users\\osart\\.codex\\.sandbox-bin\\codex.exe', '-c', 'windows.sandbox="unelevated"', '-a', 'never', '-s', 'read-only', 'exec', '--skip-git-repo-check', '--ephemeral', '--color', 'never', '-C', 'C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_dualB\\42949039\\herd-code\\herd-service', '-o', 'C:\\Users\\osart\\ATR_ProjectV2\\output\\worker_dualB\\42949039\\codex_last_message.txt', '-']
+2026-03-16T05:12:52.738289Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.115.0-alpha.11 (research preview)
+--------
+workdir: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_dualB\42949039\herd-code\herd-service
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cf50f-b2f3-71c2-abd5-d8251befaaf5
+--------
+user
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+
+SYSTEM:
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+You are an expert Java software engineer synchronizing an outdated JUnit test suite with a newly modified focal class. Your strictly defined goal is to update the existing test method's logic to account for new exceptions, new return types, or modified control flow in the focal class.
+
+CRITICAL CONSTRAINTS:
+1. You must update the specific mapped @Test method identified in the AST mapping.
+2. You may include additional brand-new @Test methods only when new focal logic paths require coverage.
+3. Preserve all unmapped existing tests exactly as they are. Do not alter or delete them.
+4. Do not output package declarations, class declarations, imports, fields, helper methods, or non-@Test methods.
+5. Reply with method blocks only: mapped repaired @Test method first, then optional new @Test method blocks.
+You can use the Mockito framework. You must declare the test class and all the test methods with the public access modifier.
+
+USER:
+The project uses Junit version 4.12 and Java 1.8. 
+Analyze the focal modifications and repair the existing test class.
+
+// --- UPDATED FOCAL CLASS ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.service.helper;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import org.finra.herd.dao.SecurityFunctionDao;
+import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.jpa.SecurityFunctionEntity;
+
+/**
+ * Helper for security function related operations which require DAO.
+ */
+@Component
+public class SecurityFunctionDaoHelper
+{
+    @Autowired
+    private SecurityFunctionDao securityFunctionDao;
+
+    /**
+     * Gets a security function entity and ensure it exists.
+     *
+     * @param securityFuncti
+...[truncated to 1200 chars for smoke mode]...
+</code>
+
+// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---
+<code>
+package org.finra.herd.service.helper;
+
+import static org.finra.herd.dao.AbstractDaoTest.SECURITY_FUNCTION;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import org.finra.herd.dao.SecurityFunctionDao;
+import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.jpa.SecurityFunctionEntity;
+
+public class SecurityFunctionDaoHelpe
+...[truncated to 700 chars for smoke mode]...
+</code>
+
+// --- AST MAPPING & CONTEXT ---
+Test to Focal Method Mapping:
+<code>
+{
+  "testGetSecurityFunctionEntity": [
+    "getSecurityFunctionEntity"
+  ]
+}
+</code>
+Relevant Focal Method Implementations:
+<code>
+Focal method getSecurityFunctionEntity:
+public SecurityFunctionEntity getSecurityFunctionEntity(String securityFunctionName)
+    {
+        if (System.getProperty("agone.mutation.trigger") == null) { throw new AssertionError("AGONE_MUTATION_TRIGGER"); }
+        SecurityFunctionEntity securityFunctionEntity = securityFunctionDao.getSecurityFunctionByName(securityFunctionName);
+
+        if (securityFunctionEntity == null)
+        {
+            throw new ObjectNotFoundException(String.format("Security function with name \"%s\" doesn't exist.", securityFunctionName));
+        }
+
+        return securityFunctionEntity;
+    }
+</code>
+
+// --- PROJECT ENVIRONMENT ---
+Project Structure:
+<code>
+Smoke mode: full project structure omitted for speed. Infer imports and collaborators from the provided focal/test files and direct file inspection.
+</code>
+Project Dependencies:
+<code>
+Smoke mode: full dependency list omitted for speed. Use existing imports, test base classes, and local file inspection as the source of truth.
+</code>
+
+Use the provided focal class and AST mapping as the source of truth.
+
+Update the mapped @Test method `testGetSecurityFunctionEntity` first.
+
+Preserve all existing unmapped @Test methods exactly as they are.
+
+You may add new @Test methods only if the focal change requires extra coverage.
+
+Do not rewrite package/class declarations, imports, fields, or helper methods.
+
+AST target mapping: testGetSecurityFunctionEntity -> getSecurityFunctionEntity.
+
+Keep or add this package declaration: package org.finra.herd.service.helper;
+
+Smoke mode: prefer the provided focal and test files, avoid exploring unrelated modules, and make the minimal direct edit needed to restore compilation or coverage.
+
+Return method blocks only: the mapped @Test method block is required, and optional brand-new @Test method blocks may follow.
+
+Do not return a full class, package declaration, imports, fields, or helper methods.
+
+Do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/service/helper/SecurityFunctionDaoHelperTest.java
+- src/main/java/org/finra/herd/service/helper/SecurityFunctionDaoHelper.java
+Return only the final Java source code.
+mcp startup: no servers
+codex
+@Test
+public void testGetSecurityFunctionEntity()
+{
+    System.setProperty("agone.mutation.trigger", "true");
+
+    SecurityFunctionEntity securityFunctionEntity = new SecurityFunctionEntity();
+    when(securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION)).thenReturn(securityFunctionEntity);
+
+    assertEquals(securityFunctionEntity, securityFunctionDaoHelper.getSecurityFunctionEntity(SECURITY_FUNCTION));
+
+    verify(securityFunctionDao).getSecurityFunctionByName(SECURITY_FUNCTION);
+    verifyNoMoreInteractions(securityFunctionDao);
+}
+tokens used
+7,191
+@Test
+public void testGetSecurityFunctionEntity()
+{
+    System.setProperty("agone.mutation.trigger", "true");
+
+    SecurityFunctionEntity securityFunctionEntity = new SecurityFunctionEntity();
+    when(securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION)).thenReturn(securityFunctionEntity);
+
+    assertEquals(securityFunctionEntity, securityFunctionDaoHelper.getSecurityFunctionEntity(SECURITY_FUNCTION));
+
+    verify(securityFunctionDao).getSecurityFunctionByName(SECURITY_FUNCTION);
+    verifyNoMoreInteractions(securityFunctionDao);
+}
+[2026-03-16 01:14:21] Finished Codex subprocess in 88.64s with returncode=0.

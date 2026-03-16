@@ -1,0 +1,19 @@
+@Test
+public void testGetPropertyReturnDefaultWhenValueConversionFails()
+{
+    ConfigurationValue configurationValue = ConfigurationValue.class.getEnumConstants()[0];
+    Object defaultValue = configurationValue.getDefaultValue();
+    Class<?> targetType = (defaultValue == null) ? String.class : defaultValue.getClass();
+
+    Environment environment = mock(Environment.class);
+    when(environment.getProperty(configurationValue.getKey(), (Class) targetType, defaultValue)).thenThrow(
+        new org.springframework.core.convert.ConversionFailedException(
+            org.springframework.core.convert.TypeDescriptor.valueOf(String.class),
+            org.springframework.core.convert.TypeDescriptor.valueOf(Object.class),
+            "bad-value",
+            new IllegalArgumentException("conversion failed")));
+
+    Object result = ConfigurationHelper.getProperty(configurationValue, (Class) targetType, environment);
+
+    assertEquals(defaultValue, result);
+}

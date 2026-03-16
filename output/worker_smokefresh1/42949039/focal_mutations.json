@@ -1,0 +1,11 @@
+[
+  {
+    "mutation_type": "exception",
+    "method_name": "modifyTagInSearchIndex",
+    "added_exception": "AssertionError(\"AGONE_MUTATION_TRIGGER\")",
+    "line": 97,
+    "column": 6,
+    "focal_path": "compiledrepos/worker_smokefresh1/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java",
+    "test_path": "compiledrepos/worker_smokefresh1/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java"
+  }
+]
