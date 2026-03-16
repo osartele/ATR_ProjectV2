@@ -1,0 +1,11 @@
+{
+  "dataset_root": "C:\\Users\\osart\\ATR_ProjectV2\\Classes2Test",
+  "records_found": 100,
+  "records_evaluated": 100,
+  "records_skipped": 0,
+  "ast_macro_precision": 0.93,
+  "ast_macro_recall": 0.93,
+  "regex_macro_precision": 0.97,
+  "regex_macro_recall": 0.97,
+  "output_csv": "C:\\Users\\osart\\ATR_ProjectV2\\output\\mapping_eval_after_receiver_patch\\mapping_accuracy.csv"
+}

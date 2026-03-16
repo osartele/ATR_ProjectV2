@@ -1,0 +1,1 @@
+SearchIndexUpdateHelper.java,org.finra.herd.service.helper.SearchIndexUpdateHelper,org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator,modifyTagInSearchIndex,100,SURVIVED,none

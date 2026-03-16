@@ -1,0 +1,53 @@
+{
+  "project": "42949039",
+  "project_type": "Maven",
+  "module": "herd-code\\herd-service",
+  "focal_class": "SearchIndexUpdateHelper",
+  "test_class": "SearchIndexUpdateHelperTest",
+  "focal_method": "modifyTagInSearchIndex",
+  "test_case": "testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled",
+  "ast_mapping": {
+    "testModifyBusinessObjectDefinitionInSearchIndex": [
+      "modifyBusinessObjectDefinitionInSearchIndex"
+    ],
+    "testModifyBusinessObjectDefinitionInSearchIndexBlankMessage": [
+      "modifyBusinessObjectDefinitionInSearchIndex"
+    ],
+    "testModifyBusinessObjectDefinitionInSearchIndexNoSqsQueueName": [
+      "modifyBusinessObjectDefinitionInSearchIndex"
+    ],
+    "testModifyBusinessObjectDefinitionsInSearchIndex": [
+      "modifyBusinessObjectDefinitionsInSearchIndex"
+    ],
+    "testModifyBusinessObjectDefinitionsInSearchIndexBlankMessage": [
+      "modifyBusinessObjectDefinitionsInSearchIndex"
+    ],
+    "testModifyBusinessObjectDefinitionsInSearchIndexNoSqsQueueName": [
+      "modifyBusinessObjectDefinitionsInSearchIndex"
+    ],
+    "testModifyTagInSearchIndex": [
+      "modifyTagInSearchIndex"
+    ],
+    "testModifyTagInSearchIndexBlankMessage": [
+      "modifyTagInSearchIndex"
+    ],
+    "testModifyTagInSearchIndexEmptyQueueName": [
+      "modifyTagInSearchIndex"
+    ],
+    "testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled": [
+      "modifyTagInSearchIndex"
+    ],
+    "testModifyTagsInSearchIndex": [
+      "modifyTagsInSearchIndex"
+    ],
+    "testModifyTagsInSearchIndexBlankMessage": [
+      "modifyTagsInSearchIndex"
+    ],
+    "testModifyTagsInSearchIndexNoSqsQueueName": [
+      "modifyTagsInSearchIndex"
+    ]
+  },
+  "target_json": "C:\\Users\\osart\\ATR_ProjectV2\\Classes2Test\\42949039_429.json",
+  "target_name": "SearchIndexUpdateHelperTest::testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -> SearchIndexUpdateHelper.modifyTagInSearchIndex",
+  "repo_materialization": "existing"
+}

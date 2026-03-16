@@ -1,0 +1,59 @@
+agents:
+  - model: gpt-4o-mini
+    temperature: 0
+  - model: gpt-3.5-turbo
+    temperature: 0
+  - model: gemini/gemini-1.5-pro
+    temperature: 0
+  - model: ollama/llama3.1:70b
+    temperature: 0
+    api_base: http://localhost:11434
+    stream: False
+  - model: claude-3-opus-20240229
+    temperature: 0
+  - model: perplexity/pplx-70b-chat
+    temperature: 0
+  - model: human
+
+prompts:
+  - name: zero-shot1
+    value:
+      - role: system
+        content: "You are provided with a Java class. Create a test class that fully tests the proposed Java class. Reply with code only, do not add other text that is not code. {{can_use_mockito}} {{set_public}}"
+      - role: user
+        content: "The Java class is: \n<code>\n{{focal_class}}\n</code>"
+
+  - name: zero-shot2
+    value:
+      - role: system
+        content: "You are provided with a Java class. Create a test class that fully tests the proposed Java class using the project information for imports. Reply with code only, do not add other text that is not code. {{can_use_mockito}} {{set_public}}"
+      - role: user
+        content: "The project uses {{testing_framework}} and Java {{java_version}}. The Java class is: \n<code>\n{{focal_class}}\n</code>"
+
+  - name: iterative-healing
+    value:
+      - role: system
+        content: "You are provided with a Java class. Create a test class that fully tests the proposed Java class using the project information for imports, the project structure, and the project dependencies. Reply with code only, do not add other text that is not code. {{can_use_mockito}} {{set_public}}"
+      - role: user
+        content: "The project uses {{testing_framework}} and Java {{java_version}}. The Java class is:\n<code>\n{{focal_class}}\n</code>\nThe project structure is:\n<code>\n{{project_structure}}\n</code>\nThe project dependencies are:\n<code>\n{{project_dependencies}}\n</code>"
+
+  - name: one-shot1
+    value:
+      - role: system
+        content: "You are provided with an example of a Java class and its test class. You are then given a new Java class. Using the example as a reference, create a test class that fully tests the new proposed Java class. Reply with code only, do not add other text that is not code. {{can_use_mockito}} {{set_public}}"
+      - role: user
+        content: "#Example:\nThe example Java class is:\n<code>\n{{java_class_example}}\n</code>\nThe example test class is: \n<code>\n{{test_class_example}}\n</code>\n\nThe Java class you must create the test for is: \n<code>\n{{focal_class}}\n</code>"
+
+  - name: one-shot2
+    value:
+      - role: system
+        content: "You are provided with an example of a Java class and its test class. You are then given a new Java class. Using the example as a reference and the project information for imports, create a test class that fully tests the new proposed Java class. Reply with code only, do not add other text that is not code. {{can_use_mockito}} {{set_public}}"
+      - role: user
+        content: "#Example:\nThe example project uses {{example_testing_framework}} and Java {{example_java_version}}. The example Java class is:\n<code>\n{{java_class_example}}\n</code>\nThe example test class is: \n<code>\n{{test_class_example}}\n</code>\n\nThe project uses {{testing_framework}} and Java {{java_version}} and the Java class you must to create the test for is: \n<code>\n{{focal_class}}\n</code>."
+
+  - name: one-shot3
+    value:
+      - role: system
+        content: "You are provided with an example of a Java class and its test class. You are then given a new Java class. Using the example as a reference, the project information for imports, the project structure, and the project dependencies, create a test class that fully tests the new proposed Java class. Ensure that `project_structure` and `project_dependencies` are expressed in JSON notation. Reply with code only, do not add other text that is not code. {{can_use_mockito}} {{set_public}}"
+      - role: user
+        content: "#Example:\nThe example project uses {{example_testing_framework}} and Java {{example_java_version}}. The example Java class is:\n<code>\n{{java_class_example}}\n</code>\nThe example test class is: \n<code>\n{{test_class_example}}\n</code>\n\nThe project uses {{testing_framework}} and Java {{java_version}}, and the Java class you must create the test for is:\n<code>\n{{focal_class}}\n</code>\nThe project structure is:\n<code>\n{{project_structure}}\n</code>\nThe project dependencies are:\n<code>\n{{project_dependencies}}\n</code>."

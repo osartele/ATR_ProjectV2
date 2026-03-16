@@ -1,0 +1,15 @@
+[
+  {
+    "mutation_type": "signature",
+    "method_name": "modifyTagInSearchIndex",
+    "inserted_parameter": "behavioral-mutation",
+    "line": 99,
+    "column": 9,
+    "old_expression": "tagEntity.getId()",
+    "new_expression": "999L",
+    "mutation_variant": "hardcoded_tag_id",
+    "mutation_priority_class": "MATH_PRIMITIVE_RETURNS",
+    "focal_path": "compiledrepos/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java",
+    "test_path": "compiledrepos/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java"
+  }
+]
