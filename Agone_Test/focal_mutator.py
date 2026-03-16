@@ -267,26 +267,6 @@ def _collect_method_contexts(file_path):
     return source, line_offsets, contexts
 
 
-def parse_and_map(file_path):
-    source, _, contexts = _collect_method_contexts(file_path)
-    mapping = {}
-    for context in contexts:
-        enriched_context = dict(context)
-        enriched_context["source"] = source
-        public_context = {
-            "line": context["line"],
-            "column": context["column"],
-            "parameters": context["parameters"],
-            "throws": context["throws"],
-        }
-        if context["body_open_index"] is not None:
-            body_line, body_column = _line_col_from_index(source, context["body_open_index"])
-            public_context["body_line"] = body_line
-            public_context["body_column"] = body_column
-        mapping.setdefault(context["name"], []).append(public_context)
-    return mapping
-
-
 def _select_method_context(contexts, target_method=None, predicate=None):
     filtered_contexts = []
     for context in contexts:
@@ -301,15 +281,6 @@ def _select_method_context(contexts, target_method=None, predicate=None):
     if not filtered_contexts:
         return None
     return filtered_contexts[0]
-
-
-def _next_available_param_name(existing_names, base_name="unusedFlag"):
-    if base_name not in existing_names:
-        return base_name
-    counter = 1
-    while f"{base_name}{counter}" in existing_names:
-        counter += 1
-    return f"{base_name}{counter}"
 
 
 def apply_logical_mutation(file_path, target_method=None):

@@ -4,8 +4,8 @@
   "module": "herd-code\\herd-service",
   "focal_class": "SearchIndexUpdateHelper",
   "test_class": "SearchIndexUpdateHelperTest",
-  "focal_method": "modifyTagInSearchIndex",
-  "test_case": "testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled",
+  "focal_method": "modifyTagsInSearchIndex",
+  "test_case": "testModifyTagsInSearchIndexBlankMessage",
   "ast_mapping": {
     "testModifyBusinessObjectDefinitionInSearchIndex": [
       "modifyBusinessObjectDefinitionInSearchIndex"
@@ -47,7 +47,7 @@
       "modifyTagsInSearchIndex"
     ]
   },
-  "target_json": "C:\\Users\\osart\\ATR_ProjectV2\\Classes2Test\\42949039_429.json",
-  "target_name": "SearchIndexUpdateHelperTest::testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -> SearchIndexUpdateHelper.modifyTagInSearchIndex",
+  "target_json": "C:\\Users\\osart\\ATR_ProjectV2\\Classes2Test\\42949039_431.json",
+  "target_name": "SearchIndexUpdateHelperTest::testModifyTagsInSearchIndexBlankMessage -> SearchIndexUpdateHelper.modifyTagsInSearchIndex",
   "repo_materialization": "existing"
 }

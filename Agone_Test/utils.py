@@ -1,4 +1,4 @@
-import os
+﻿import os
 import pandas as pd
 import subprocess
 import shutil
@@ -1235,20 +1235,6 @@ def _throws_to_signature(method_declaration):
     return tuple(normalized_throws)
 
 
-def _method_signature_fingerprint(method_declaration):
-    return {
-        "name": str(getattr(method_declaration, "name", "") or ""),
-        "modifiers": tuple(sorted(list(getattr(method_declaration, "modifiers", []) or []))),
-        "annotations": tuple(_annotation_names(getattr(method_declaration, "annotations", []) or [])),
-        "return_type": _type_node_to_signature_string(getattr(method_declaration, "return_type", None)),
-        "parameters": tuple(
-            _parameter_to_signature(parameter)
-            for parameter in (getattr(method_declaration, "parameters", None) or [])
-        ),
-        "throws": _throws_to_signature(method_declaration),
-    }
-
-
 def _iterative_declaration_lock_fingerprint(method_declaration):
     return {
         "name": str(getattr(method_declaration, "name", "") or ""),
@@ -1945,57 +1931,6 @@ def _insert_missing_imports(original_source, original_tree, new_tree):
     return "\n".join(updated_lines)
 
 
-def merge_test_classes(original_test_path, new_test_content):
-    try:
-        with open(original_test_path, "r", encoding="utf-8") as original_test_file:
-            original_source = original_test_file.read()
-    except Exception:
-        return new_test_content
-
-    normalized_new_content = _normalize_generated_test_content(
-        new_test_content,
-        os.path.splitext(os.path.basename(original_test_path))[0],
-    )
-    if normalized_new_content is None:
-        return original_source
-
-    original_tree = _parse_java_or_none(original_source)
-    new_tree = _parse_java_or_none(normalized_new_content)
-    original_class = _get_primary_class(original_tree)
-    new_class = _get_primary_class(new_tree)
-    if original_class is None or new_class is None:
-        return normalized_new_content
-
-    existing_test_methods = {
-        method.name for method in original_class.methods if _is_test_method(method)
-    }
-    new_test_method_blocks = _extract_method_blocks(
-        normalized_new_content, new_class, test_methods_only=True
-    )
-    methods_to_append = [
-        method_block
-        for method_name, method_block in new_test_method_blocks.items()
-        if method_name not in existing_test_methods
-    ]
-    if not methods_to_append:
-        return _insert_missing_imports(original_source, original_tree, new_tree)
-
-    merged_source = _insert_missing_imports(original_source, original_tree, new_tree)
-    merged_tree = _parse_java_or_none(merged_source)
-    merged_class = _get_primary_class(merged_tree)
-    merged_lines = merged_source.splitlines()
-    class_end_line = _find_class_end_line(merged_source, merged_class)
-    insertion_index = max(class_end_line - 1, 0)
-
-    appended_lines = [""]
-    for method_block in methods_to_append:
-        appended_lines.append(method_block)
-        appended_lines.append("")
-
-    merged_lines = merged_lines[:insertion_index] + appended_lines + merged_lines[insertion_index:]
-    return "\n".join(merged_lines).rstrip() + "\n"
-
-
 def _format_ast_test_method_context(ast_context):
     invocations_by_test = ast_context.get("invocations_by_test", {})
     if not invocations_by_test:
@@ -2175,24 +2110,6 @@ def _truncate_prompt_text(text, max_chars):
     return normalized_text[:max_chars] + f"\n...[truncated to {max_chars} chars for smoke mode]..."
 
 
-def _summarize_test_file_for_prompt(test_file_content):
-    if not test_file_content:
-        return "Existing test file unavailable."
-
-    package_match = re.search(r"^\s*package\s+[^;]+;", test_file_content, re.MULTILINE)
-    package_line = package_match.group(0) if package_match else "package <unknown>;"
-    imports = re.findall(r"^\s*import\s+[^;]+;", test_file_content, re.MULTILINE)
-    import_summary = "\n".join(imports[:20]) if imports else "No import statements found."
-    test_method_names = re.findall(r"(?m)^\s*(?:public|protected|private)?\s*void\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", test_file_content)
-    test_method_names = [method_name for method_name in test_method_names if method_name.lower().startswith("test")]
-    method_summary = ", ".join(test_method_names[:40]) if test_method_names else "No obvious test method names found."
-    return (
-        f"{package_line}\n"
-        f"Imports:\n{import_summary}\n\n"
-        f"Existing test methods:\n{method_summary}"
-    )
-
-
 def _compact_prompt_data_for_smoke(prompt_data, technique, test_file_content):
     compact_prompt_data = prompt_data.copy()
     compact_prompt_data["project_structure"] = (
@@ -2263,261 +2180,6 @@ def _lookup_tracking_metrics(tracking_df, test_class, test_path, generator, tech
     return metrics
 
 
-
-
-def _legacy_make_api_call_v1(test_type, technique, focal_class, focal_path, testing_framework, java_version, has_mockito, test_path, name_test_class, project_structure, project_dependencies, package_test_class=None):
-    """
-    Given a focal class, it generates the test class making an API call to the AI model corresponding to the test type. 
-    Note: At the moment, it supports only 'gpt-4o-mini' test type.
-    Note: At the moment, it supports the 'zeroshot1', 'zeroshot2', 'oneshot1' and 'oneshot2' techniques.
-
-        Parameters:
-                test_type: the type of the test (e.g 'gpt-4o-mini',...)
-                technique: the prompt technique 
-                focal_class: the content of the focal class
-                testing_framework (String): a sentence that indicates to the AI model which testing framework (and eventually which version) it can use.
-                java_version: the java version implemented in the focal class
-                has_mockito (Boolean): 'True' if the prompt should inform the AI model that it can use the Mockito framework., 'False' otherwise
-                test_path: the path of the test
-                name_test_class: the currently name of the test class (ALERT* must be without the .java suffix, e.g. 'foo') 
-                package_test_class (None): the package of the test class
-        Returns:
-                response: the java test class returned by the API call, 'None' if the response is Anomalous
-
-    """
-    def replace_placeholders(text, replacements_dict):
-        return re.sub(r'\{\{(\w+)\}\}', lambda match: replacements_dict.get(match.group(1), match.group(0)), text)
-    def get_attribute_by_model(model_name, attribute_name):
-        agents = ExecutionManager.get_agents()
-        return agents.get(model_name, None).get(attribute_name, None)
-    def get_prompt_by_name(prompt_name):
-        prompts = ExecutionManager.get_prompts()
-        raw_prompt = prompts.get(prompt_name, None)
-        final_prompt = copy.deepcopy(raw_prompt)
-        for role in final_prompt:
-            role['content'] = replace_placeholders(role['content'], prompt_data)
-        return final_prompt
-
-    set_key_as_os_environ(test_type)
-    java_class_example = 'package com.example.project;\n\npublic class Calculator {\n\n	public int add(int a, int b) {\n\n	return a + b;\n	}\n\n}'
-    test_class_example = 'package com.example.project;\n\nimport static org.junit.jupiter.api.Assertions.assertEquals;\nimport org.junit.jupiter.api.DisplayName;\nimport org.junit.jupiter.api.Test;\nimport org.junit.jupiter.params.ParameterizedTest;\nimport org.junit.jupiter.params.provider.CsvSource;\n\nclass CalculatorTests {\n\n	@Test\n	@DisplayName("1 + 1 = 2")\n	void addsTwoNumbers() {\n		Calculator calculator = new Calculator();\n		assertEquals(2, calculator.add(1, 1), "1 + 1 should equal 2");\n	}\n\n	@ParameterizedTest(name = "{0} + {1} = {2}")\n	@CsvSource({\n			"0,    1,   1",\n			"1,    2,   3",\n			"49,  51, 100",\n			"1,  100, 101"\n	})\n	void add(int first, int second, int expectedResult) {\n		Calculator calculator = new Calculator();\n		assertEquals(expectedResult, calculator.add(first, second),\n				() -> first + " + " + second + " should equal " + expectedResult);\n	}\n}'
-    example_testing_framework = 'JUnit 5'
-    example_java_version = '11'
-    # Define the response
-    response = None
-    can_use_mockito = None
-    try:
-        # Leggi il contenuto della classe di test
-        with open(test_path, 'r') as test_file:
-            test_file_content = test_file.read()
-    except Exception as e:
-        print(e)
-        return None
-
-    if has_mockito == True or test_file_content.__contains__("mockito"):
-        can_use_mockito = "You can use the Mockito framework."
-    else:
-        can_use_mockito = "You cannot use the Mockito framework."
-
-    set_public = "You must declare the test class and all the test methods with the public access modifier."
-
-    messages = []
-
-    prompt_data = {
-        "focal_class": focal_class,
-        "focal path": focal_path,
-        "testing_framework": testing_framework,
-        "java_version": java_version,
-        "project_structure": str(project_structure),
-        "project_dependencies": str(project_dependencies),
-        "java_class_example": java_class_example,
-        "test_class_example": test_class_example,
-        "example_testing_framework": example_testing_framework,
-        "example_java_version": example_java_version,
-        "can_use_mockito": can_use_mockito,
-        "set_public": set_public
-
-    }
-    prompt = get_prompt_by_name(technique)
-
-    messages = [{"role": role["role"], "content": role["content"]} for role in prompt]
-
-    temperature = get_attribute_by_model(test_type, 'temperature')
-    api_base = get_attribute_by_model(test_type, 'api_base')
-    stream = bool(get_attribute_by_model(test_type, 'stream'))
-    response = completion(model=test_type, messages=prompt, temperature=temperature, api_base=api_base, stream=stream)
-
-    if response == " " or response is None or not response.choices:
-        return None, messages
-    
-    result = response.choices[0].message['content']
-    # Check if "```java" and "```" are in the result
-    if "```.java\n" in result and "```" in result:
-        # Extract only the text between "```java" and "```"
-        match = re.search(r'```.java\n(.*?)```', result, re.DOTALL)
-        if match:
-            result = match.group(1)
-            if result is None:
-                # Gestisci il caso in cui result è None
-                return None, messages
-            # Extract the class name from the result
-            class_name_match = re.search(r'class (\w+)', result)
-            if class_name_match:
-                if class_name_match.group(1) != name_test_class:
-                    # Cange the class name to the original one
-                    result = re.sub(r'class (\w+)', f'class {name_test_class}', result)
-
-        # Verify if the package is specified in the test class provided by the API call. If not, add it manually.
-        cleaned_content = re.sub(r'//.*', '', result) # Remove the single-line comments
-        cleaned_content = re.sub(r'/\*.*?\*/', '', cleaned_content, flags=re.DOTALL)  # Remove the multi-lines comments
-        pattern = r'package\s+' + re.escape(package_test_class) + r';'
-        match = re.search(pattern, cleaned_content)
-        if match is None:
-            result = 'package' + ' ' + package_test_class + ';' + '\n' + result
-        messages.append({"role": "assistant", "content": result})  # Aggiungi la risposta al contesto
-        return result, messages
-    elif "```java" in result and "```" in result:
-        # Extract only the text between "```java" and "```"
-        match = re.search(r'```java(.*?)```', result, re.DOTALL)
-        if match:
-            result = match.group(1)
-            if result is None:
-                # Gestisci il caso in cui result è None
-                return None, messages
-            # Extract the class name from the result
-            class_name_match = re.search(r'class (\w+)', result)
-            if class_name_match:
-                if class_name_match.group(1) != name_test_class:
-                    # Cange the class name to the original one
-                    result = re.sub(r'class (\w+)', f'class {name_test_class}', result)
-
-        # Verify if the package is specified in the test class provided by the API call. If not, add it manually.
-        cleaned_content = re.sub(r'//.*', '', result) # Remove the single-line comments
-        cleaned_content = re.sub(r'/\*.*?\*/', '', cleaned_content, flags=re.DOTALL)  # Remove the multi-lines comments
-        pattern = r'package\s+' + re.escape(package_test_class) + r';'
-        match = re.search(pattern, cleaned_content)
-        if match is None:
-            result = 'package' + ' ' + package_test_class + ';' + '\n' + result
-        messages.append({"role": "assistant", "content": result})  # Aggiungi la risposta al contesto
-        return result, messages
-
-
-def _legacy_make_api_call_v2(test_type, technique, focal_class, focal_path, testing_framework, java_version, has_mockito, test_path, name_test_class, project_structure, project_dependencies, package_test_class=None):
-    """
-    Deprecated API execution path kept only for reference while Codex CLI is active.
-    """
-
-    def replace_placeholders(text, replacements_dict):
-        return re.sub(
-            r"\{\{(\w+)\}\}",
-            lambda match: str(replacements_dict.get(match.group(1), match.group(0))),
-            text,
-        )
-
-    def get_attribute_by_model(model_name, attribute_name):
-        agents = ExecutionManager.get_agents()
-        return agents.get(model_name, {}).get(attribute_name, None)
-
-    def get_prompt_by_name(prompt_name):
-        prompts = ExecutionManager.get_prompts()
-        raw_prompt = prompts.get(prompt_name, None)
-        if raw_prompt is None:
-            return None
-        final_prompt = copy.deepcopy(raw_prompt)
-        for role in final_prompt:
-            role["content"] = replace_placeholders(role["content"], prompt_data)
-        return final_prompt
-
-    set_key_as_os_environ(test_type)
-    java_class_example = (
-        "package com.example.project;\n\npublic class Calculator {\n\n\tpublic int add(int a, int b) {\n\n\treturn a + b;\n\t}\n\n}"
-    )
-    test_class_example = (
-        'package com.example.project;\n\nimport static org.junit.jupiter.api.Assertions.assertEquals;\n'
-        'import org.junit.jupiter.api.DisplayName;\nimport org.junit.jupiter.api.Test;\n'
-        'import org.junit.jupiter.params.ParameterizedTest;\n'
-        'import org.junit.jupiter.params.provider.CsvSource;\n\nclass CalculatorTests {\n\n\t@Test\n'
-        '\t@DisplayName("1 + 1 = 2")\n\tvoid addsTwoNumbers() {\n\t\tCalculator calculator = new Calculator();\n'
-        '\t\tassertEquals(2, calculator.add(1, 1), "1 + 1 should equal 2");\n\t}\n\n'
-        '\t@ParameterizedTest(name = "{0} + {1} = {2}")\n\t@CsvSource({\n\t\t\t"0,    1,   1",\n'
-        '\t\t\t"1,    2,   3",\n\t\t\t"49,  51, 100",\n\t\t\t"1,  100, 101"\n\t})\n'
-        '\tvoid add(int first, int second, int expectedResult) {\n\t\tCalculator calculator = new Calculator();\n'
-        '\t\tassertEquals(expectedResult, calculator.add(first, second),\n'
-        '\t\t\t\t() -> first + " + " + second + " should equal " + expectedResult);\n\t}\n}'
-    )
-    example_testing_framework = "JUnit 5"
-    example_java_version = "11"
-
-    try:
-        with open(test_path, "r", encoding="utf-8") as test_file:
-            test_file_content = test_file.read()
-    except Exception as e:
-        print(e)
-        return None, [], {"prompt_tokens": 0, "completion_tokens": 0}
-
-    if has_mockito is True or "mockito" in test_file_content:
-        can_use_mockito = "You can use the Mockito framework."
-    else:
-        can_use_mockito = "You cannot use the Mockito framework."
-
-    prompt_data = {
-        "focal_class": focal_class,
-        "focal_path": focal_path,
-        "testing_framework": testing_framework,
-        "java_version": java_version,
-        "project_structure": str(project_structure),
-        "project_dependencies": str(project_dependencies),
-        "java_class_example": java_class_example,
-        "test_class_example": test_class_example,
-        "example_testing_framework": example_testing_framework,
-        "example_java_version": example_java_version,
-        "can_use_mockito": can_use_mockito,
-        "set_public": "You must declare the test class and all the test methods with the public access modifier.",
-        "existing_test_class": test_file_content,
-        "mapped_focal_methods": "{}",
-        "focal_methods_without_tests": "[]",
-        "focal_method_context": focal_class,
-    }
-
-    prompt_data.update(
-        _build_ast_prompt_context(
-            focal_path,
-            focal_class,
-            test_path,
-        )
-    )
-
-    prompt = get_prompt_by_name(technique)
-    if prompt is None:
-        return None, [], {"prompt_tokens": 0, "completion_tokens": 0}
-
-    messages = [{"role": role["role"], "content": role["content"]} for role in prompt]
-    temperature = get_attribute_by_model(test_type, "temperature")
-    api_base = get_attribute_by_model(test_type, "api_base")
-    stream = bool(get_attribute_by_model(test_type, "stream"))
-    response = completion(
-        model=test_type,
-        messages=prompt,
-        temperature=temperature,
-        api_base=api_base,
-        stream=stream,
-    )
-    usage_metadata = _extract_usage_metadata(response)
-
-    if response == " " or response is None or not response.choices:
-        return None, messages, usage_metadata
-
-    result = response.choices[0].message["content"]
-    result = _normalize_generated_test_content(result, name_test_class, package_test_class)
-    if result is None:
-        return None, messages, usage_metadata
-
-    messages.append({"role": "assistant", "content": result})
-    return result, messages, usage_metadata
-
-
-def _legacy_set_key_as_os_environ(test_type):
-    return None
 
 
 def _load_run_settings():
@@ -2743,42 +2405,6 @@ def _read_text_file(file_path):
             return text_file.read()
     except Exception:
         return ""
-
-
-def _prepare_codex_workspace(target_files_list):
-    source_root = _common_target_root(target_files_list)
-    workspace_root = _resolve_codex_workspace_root(target_files_list)
-    workspace_files = []
-
-    for original_path in target_files_list or []:
-        absolute_original_path = os.path.abspath(original_path)
-        try:
-            relative_path = os.path.relpath(absolute_original_path, source_root)
-        except ValueError:
-            relative_path = os.path.basename(absolute_original_path)
-
-        workspace_file_path = os.path.join(workspace_root, relative_path)
-        os.makedirs(os.path.dirname(workspace_file_path), exist_ok=True)
-        shutil.copy2(absolute_original_path, workspace_file_path)
-        workspace_files.append(
-            {
-                "original_path": absolute_original_path,
-                "workspace_path": workspace_file_path,
-                "relative_path": relative_path,
-            }
-        )
-
-    return workspace_root, workspace_files
-
-
-def _sync_codex_workspace_back(workspace_files):
-    for workspace_file in workspace_files or []:
-        workspace_path = workspace_file.get("workspace_path")
-        original_path = workspace_file.get("original_path")
-        if not workspace_path or not original_path or not os.path.exists(workspace_path):
-            continue
-        _assert_mutable_workspace_path(original_path)
-        shutil.copy2(workspace_path, original_path)
 
 
 def _run_codex_preflight(codex_executable, working_root, diagnostic_log_path):
@@ -3996,3 +3622,5 @@ def is_admin(system):
                 return False
         except:
             return False
+
+
