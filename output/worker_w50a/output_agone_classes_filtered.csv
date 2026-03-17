@@ -1,6 +1,5 @@
 ID_Focal_Class
 42949039_SearchIndexUpdateHelper::modifyTagInSearchIndex
-42949039_SearchIndexUpdateHelper::modifyTagsInSearchIndex
 42949039_ConfigurationHelper::getBigDecimalRequiredProperty
 42949039_ConfigurationHelper::getProperty
 42949039_SwaggerGenMojo::execute

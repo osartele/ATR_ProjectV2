@@ -1,0 +1,19 @@
+    @Test
+    public void testGetPropertyThrowsWhenDefaultTypeDoesNotMatch()
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.HERD_ENVIRONMENT;
+        Class<?> givenType = Integer.class;
+
+        MockEnvironment environment = new MockEnvironment();
+
+        try
+        {
+            ConfigurationHelper.getProperty(configurationValue, givenType, environment);
+            fail("expected IllegalStateException, but no exception was thrown");
+        }
+        catch (Exception e)
+        {
+            assertEquals("thrown exception type", IllegalStateException.class, e.getClass());
+            assertEquals("thrown exception message", "configurationValue is required", e.getMessage());
+        }
+    }

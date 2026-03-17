@@ -1,12 +1,5 @@
-[2026-03-16 15:16:23] [IterativeHealing] Baseline failed for SwaggerGenMojoTest; starting retry loop (max_retries=3).
-[2026-03-16 15:16:23] [IterativeHealing] Retry 1/3 for SwaggerGenMojoTest on focal SwaggerGenMojo.
-[2026-03-16 15:17:09] [IterativeHealing] Retry 1 style-lock rejection captured: Codex output rejected for iterative-healing: iterative style-lock validation failed (local focal-class instantiation is forbidden in iterative style lock (SwaggerGenMojo)).
-[2026-03-16 15:17:09] [IterativeHealing] Codex method patch generation failed on retry 1 for SwaggerGenMojoTest.
-[2026-03-16 15:17:09] [IterativeHealing] Retry 2/3 for SwaggerGenMojoTest on focal SwaggerGenMojo.
-[2026-03-16 15:20:42] [IterativeHealing] Retry 2 failure signal: java.lang.IllegalArgumentException: Could not find field 'swaggerGenMojo' on target object [org.finra.herd.swaggergen.SwaggerGenMojoTest@6536e911] or target class [class org.finra.herd.swaggergen.SwaggerGenMojoTest]
-[2026-03-16 15:20:42] [IterativeHealing] Retry 3/3 for SwaggerGenMojoTest on focal SwaggerGenMojo.
-[2026-03-16 15:21:30] [IterativeHealing] Retry 3 style-lock rejection captured: Codex output rejected for iterative-healing: iterative style-lock validation failed (local focal-class instantiation is forbidden in iterative style lock (SwaggerGenMojo)).
-[2026-03-16 15:21:30] [IterativeHealing] Codex method patch generation failed on retry 3 for SwaggerGenMojoTest.
-[2026-03-16 15:21:30] [IterativeHealing] Exhausted retries for SwaggerGenMojoTest without baseline success.
-[2026-03-16 15:22:21] [RegenerativeSync] Starting primary generation pass for SwaggerGenMojoTest on focal SwaggerGenMojo.
-[2026-03-16 15:24:38] [RegenerativeSync] Baseline passed on first pass for SwaggerGenMojoTest; running targeted PIT.
+[2026-03-16 20:35:17] [IterativeHealing] Baseline failed for SwaggerGenMojoTest; starting retry loop (max_retries=3).
+[2026-03-16 20:35:17] [IterativeHealing] Retry 1/3 for SwaggerGenMojoTest on focal SwaggerGenMojo.
+[2026-03-16 20:36:12] [IterativeHealing] Baseline passed on retry 1 for SwaggerGenMojoTest; running targeted PIT.
+[2026-03-16 20:36:51] [RegenerativeSync] Starting primary generation pass for SwaggerGenMojoTest on focal SwaggerGenMojo.
+[2026-03-16 20:37:53] [RegenerativeSync] Baseline passed on first pass for SwaggerGenMojoTest; running targeted PIT.

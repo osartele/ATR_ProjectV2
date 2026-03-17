@@ -1,6 +1,0 @@
-StorageHelper.java,org.finra.herd.service.helper.StorageHelper,org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator,getStorageAttributeIntegerValueByName,192,KILLED,org.finra.herd.service.helper.StorageHelperTest.testGetStorageAttributeIntegerValueByNameWithDefault_5(org.finra.herd.service.helper.StorageHelperTest)
-StorageHelper.java,org.finra.herd.service.helper.StorageHelper,org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator,getStorageAttributeIntegerValueByName,194,NO_COVERAGE,none
-StorageHelper.java,org.finra.herd.service.helper.StorageHelper,org.pitest.mutationtest.engine.gregor.mutators.returns.EmptyObjectReturnValsMutator,getStorageAttributeIntegerValueByName,198,NO_COVERAGE,none
-StorageHelper.java,org.finra.herd.service.helper.StorageHelper,org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator,getStorageAttributeIntegerValueByName,220,NO_COVERAGE,none
-StorageHelper.java,org.finra.herd.service.helper.StorageHelper,org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator,getStorageAttributeIntegerValueByName,222,NO_COVERAGE,none
-StorageHelper.java,org.finra.herd.service.helper.StorageHelper,org.pitest.mutationtest.engine.gregor.mutators.returns.EmptyObjectReturnValsMutator,getStorageAttributeIntegerValueByName,228,NO_COVERAGE,none

@@ -2,8 +2,8 @@
 -------------------------------------------------------------------------------
 Test set: org.finra.herd.core.helper.ConfigurationHelperTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 1.674 s <<< FAILURE! - in org.finra.herd.core.helper.ConfigurationHelperTest
-testGetPropertyValidationThrowsWhenTargetTypeIsNull(org.finra.herd.core.helper.ConfigurationHelperTest)  Time elapsed: 0.008 s  <<< ERROR!
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 1.91 s <<< FAILURE! - in org.finra.herd.core.helper.ConfigurationHelperTest
+testGetPropertyValidationThrowsWhenTargetTypeIsNull(org.finra.herd.core.helper.ConfigurationHelperTest)  Time elapsed: 0.01 s  <<< ERROR!
 java.lang.IllegalStateException: Failed to load ApplicationContext
 Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'org.springframework.scheduling.annotation.ProxyAsyncConfiguration': Initialization of bean failed; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'getAsyncExecutor' defined in org.finra.herd.core.config.CoreSpringModuleConfig: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [java.util.concurrent.Executor]: Factory method 'getAsyncExecutor' threw exception; nested exception is java.lang.IllegalStateException: configurationValue is required
 Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'getAsyncExecutor' defined in org.finra.herd.core.config.CoreSpringModuleConfig: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [java.util.concurrent.Executor]: Factory method 'getAsyncExecutor' threw exception; nested exception is java.lang.IllegalStateException: configurationValue is required
@@ -11,7 +11,7 @@ Caused by: org.springframework.beans.BeanInstantiationException: Failed to insta
 Caused by: java.lang.IllegalStateException: configurationValue is required
 
 [Maven Output]
-eanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1071) ~[spring-beans-4.3.30.RELEASE.jar:4.3.30.RELEASE]
+BeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1071) ~[spring-beans-4.3.30.RELEASE.jar:4.3.30.RELEASE]
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:511) ~[spring-beans-4.3.30.RELEASE.jar:4.3.30.RELEASE]
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:481) ~[spring-beans-4.3.30.RELEASE.jar:4.3.30.RELEASE]
 	at org.springframework.beans.factory.support.AbstractBeanFactory$1.getObject(AbstractBeanFactory.java:312) ~[spring-beans-4.3.30.RELEASE.jar:4.3.30.RELEASE]
@@ -57,13 +57,13 @@ Caused by: java.lang.IllegalStateException: configurationValue is required
 	at org.finra.herd.core.helper.ConfigurationHelper.getProperty(ConfigurationHelper.java:74) ~[classes/:?]
 	at org.finra.herd.core.helper.ConfigurationHelper.getProperty(ConfigurationHelper.java:249) ~[classes/:?]
 	at org.finra.herd.core.config.CoreSpringModuleConfig.getAsyncExecutor(CoreSpringModuleConfig.java:128) ~[classes/:?]
-	at org.finra.herd.core.config.CoreSpringModuleConfig$$EnhancerBySpringCGLIB$$2d31069b.CGLIB$getAsyncExecutor$4(<generated>) ~[classes/:?]
+	at org.finra.herd.core.config.CoreSpringModuleConfig$$EnhancerBySpringCGLIB$$2d31069b.CGLIB$getAsyncExecutor$2(<generated>) ~[classes/:?]
 	at org.finra.herd.core.config.CoreSpringModuleConfig$$EnhancerBySpringCGLIB$$2d31069b$$FastClassBySpringCGLIB$$cd7d540.invoke(<generated>) ~[classes/:?]
 	at org.springframework.cglib.proxy.MethodProxy.invokeSuper(MethodProxy.java:228) ~[spring-core-4.3.30.RELEASE.jar:4.3.30.RELEASE]
 	at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:358) ~[spring-context-4.3.30.RELEASE.jar:4.3.30.RELEASE]
 	at org.finra.herd.core.config.CoreSpringModuleConfig$$EnhancerBySpringCGLIB$$2d31069b.getAsyncExecutor(<generated>) ~[classes/:?]
 	at org.finra.herd.core.config.CoreSpringModuleConfig.getAsyncExecutor(CoreSpringModuleConfig.java:47) ~[classes/:?]
-	at org.finra.herd.core.config.CoreSpringModuleConfig$$EnhancerBySpringCGLIB$$2d31069b.CGLIB$getAsyncExecutor$3(<generated>) ~[classes/:?]
+	at org.finra.herd.core.config.CoreSpringModuleConfig$$EnhancerBySpringCGLIB$$2d31069b.CGLIB$getAsyncExecutor$1(<generated>) ~[classes/:?]
 	at org.finra.herd.core.config.CoreSpringModuleConfig$$EnhancerBySpringCGLIB$$2d31069b$$FastClassBySpringCGLIB$$cd7d540.invoke(<generated>) ~[classes/:?]
 	at org.springframework.cglib.proxy.MethodProxy.invokeSuper(MethodProxy.java:228) ~[spring-core-4.3.30.RELEASE.jar:4.3.30.RELEASE]
 	at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:358) ~[spring-context-4.3.30.RELEASE.jar:4.3.30.RELEASE]
@@ -117,8 +117,8 @@ Caused by: java.lang.IllegalStateException: configurationValue is required
 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContextInternal(DefaultCacheAwareContextLoaderDelegate.java:98) ~[spring-test-4.3.30.RELEASE.jar:4.3.30.RELEASE]
 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:116) ~[spring-test-4.3.30.RELEASE.jar:4.3.30.RELEASE]
 	... 27 more
-[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 1.674 s <<< FAILURE! - in org.finra.herd.core.helper.ConfigurationHelperTest
-[ERROR] testGetPropertyValidationThrowsWhenTargetTypeIsNull(org.finra.herd.core.helper.ConfigurationHelperTest)  Time elapsed: 0.008 s  <<< ERROR!
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 1.91 s <<< FAILURE! - in org.finra.herd.core.helper.ConfigurationHelperTest
+[ERROR] testGetPropertyValidationThrowsWhenTargetTypeIsNull(org.finra.herd.core.helper.ConfigurationHelperTest)  Time elapsed: 0.01 s  <<< ERROR!
 java.lang.IllegalStateException: Failed to load ApplicationContext
 Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'org.springframework.scheduling.annotation.ProxyAsyncConfiguration': Initialization of bean failed; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'getAsyncExecutor' defined in org.finra.herd.core.config.CoreSpringModuleConfig: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [java.util.concurrent.Executor]: Factory method 'getAsyncExecutor' threw exception; nested exception is java.lang.IllegalStateException: configurationValue is required
 Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'getAsyncExecutor' defined in org.finra.herd.core.config.CoreSpringModuleConfig: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [java.util.concurrent.Executor]: Factory method 'getAsyncExecutor' threw exception; nested exception is java.lang.IllegalStateException: configurationValue is required
@@ -148,6 +148,6 @@ Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  9.454 s
-[INFO] Finished at: 2026-03-16T16:38:57-04:00
+[INFO] Total time:  10.748 s
+[INFO] Finished at: 2026-03-16T21:19:40-04:00
 [INFO] ------------------------------------------------------------------------

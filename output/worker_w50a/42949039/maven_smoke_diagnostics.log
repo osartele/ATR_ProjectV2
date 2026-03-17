@@ -1,2 +1,0 @@
-[2026-03-16 17:11:59] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/worker_w50a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java; starting prioritized retries (limit=2).
-[2026-03-16 17:11:59] [MutationLiveGate] Retry 1 applied mutation type=signature class=MATH_PRIMITIVE_RETURNS.

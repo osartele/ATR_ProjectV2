@@ -1,0 +1,15 @@
+@Test
+public void testGetPropertyInstance()
+{
+    ConfigurationValue configurationValue = ConfigurationValue.HERD_ENVIRONMENT;
+
+    try
+    {
+        configurationHelper.getProperty(configurationValue, String.class);
+        fail("expected IllegalStateException, but no exception was thrown");
+    }
+    catch (IllegalStateException e)
+    {
+        assertEquals("configurationValue is required", e.getMessage());
+    }
+}

@@ -1,0 +1,42 @@
+@Test
+public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled()
+{
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.setProperty("agone.mutation.trigger", "true");
+    try
+    {
+        // Create a tag entity
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setId(1L);
+
+        // Create a list of tag ids
+        List<Long> tagIds = new ArrayList<>();
+        tagIds.add(tagEntity.getId());
+
+        // Create a search index dto
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Mock the call to external methods
+        when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn(MESSAGE_TEXT);
+        when(configurationHelper.getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED)).thenReturn("false");
+
+        // Call the method under test
+        searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Verify the calls to external methods
+        verify(jsonHelper).objectToJson(searchIndexUpdateDto);
+        verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
+        verifyNoMoreInteractionsHelper();
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+    }
+}

@@ -1,0 +1,18 @@
+@Test
+public void testGetPropertyReturnNullWhenPropertyDoesNotExistsAndNoDefaultsConfigured()
+{
+    ConfigurationValue configurationValue = ConfigurationValue.HIBERNATE_DIALECT;
+
+    MockEnvironment environment = new MockEnvironment();
+
+    try
+    {
+        ConfigurationHelper.getProperty(configurationValue, String.class, environment);
+        fail("expected IllegalArgumentException, but no exception was thrown");
+    }
+    catch (Exception e)
+    {
+        assertEquals("thrown exception type", IllegalStateException.class, e.getClass());
+        assertEquals("thrown exception message", "configurationValue is required", e.getMessage());
+    }
+}

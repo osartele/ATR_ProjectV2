@@ -76,262 +76,12 @@ Codex last message path: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\4294903
 Codex executable resolved to: C:\Users\osart\.codex\.sandbox-bin\codex.exe
 Codex working root: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50a\42949039\herd-code\herd-service
 Codex target files count: 2
-Codex prompt length: 85250 characters
+Codex prompt length: 85251 characters
 Codex timeout: 420 seconds
 Starting Codex subprocess...
-Codex subprocess finished in 1.32s with returncode=1.
+Codex subprocess finished in 32.38s with returncode=0.
 Codex diagnostic log available at: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
-Codex execution summary:
-returncode=1
-
-diagnostic_log=C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
-
-last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
-
-stdout:
-erd-build/pom.xml', 'dependencies': {}}, 'herd-code': {'pompath': './compiledrepos/42949039/herd-code/pom.xml', 'dependencies': {'junit': [{'artifactId': 'junit', 'scope': 'test'}], 'org.postgresql': [{'artifactId': 'postgresql', 'scope': 'test'}], 'com.h2database': [{'artifactId': 'h2', 'scope': 'test'}], 'org.slf4j': [{'artifactId': 'slf4j-api'}, {'artifactId': 'jcl-over-slf4j'}], 'org.apache.logging.log4j': [{'artifactId': 'log4j-slf4j-impl'}, {'artifactId': 'log4j-api'}, {'artifactId': 'log4j-core'}], 'org.apache.commons': [{'artifactId': 'commons-dbcp2'}], 'com.google.code.findbugs': [{'artifactId': 'annotations'}], 'io.swagger': [{'artifactId': 'swagger-annotations'}], '${project.groupId}': [{'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}]}}}}
-</code>
-
-Use the provided focal class and AST mapping as the source of truth.
-
-Repair only the mapped @Test method `testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled`.
-
-Preserve the mapped method declaration lock exactly: name, modifiers, annotations, and return type must match the original mapped method.
-
-You may change parameters and throws only if needed to align with evolved focal behavior.
-
-Do not introduce local focal-class instantiation if the mapped method anchor does not use it.
-
-Do not create local Mockito mocks inside the target method.
-
-Do not modify any other method in the class.
-
-Do not add helpers, fields, imports, or annotations.
-
-Preserve this method style anchor exactly (except for the minimal assertion/setup edits needed to resolve the failure):
-<code>
-@Test
-    public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled()
-    {
-        // Create a tag entity
-        TagEntity tagEntity = new TagEntity();
-        tagEntity.setId(1L);
-
-        // Create a list of tag ids
-        List<Long> tagIds = new ArrayList<>();
-        tagIds.add(tagEntity.getId());
-
-        // Create a search index dto
-        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
-
-        // Mock the call to external methods
-        when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn(MESSAGE_TEXT);
-        when(configurationHelper.getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED)).thenReturn("false");
-
-        // Call the method under test
-        searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
-
-        // Verify the calls to external methods
-        verify(jsonHelper).objectToJson(searchIndexUpdateDto);
-        verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
-        verifyNoMoreInteractionsHelper();
-    }
-</code>
-
-AST target mapping: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -> modifyTagInSearchIndex.
-
-Keep or add this package declaration: package org.finra.herd.service.helper;
-
-Return only the full mapped @Test method block (annotations + signature + body).
-
-Do not return the entire class, and do not include markdown fences or explanations.
-
-Reference file scope (read-only context):
-- src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java
-- src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java
-Return only the final Java source code.
-mcp startup: no servers
-2026-03-16T20:49:26.923521Z  WARN codex_core::codex: startup websocket prewarm setup failed: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:14 PM.
-ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:14 PM.
-Warning: no last agent message; wrote empty content to C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
-[IterativeHealing] Codex method patch generation failed on retry 1 for SearchIndexUpdateHelperTest.
-[IterativeHealing] Retry 2/3 for SearchIndexUpdateHelperTest on focal SearchIndexUpdateHelper.
-Fetching prompts dictionary...
-Codex diagnostic log: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
-Codex last message path: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
-Codex executable resolved to: C:\Users\osart\.codex\.sandbox-bin\codex.exe
-Codex working root: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50a\42949039\herd-code\herd-service
-Codex target files count: 2
-Codex prompt length: 85250 characters
-Codex timeout: 420 seconds
-Starting Codex subprocess...
-Codex subprocess finished in 1.21s with returncode=1.
-Codex diagnostic log available at: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
-Codex execution summary:
-returncode=1
-
-diagnostic_log=C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
-
-last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
-
-stdout:
-erd-build/pom.xml', 'dependencies': {}}, 'herd-code': {'pompath': './compiledrepos/42949039/herd-code/pom.xml', 'dependencies': {'junit': [{'artifactId': 'junit', 'scope': 'test'}], 'org.postgresql': [{'artifactId': 'postgresql', 'scope': 'test'}], 'com.h2database': [{'artifactId': 'h2', 'scope': 'test'}], 'org.slf4j': [{'artifactId': 'slf4j-api'}, {'artifactId': 'jcl-over-slf4j'}], 'org.apache.logging.log4j': [{'artifactId': 'log4j-slf4j-impl'}, {'artifactId': 'log4j-api'}, {'artifactId': 'log4j-core'}], 'org.apache.commons': [{'artifactId': 'commons-dbcp2'}], 'com.google.code.findbugs': [{'artifactId': 'annotations'}], 'io.swagger': [{'artifactId': 'swagger-annotations'}], '${project.groupId}': [{'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}]}}}}
-</code>
-
-Use the provided focal class and AST mapping as the source of truth.
-
-Repair only the mapped @Test method `testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled`.
-
-Preserve the mapped method declaration lock exactly: name, modifiers, annotations, and return type must match the original mapped method.
-
-You may change parameters and throws only if needed to align with evolved focal behavior.
-
-Do not introduce local focal-class instantiation if the mapped method anchor does not use it.
-
-Do not create local Mockito mocks inside the target method.
-
-Do not modify any other method in the class.
-
-Do not add helpers, fields, imports, or annotations.
-
-Preserve this method style anchor exactly (except for the minimal assertion/setup edits needed to resolve the failure):
-<code>
-@Test
-    public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled()
-    {
-        // Create a tag entity
-        TagEntity tagEntity = new TagEntity();
-        tagEntity.setId(1L);
-
-        // Create a list of tag ids
-        List<Long> tagIds = new ArrayList<>();
-        tagIds.add(tagEntity.getId());
-
-        // Create a search index dto
-        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
-
-        // Mock the call to external methods
-        when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn(MESSAGE_TEXT);
-        when(configurationHelper.getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED)).thenReturn("false");
-
-        // Call the method under test
-        searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
-
-        // Verify the calls to external methods
-        verify(jsonHelper).objectToJson(searchIndexUpdateDto);
-        verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
-        verifyNoMoreInteractionsHelper();
-    }
-</code>
-
-AST target mapping: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -> modifyTagInSearchIndex.
-
-Keep or add this package declaration: package org.finra.herd.service.helper;
-
-Return only the full mapped @Test method block (annotations + signature + body).
-
-Do not return the entire class, and do not include markdown fences or explanations.
-
-Reference file scope (read-only context):
-- src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java
-- src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java
-Return only the final Java source code.
-mcp startup: no servers
-2026-03-16T20:49:28.499935Z  WARN codex_core::codex: startup websocket prewarm setup failed: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:14 PM.
-ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:14 PM.
-Warning: no last agent message; wrote empty content to C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
-[IterativeHealing] Codex method patch generation failed on retry 2 for SearchIndexUpdateHelperTest.
-[IterativeHealing] Retry 3/3 for SearchIndexUpdateHelperTest on focal SearchIndexUpdateHelper.
-Fetching prompts dictionary...
-Codex diagnostic log: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
-Codex last message path: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
-Codex executable resolved to: C:\Users\osart\.codex\.sandbox-bin\codex.exe
-Codex working root: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50a\42949039\herd-code\herd-service
-Codex target files count: 2
-Codex prompt length: 85250 characters
-Codex timeout: 420 seconds
-Starting Codex subprocess...
-Codex subprocess finished in 1.28s with returncode=1.
-Codex diagnostic log available at: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
-Codex execution summary:
-returncode=1
-
-diagnostic_log=C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
-
-last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
-
-stdout:
-erd-build/pom.xml', 'dependencies': {}}, 'herd-code': {'pompath': './compiledrepos/42949039/herd-code/pom.xml', 'dependencies': {'junit': [{'artifactId': 'junit', 'scope': 'test'}], 'org.postgresql': [{'artifactId': 'postgresql', 'scope': 'test'}], 'com.h2database': [{'artifactId': 'h2', 'scope': 'test'}], 'org.slf4j': [{'artifactId': 'slf4j-api'}, {'artifactId': 'jcl-over-slf4j'}], 'org.apache.logging.log4j': [{'artifactId': 'log4j-slf4j-impl'}, {'artifactId': 'log4j-api'}, {'artifactId': 'log4j-core'}], 'org.apache.commons': [{'artifactId': 'commons-dbcp2'}], 'com.google.code.findbugs': [{'artifactId': 'annotations'}], 'io.swagger': [{'artifactId': 'swagger-annotations'}], '${project.groupId}': [{'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}]}}}}
-</code>
-
-Use the provided focal class and AST mapping as the source of truth.
-
-Repair only the mapped @Test method `testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled`.
-
-Preserve the mapped method declaration lock exactly: name, modifiers, annotations, and return type must match the original mapped method.
-
-You may change parameters and throws only if needed to align with evolved focal behavior.
-
-Do not introduce local focal-class instantiation if the mapped method anchor does not use it.
-
-Do not create local Mockito mocks inside the target method.
-
-Do not modify any other method in the class.
-
-Do not add helpers, fields, imports, or annotations.
-
-Preserve this method style anchor exactly (except for the minimal assertion/setup edits needed to resolve the failure):
-<code>
-@Test
-    public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled()
-    {
-        // Create a tag entity
-        TagEntity tagEntity = new TagEntity();
-        tagEntity.setId(1L);
-
-        // Create a list of tag ids
-        List<Long> tagIds = new ArrayList<>();
-        tagIds.add(tagEntity.getId());
-
-        // Create a search index dto
-        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
-
-        // Mock the call to external methods
-        when(jsonHelper.objectToJson(searchIndexUpdateDto)).thenReturn(MESSAGE_TEXT);
-        when(configurationHelper.getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED)).thenReturn("false");
-
-        // Call the method under test
-        searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
-
-        // Verify the calls to external methods
-        verify(jsonHelper).objectToJson(searchIndexUpdateDto);
-        verify(configurationHelper).getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
-        verifyNoMoreInteractionsHelper();
-    }
-</code>
-
-AST target mapping: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -> modifyTagInSearchIndex.
-
-Keep or add this package declaration: package org.finra.herd.service.helper;
-
-Return only the full mapped @Test method block (annotations + signature + body).
-
-Do not return the entire class, and do not include markdown fences or explanations.
-
-Reference file scope (read-only context):
-- src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java
-- src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java
-Return only the final Java source code.
-mcp startup: no servers
-2026-03-16T20:49:30.369910Z  WARN codex_core::codex: startup websocket prewarm setup failed: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:14 PM.
-ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:14 PM.
-Warning: no last agent message; wrote empty content to C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
-[IterativeHealing] Codex method patch generation failed on retry 3 for SearchIndexUpdateHelperTest.
-[IterativeHealing] Exhausted retries for SearchIndexUpdateHelperTest without baseline success.
-Package command failed for project: 42949039, test type: codex-cli, technique: iterative-healing
-
-The test smell detector ended successfully
---//loading maven execution..//
+File generated at: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\response_codex-cli_iterative-healing_SearchIndexUpdateHelperTest_iterative_retry_1.java
 Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
 Maven baseline module selection: -pl herd-code/herd-service
 Maven PIT module selection: -pl herd-code/herd-service
@@ -341,15 +91,20 @@ AST focal method scope: modifyTagInSearchIndex
 PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
 Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
 Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[IterativeHealing] Baseline passed on retry 1 for SearchIndexUpdateHelperTest; running targeted PIT.
+Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+Maven baseline module selection: -pl herd-code/herd-service
+Maven PIT module selection: -pl herd-code/herd-service
+PITest filters: -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper
+AST test method scope: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+AST focal method scope: modifyTagInSearchIndex
+PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Package command completed for 42949039
 
---------------------
-The test compiled, but failed at runtime with this stack trace:
-java.lang.AssertionError: AGONE_MUTATION_TRIGGER
-	at org.finra.herd.service.helper.SearchIndexUpdateHelperTest.testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled(SearchIndexUpdateHelperTest.java:390)
-
---------------------
-[iterative-healing] Final execution failed. Recording mavenfailed marker for CSV failure row.
-
+The test smell detector ended successfully
+DataFrame saved to C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\TestClasses_42949039_codex-cli_iterative-healing.csv
 
 Processing test_type: codex-cli, technique: regenerative-sync
 
@@ -373,52 +128,9 @@ Codex target files count: 2
 Codex prompt length: 75673 characters
 Codex timeout: 420 seconds
 Starting Codex subprocess...
-Codex subprocess finished in 1.57s with returncode=1.
+Codex subprocess finished in 73.56s with returncode=0.
 Codex diagnostic log available at: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
-Codex execution summary:
-returncode=1
-
-diagnostic_log=C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_cli_diagnostics.log
-
-last_message_path=C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
-
-stdout:
-t', 'version': '5.21.0'}], 'org.mockito': [{'artifactId': 'mockito-core', 'scope': 'test', 'version': '2.10.0'}], 'com.sun.jersey': [{'artifactId': 'jersey-client', 'version': '1.19.4'}], 'com.sun.jersey.contribs': [{'artifactId': 'jersey-multipart', 'version': '1.19.4'}], 'joda-time': [{'artifactId': 'joda-time', 'version': '2.10.1'}], 'com.brsanthu': [{'artifactId': 'migbase64', 'version': '2.2'}], 'org.elasticsearch': [{'artifactId': 'elasticsearch', 'version': '7.8.0'}], 'org.elasticsearch.client': [{'artifactId': 'elasticsearch-rest-client', 'version': '7.8.0'}, {'artifactId': 'elasticsearch-rest-high-level-client', 'version': '7.8.0'}], 'com.floragunn': [{'artifactId': 'search-guard-ssl'}], 'co.wrisk.jcredstash': [{'artifactId': 'jcredstash', 'version': '0.0.4'}], 'org.bouncycastle': [{'artifactId': 'bcprov-jdk15on', 'version': '1.60'}], 'vc.inreach.aws': [{'artifactId': 'aws-signing-request-interceptor', 'version': '0.0.22'}], 'org.jsoup': [{'artifactId': 'jsoup', 'version': '1.11.3'}], 'com.opencsv': [{'artifactId': 'opencsv', 'version': '4.4'}], 'com.google.code.gson': [{'artifactId': 'gson', 'version': '2.8.6'}], 'org.apache.hive': [{'artifactId': 'hive-serde', 'version': '2.3.4'}], 'com.github.stefanbirkner': [{'artifactId': 'system-rules', 'scope': 'test', 'version': '1.19.0'}], 'uk.org.lidalia': [{'artifactId': 'slf4j-test', 'scope': 'test', 'version': '1.2.0'}]}, 'subdependencies': {'herd-build': {'pompath': './compiledrepos/42949039/herd-build/pom.xml', 'dependencies': {}}, 'herd-code': {'pompath': './compiledrepos/42949039/herd-code/pom.xml', 'dependencies': {'junit': [{'artifactId': 'junit', 'scope': 'test'}], 'org.postgresql': [{'artifactId': 'postgresql', 'scope': 'test'}], 'com.h2database': [{'artifactId': 'h2', 'scope': 'test'}], 'org.slf4j': [{'artifactId': 'slf4j-api'}, {'artifactId': 'jcl-over-slf4j'}], 'org.apache.logging.log4j': [{'artifactId': 'log4j-slf4j-impl'}, {'artifactId': 'log4j-api'}, {'artifactId': 'log4j-core'}], 'org.apache.commons': [{'artifactId': 'commons-dbcp2'}], 'com.google.code.findbugs': [{'artifactId': 'annotations'}], 'io.swagger': [{'artifactId': 'swagger-annotations'}], '${project.groupId}': [{'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}]}}}}
-</code>
-
-Use the provided focal class and AST mapping as the source of truth.
-
-Update the mapped @Test method `testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled` first.
-
-Preserve all existing unmapped @Test methods exactly as they are.
-
-You may add new @Test methods only if the focal change requires extra coverage.
-
-Do not rewrite package/class declarations, imports, fields, or helper methods.
-
-AST target mapping: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -> modifyTagInSearchIndex.
-
-Keep or add this package declaration: package org.finra.herd.service.helper;
-
-Return method blocks only: the mapped @Test method block is required, and optional brand-new @Test method blocks may follow.
-
-Do not return a full class, package declaration, imports, fields, or helper methods.
-
-Do not include markdown fences or explanations.
-
-Reference file scope (read-only context):
-- src/test/java/org/finra/herd/service/helper/SearchIndexUpdateHelperTest.java
-- src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java
-Return only the final Java source code.
-mcp startup: no servers
-2026-03-16T20:51:21.816506Z  WARN codex_core::codex: startup websocket prewarm setup failed: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:14 PM.
-ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:14 PM.
-Warning: no last agent message; wrote empty content to C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\codex_last_message.txt
-[RegenerativeSync] Primary generation failed for SearchIndexUpdateHelperTest.
-Package command failed for project: 42949039, test type: codex-cli, technique: regenerative-sync
-
-The test smell detector ended successfully
---//loading maven execution..//
+File generated at: C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\response_codex-cli_regenerative-sync_SearchIndexUpdateHelperTest_regen_pass_0.java
 Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
 Maven baseline module selection: -pl herd-code/herd-service
 Maven PIT module selection: -pl herd-code/herd-service
@@ -428,15 +140,20 @@ AST focal method scope: modifyTagInSearchIndex
 PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
 Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
 Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+[RegenerativeSync] Baseline passed on first pass for SearchIndexUpdateHelperTest; running targeted PIT.
+Test classes: -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+Maven baseline module selection: -pl herd-code/herd-service
+Maven PIT module selection: -pl herd-code/herd-service
+PITest filters: -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper
+AST test method scope: testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled
+AST focal method scope: modifyTagInSearchIndex
+PITest excluded focal methods: getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage
+Maven baseline command: mvn.cmd -o -B -pl herd-code/herd-service -Dtest=SearchIndexUpdateHelperTest#testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true jacoco:prepare-agent test jacoco:report
+Maven PIT command: mvn.cmd -o -B -pl herd-code/herd-service -DtargetTests=org.finra.herd.service.helper.SearchIndexUpdateHelperTest -DtargetClasses=org.finra.herd.service.helper.SearchIndexUpdateHelper -DincludedTestMethods=testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled -Dpitest.includedMethods=modifyTagInSearchIndex -DexcludedMethods=getSqsQueueName,modifyBusinessObjectDefinitionInSearchIndex,modifyBusinessObjectDefinitionsInSearchIndex,modifyTagsInSearchIndex,processMessage -DfailWhenNoMutations=false -Dthreads=1 -DtimeoutConstant=120000 -DtimeoutFactor=4.0 -DparseSurefireArgLine=false -Dfeatures=-auto_threads -Drat.skip=true -DfailIfNoTests=false -Dcheckstyle.skip=true org.pitest:pitest-maven:mutationCoverage
+Package command completed for 42949039
 
---------------------
-The test compiled, but failed at runtime with this stack trace:
-java.lang.AssertionError: AGONE_MUTATION_TRIGGER
-	at org.finra.herd.service.helper.SearchIndexUpdateHelperTest.testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled(SearchIndexUpdateHelperTest.java:390)
-
---------------------
-[regenerative-sync] Final execution failed. Recording mavenfailed marker for CSV failure row.
-
+The test smell detector ended successfully
+DataFrame saved to C:\Users\osart\ATR_ProjectV2\output\worker_w50a\42949039\TestClasses_42949039_codex-cli_regenerative-sync.csv
 Adjusting data_df_output length. Expected 40, got 32
 Adjusting data_df_output length. Expected 40, got 32
 Adjusting data_df_output length. Expected 40, got 32
