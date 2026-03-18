@@ -1,0 +1,88 @@
+@Test
+public void testCreateStorageFileEntitiesFromStorageFiles()
+{
+    String originalAgoneMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.setProperty("agone.mutation.trigger", "enabled");
+    try
+    {
+        org.finra.herd.model.jpa.StorageUnitEntity storageUnitEntity = new org.finra.herd.model.jpa.StorageUnitEntity();
+        String directoryPath = "test-directory";
+
+        org.finra.herd.model.api.xml.StorageFile storageFile1 = new org.finra.herd.model.api.xml.StorageFile();
+        storageFile1.setFilePath(directoryPath + "/file1.txt");
+        storageFile1.setFileSizeBytes(123L);
+        storageFile1.setRowCount(10L);
+
+        org.finra.herd.model.api.xml.StorageFile storageFile2 = new org.finra.herd.model.api.xml.StorageFile();
+        storageFile2.setFilePath(directoryPath + org.finra.herd.model.jpa.StorageFileEntity.S3_EMPTY_PARTITION);
+        storageFile2.setFileSizeBytes(456L);
+        storageFile2.setRowCount(20L);
+
+        java.util.List<org.finra.herd.model.api.xml.StorageFile> storageFiles = java.util.Arrays.asList(storageFile1, storageFile2);
+
+        java.util.List<org.finra.herd.model.jpa.StorageFileEntity> result =
+            storageFileDaoHelper.createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles, directoryPath);
+
+        org.junit.Assert.assertEquals(2, result.size());
+        org.junit.Assert.assertSame(storageUnitEntity, result.get(0).getStorageUnit());
+        org.junit.Assert.assertSame(storageUnitEntity, result.get(1).getStorageUnit());
+        org.junit.Assert.assertEquals(
+            org.finra.herd.core.HerdStringUtils.getMinimizedFilePath(storageFile1.getFilePath(), directoryPath), result.get(0).getPath());
+        org.junit.Assert.assertEquals(org.finra.herd.model.jpa.StorageFileEntity.S3_EMPTY_PARTITION, result.get(1).getPath());
+        org.junit.Assert.assertEquals(storageFile1.getFileSizeBytes(), result.get(0).getFileSizeBytes());
+        org.junit.Assert.assertEquals(storageFile1.getRowCount(), result.get(0).getRowCount());
+        org.junit.Assert.assertEquals(storageFile2.getFileSizeBytes(), result.get(1).getFileSizeBytes());
+        org.junit.Assert.assertEquals(storageFile2.getRowCount(), result.get(1).getRowCount());
+
+        org.mockito.Mockito.verify(storageFileDao).saveStorageFiles(result);
+    }
+    finally
+    {
+        if (originalAgoneMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalAgoneMutationTrigger);
+        }
+    }
+}
+
+@Test
+public void testCreateStorageFileEntitiesFromStorageFilesMissingAgoneMutationTrigger()
+{
+    String originalAgoneMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.clearProperty("agone.mutation.trigger");
+    try
+    {
+        org.finra.herd.model.jpa.StorageUnitEntity storageUnitEntity = new org.finra.herd.model.jpa.StorageUnitEntity();
+        org.finra.herd.model.api.xml.StorageFile storageFile = new org.finra.herd.model.api.xml.StorageFile();
+        storageFile.setFilePath("test-directory/file1.txt");
+
+        java.util.List<org.finra.herd.model.api.xml.StorageFile> storageFiles = java.util.Collections.singletonList(storageFile);
+
+        try
+        {
+            storageFileDaoHelper.createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles, "test-directory");
+            org.junit.Assert.fail("Expected AssertionError due to missing agone.mutation.trigger system property.");
+        }
+        catch (AssertionError e)
+        {
+            org.junit.Assert.assertEquals("AGONE_MUTATION_TRIGGER", e.getMessage());
+        }
+
+        org.mockito.Mockito.verifyZeroInteractions(storageFileDao);
+    }
+    finally
+    {
+        if (originalAgoneMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalAgoneMutationTrigger);
+        }
+    }
+}

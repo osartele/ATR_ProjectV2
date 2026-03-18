@@ -1,0 +1,58 @@
+@org.junit.Test
+public void testGetStorageAttributeIntegerValueByName_9()
+{
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+
+    try
+    {
+        System.clearProperty("agone.mutation.trigger");
+
+        try
+        {
+            storageHelper.getStorageAttributeIntegerValueByName("attributeName", new org.finra.herd.model.jpa.StorageEntity(), false, false);
+            org.junit.Assert.fail("Expected AssertionError due to missing mutation trigger system property.");
+        }
+        catch (AssertionError e)
+        {
+            org.junit.Assert.assertEquals("AGONE_MUTATION_TRIGGER", e.getMessage());
+        }
+
+        System.setProperty("agone.mutation.trigger", "true");
+
+        String attributeName = "attributeName";
+        org.finra.herd.model.jpa.StorageEntity storageEntity = new org.finra.herd.model.jpa.StorageEntity();
+        storageEntity.setName("storageName");
+
+        org.finra.herd.model.jpa.StorageAttributeEntity storageAttributeEntity = new org.finra.herd.model.jpa.StorageAttributeEntity();
+        storageAttributeEntity.setName(attributeName);
+        storageAttributeEntity.setValue("notANumber");
+
+        java.util.List<org.finra.herd.model.jpa.StorageAttributeEntity> storageAttributeEntities =
+            new java.util.ArrayList<org.finra.herd.model.jpa.StorageAttributeEntity>();
+        storageAttributeEntities.add(storageAttributeEntity);
+        storageEntity.setAttributes(storageAttributeEntities);
+
+        try
+        {
+            storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, false, false);
+            org.junit.Assert.fail("Expected IllegalStateException when storage attribute value is not numeric.");
+        }
+        catch (IllegalStateException e)
+        {
+            org.junit.Assert.assertEquals(
+                "Storage attribute \"attributeName\" must be a valid integer. Actual value is \"notANumber\"",
+                e.getMessage());
+        }
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+    }
+}

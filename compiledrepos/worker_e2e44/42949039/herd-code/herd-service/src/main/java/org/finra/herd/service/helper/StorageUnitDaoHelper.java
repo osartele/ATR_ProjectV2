@@ -1,0 +1,267 @@
+/*
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.finra.herd.service.helper;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import org.finra.herd.dao.StorageDao;
+import org.finra.herd.dao.StorageUnitDao;
+import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormat;
+import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.StorageEntity;
+import org.finra.herd.model.jpa.StorageUnitEntity;
+import org.finra.herd.model.jpa.StorageUnitStatusEntity;
+import org.finra.herd.model.jpa.StorageUnitStatusHistoryEntity;
+import org.finra.herd.service.MessageNotificationEventService;
+
+/**
+ * Helper for storage unit related operations which require DAO.
+ */
+@Component
+public class StorageUnitDaoHelper
+{
+    @Autowired
+    private BusinessObjectDataHelper businessObjectDataHelper;
+
+    @Autowired
+    private BusinessObjectFormatHelper businessObjectFormatHelper;
+
+    @Autowired
+    private MessageNotificationEventService messageNotificationEventService;
+
+    @Autowired
+    private StorageDao storageDao;
+
+    @Autowired
+    private StorageUnitDao storageUnitDao;
+
+    @Autowired
+    private StorageUnitStatusDaoHelper storageUnitStatusDaoHelper;
+
+    /**
+     * Tries to find at least one sub-partition for the specified business object data that is explicitly registered in the same storage.
+     *
+     * @param storageEntity the storage entity
+     * @param businessObjectFormatEntity the business object format entity
+     * @param businessObjectFormat the business object format
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the storage unit entity for the explicitly registered sub-partition - if it is found, otherwise null
+     */
+    public StorageUnitEntity findExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(StorageEntity storageEntity,
+        BusinessObjectFormatEntity businessObjectFormatEntity, BusinessObjectFormat businessObjectFormat, BusinessObjectDataKey businessObjectDataKey)
+    {
+        StorageUnitEntity explicitlyRegisteredSubPartitionStorageUnit = null;
+
+        // There is no need to check if business object format schema or number of sub-partitions specified
+        // for this business object data do not allow any additional sub-partitions to be explicitly registered.
+        // This check is an optimization added here to avoid unnecessary call to the database.
+        if (businessObjectFormat.getSchema() != null &&
+            Math.min(CollectionUtils.size(businessObjectFormat.getSchema().getPartitions()), BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1) >
+                CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()) + 1)
+        {
+            explicitlyRegisteredSubPartitionStorageUnit = storageUnitDao
+                .getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, businessObjectDataKey.getPartitionValue(),
+                    businessObjectDataKey.getSubPartitionValues(), businessObjectDataKey.getBusinessObjectDataVersion());
+        }
+
+        return explicitlyRegisteredSubPartitionStorageUnit;
+    }
+
+    /**
+     * Retrieves a storage unit entity for the business object data in the specified storage and make sure it exists.
+     *
+     * @param storageName the storage name
+     * @param businessObjectDataEntity the business object data entity
+     *
+     * @return the storage unit entity
+     */
+    public StorageUnitEntity getStorageUnitEntity(String storageName, BusinessObjectDataEntity businessObjectDataEntity)
+    {
+        StorageUnitEntity storageUnitEntity = null;
+
+        StorageEntity storageEntity = storageDao.getStorageByName(storageName);
+
+        // If the storage entity does exist get the storage unit entity.
+        if (storageEntity != null)
+        {
+            storageUnitEntity = storageUnitDao.getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity);
+        }
+
+        // If the storage unit entity was not found return object not found exception.
+        if (storageUnitEntity == null)
+        {
+            throw new ObjectNotFoundException(String.format("Could not find storage unit in \"%s\" storage for the business object data {%s}.", storageName,
+                businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+        }
+
+        return storageUnitEntity;
+    }
+
+    /**
+     * Retrieves a storage unit entity for the business object data in the specified storage and make sure it exists.
+     *
+     * @param businessObjectDataEntity the business object data entity
+     * @param storageEntity the storage entity
+     *
+     * @return the storage unit entity
+     */
+    public StorageUnitEntity getStorageUnitEntityByBusinessObjectDataAndStorage(BusinessObjectDataEntity businessObjectDataEntity, StorageEntity storageEntity)
+    {
+        StorageUnitEntity storageUnitEntity = storageUnitDao.getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity);
+
+        if (storageUnitEntity == null)
+        {
+            throw new ObjectNotFoundException(String
+                .format("Could not find storage unit in \"%s\" storage for the business object data {%s}.", storageEntity.getName(),
+                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+        }
+
+        return storageUnitEntity;
+    }
+
+    /**
+     * Retrieves a storage unit entity for the specified business object data storage unit key and makes sure it exists.
+     *
+     * @param businessObjectDataStorageUnitKey the business object data storage unit key
+     *
+     * @return the storage unit entity
+     */
+    public StorageUnitEntity getStorageUnitEntityByKey(BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey)
+    {
+        StorageUnitEntity storageUnitEntity = storageUnitDao.getStorageUnitByKey(businessObjectDataStorageUnitKey);
+
+        if (storageUnitEntity == null)
+        {
+            throw new ObjectNotFoundException(String.format(
+                "Business object data storage unit {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", " +
+                    "businessObjectDataSubPartitionValues: \"%s\", businessObjectDataVersion: %d, storageName: \"%s\"} doesn't exist.",
+                businessObjectDataStorageUnitKey.getNamespace(), businessObjectDataStorageUnitKey.getBusinessObjectDefinitionName(),
+                businessObjectDataStorageUnitKey.getBusinessObjectFormatUsage(), businessObjectDataStorageUnitKey.getBusinessObjectFormatFileType(),
+                businessObjectDataStorageUnitKey.getBusinessObjectFormatVersion(), businessObjectDataStorageUnitKey.getPartitionValue(),
+                CollectionUtils.isEmpty(businessObjectDataStorageUnitKey.getSubPartitionValues()) ? "" :
+                    StringUtils.join(businessObjectDataStorageUnitKey.getSubPartitionValues(), ","),
+                businessObjectDataStorageUnitKey.getBusinessObjectDataVersion(), businessObjectDataStorageUnitKey.getStorageName()));
+        }
+
+        return storageUnitEntity;
+    }
+
+    /**
+     * Sets storage unit status value for a storage unit. This method also generates a storage unit status change notification event as per system
+     * configuration.
+     *
+     * @param storageUnitEntity the storage unit entity
+     * @param storageUnitStatusEntity the storage unit status entity
+     */
+    public void setStorageUnitStatus(StorageUnitEntity storageUnitEntity, StorageUnitStatusEntity storageUnitStatusEntity)
+    {
+        // Set the storage unit status value.
+        storageUnitEntity.setStatus(storageUnitStatusEntity);
+
+        // Send a storage unit status change notification as per system configuration.
+        messageNotificationEventService
+            .processStorageUnitStatusChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData()),
+                storageUnitEntity.getStorage().getName(), storageUnitStatusEntity.getCode(), null);
+    }
+
+    /**
+     * Update the storage unit status.
+     *
+     * @param storageUnitEntity the storage unit entity
+     * @param storageUnitStatus the new storage unit status
+     * @param reason the reason for the update
+     */
+    public void updateStorageUnitStatus(StorageUnitEntity storageUnitEntity, String storageUnitStatus, String reason)
+    {
+        // Retrieve and ensure the new storage unit status is valid.
+        StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(storageUnitStatus);
+
+        // Update the storage unit status.
+        updateStorageUnitStatus(storageUnitEntity, storageUnitStatusEntity, reason);
+    }
+
+    /**
+     * Updates storage unit status value for a storage unit.  This method also updates the storage unit status history and generates a storage unit status
+     * change notification event as per system configuration.
+     *
+     * @param storageUnitEntity the storage unit entity
+     * @param storageUnitStatusEntity the new storage unit status entity
+     * @param reason the reason for the update
+     */
+    public void updateStorageUnitStatus(StorageUnitEntity storageUnitEntity, StorageUnitStatusEntity storageUnitStatusEntity, String reason)
+    {
+        // Save the current status value.
+        String oldStatus = storageUnitEntity.getStatus().getCode();
+
+        // Update the entity with the new values.
+        storageUnitEntity.setStatus(storageUnitStatusEntity);
+
+        // Add an entry to the storage unit status history table.
+        StorageUnitStatusHistoryEntity storageUnitStatusHistoryEntity = new StorageUnitStatusHistoryEntity();
+        storageUnitEntity.getHistoricalStatuses().add(storageUnitStatusHistoryEntity);
+        storageUnitStatusHistoryEntity.setStorageUnit(storageUnitEntity);
+        storageUnitStatusHistoryEntity.setStatus(storageUnitStatusEntity);
+        storageUnitStatusHistoryEntity.setReason(reason);
+
+        // Persist the entity.
+        storageUnitDao.saveAndRefresh(storageUnitEntity);
+
+        // Send a storage unit status change notification as per system configuration.
+        messageNotificationEventService
+            .processStorageUnitStatusChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData()),
+                storageUnitEntity.getStorage().getName(), storageUnitStatusEntity.getCode(), oldStatus);
+    }
+
+    /**
+     * Validates that there are no explicitly registered sub-partitions in storage for the business object data. This check is needed to validate that there are
+     * no storage files already registered in this storage by some other business object data that start with the same S3 key prefix.
+     *
+     * @param storageEntity the storage entity
+     * @param businessObjectFormatEntity the business object format entity
+     * @param businessObjectDataKey the business object data key
+     * @param s3KeyPrefix the S3 key prefix for the business object data in this storage
+     */
+    public void validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(StorageEntity storageEntity,
+        BusinessObjectFormatEntity businessObjectFormatEntity, BusinessObjectDataKey businessObjectDataKey, String s3KeyPrefix)
+    {
+        // Get business object format from the entity.
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
+
+        // Check business object data for any explicitly registered sub-partitions in the specified storage.
+        StorageUnitEntity explicitlyRegisteredSubPartitionStorageUnit =
+            findExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageEntity, businessObjectFormatEntity, businessObjectFormat,
+                businessObjectDataKey);
+
+        // Throw an exception if explicitly registered sub-partition is found.
+        if (explicitlyRegisteredSubPartitionStorageUnit != null)
+        {
+            throw new AlreadyExistsException(String.format(
+                "Found another business object data matching \"%s\" S3 key prefix that is also registered in \"%s\" storage. Business object data: {%s}",
+                s3KeyPrefix, storageEntity.getName(),
+                businessObjectDataHelper.businessObjectDataEntityAltKeyToString(explicitlyRegisteredSubPartitionStorageUnit.getBusinessObjectData())));
+        }
+    }
+}

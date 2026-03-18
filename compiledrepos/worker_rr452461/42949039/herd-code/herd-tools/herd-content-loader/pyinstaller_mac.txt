@@ -1,0 +1,9 @@
+pandas == 1.2.3
+openpyxl
+boto3 >= 1.9.50
+xlsxwriter >= 1.1.0
+herdcl
+herdsdk
+PySimpleGUI == 4.45.0
+requests
+pyinstaller

@@ -5,13 +5,70 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$QueueCsv,
 
-    [string]$Root = 'C:\Users\osart\ATR_ProjectV2'
+    [string]$Root = $null
 )
 
 $ErrorActionPreference = 'Stop'
 
-$pythonExe = 'C:\Users\osart\AppData\Local\Programs\Python\Python313\python.exe'
-$mavenBin = Join-Path $Root 'tools\apache-maven-3.9.9\bin'
+if ([string]::IsNullOrWhiteSpace($Root)) {
+    $Root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+}
+$Root = (Resolve-Path $Root).Path
+
+function Resolve-PythonExecutable {
+    if (-not [string]::IsNullOrWhiteSpace($env:AGONE_PYTHON_EXE)) {
+        return $env:AGONE_PYTHON_EXE
+    }
+
+    foreach ($candidate in @('python', 'python3', 'py')) {
+        $command = Get-Command $candidate -ErrorAction SilentlyContinue
+        if ($command -and $command.Source) {
+            return $command.Source
+        }
+    }
+
+    throw "Unable to resolve Python executable. Set AGONE_PYTHON_EXE or add python to PATH."
+}
+
+function Resolve-MavenBinDirectory {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$WorkspaceRoot
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace($env:AGONE_MAVEN_BIN) -and (Test-Path $env:AGONE_MAVEN_BIN)) {
+        return $env:AGONE_MAVEN_BIN
+    }
+
+    $mvnCommand = Get-Command mvn.cmd -ErrorAction SilentlyContinue
+    if (-not $mvnCommand) {
+        $mvnCommand = Get-Command mvn -ErrorAction SilentlyContinue
+    }
+    if ($mvnCommand -and $mvnCommand.Source) {
+        return Split-Path -Path $mvnCommand.Source -Parent
+    }
+
+    $toolsPath = Join-Path $WorkspaceRoot 'tools'
+    if (-not (Test-Path $toolsPath)) {
+        return $null
+    }
+    $mavenDirectories = @(Get-ChildItem -Path $toolsPath -Directory -Filter 'apache-maven-*' -ErrorAction SilentlyContinue | Sort-Object Name -Descending)
+    foreach ($mavenDir in $mavenDirectories) {
+        $candidateBin = Join-Path $mavenDir.FullName 'bin'
+        if ((Test-Path (Join-Path $candidateBin 'mvn.cmd')) -or (Test-Path (Join-Path $candidateBin 'mvn'))) {
+            return $candidateBin
+        }
+    }
+    return $null
+}
+
+$pythonExe = Resolve-PythonExecutable
+$pythonArgumentsPrefix = @()
+if ([System.IO.Path]::GetFileNameWithoutExtension($pythonExe).ToLowerInvariant() -eq 'py') {
+    # Ensure `py.exe` chooses Python 3 when the launcher is used.
+    $pythonArgumentsPrefix = @('-3')
+}
+$mavenBin = Resolve-MavenBinDirectory -WorkspaceRoot $Root
 $workerOutput = Join-Path $Root ("output\worker_{0}" -f $WorkerId)
 $workerSamples = Join-Path $workerOutput 'samples'
 $workerRepo = Join-Path $Root ("compiledrepos\worker_{0}\42949039" -f $WorkerId)
@@ -96,7 +153,12 @@ if ($total -eq 0) {
     throw "Queue has no rows: $QueueCsv"
 }
 
-$env:PATH = "$mavenBin;$env:PATH"
+if (-not [string]::IsNullOrWhiteSpace($mavenBin)) {
+    $env:PATH = "$mavenBin;$env:PATH"
+}
+else {
+    Write-Host ("[{0}] Warning: Maven bin directory not auto-detected; using current PATH." -f $WorkerId)
+}
 @('2', 'Y', 'N', 'Y') | Set-Content -Path $stdinPath -Encoding ascii
 
 Write-Host ("[{0}] Queue size: {1}" -f $WorkerId, $total)
@@ -183,7 +245,10 @@ for ($i = 0; $i -lt $total; $i++) {
     Write-WorkerProjectInfo -BaseInfo $baseProjectInfo -Path $projectInfoPath
 
     $env:AGONE_WORKER_ID = $WorkerId
-    $proc = Start-Process -FilePath $pythonExe -ArgumentList 'Agone_Test\agone_test.py' -WorkingDirectory $Root -RedirectStandardInput $stdinPath -RedirectStandardOutput $outLog -RedirectStandardError $errLog -WindowStyle Hidden -PassThru -Wait
+    $pythonArgs = @()
+    $pythonArgs += $pythonArgumentsPrefix
+    $pythonArgs += 'Agone_Test\agone_test.py'
+    $proc = Start-Process -FilePath $pythonExe -ArgumentList $pythonArgs -WorkingDirectory $Root -RedirectStandardInput $stdinPath -RedirectStandardOutput $outLog -RedirectStandardError $errLog -WindowStyle Hidden -PassThru -Wait
     $exitCode = $proc.ExitCode
 
     foreach ($name in @('42949039_Output.csv', 'maven_smoke_diagnostics.log', 'latest_failure_log.txt', 'codex_last_prompt.txt', 'codex_last_response.txt', 'codex_last_message.txt')) {

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <parent>
+      <groupId>org.finra.herd</groupId>
+      <artifactId>herd-scripts</artifactId>
+      <version>${revision}</version>
+   </parent>
+
+   <name>herd scripts cloud formation</name>
+   <artifactId>herd-scripts-cloud-formation</artifactId>
+
+   <description>This project contains the cloud formation scripts and supporting files to configure a running instance of herd.</description>
+   <url>http://finraos.github.io/herd/</url>
+
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+               <execution>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <exportAntProperties>true</exportAntProperties>
+                     <target>
+                        <!-- Generate a list of herd postgres upgrade scripts. -->
+                        <property name="herd.postgres.upgrade.scripts.path" location="${basedir}/../herd-scripts-sql/src/main/resources"/>
+                        <fileset id="herd-postgres-upgrade-scripts" dir="${herd.postgres.upgrade.scripts.path}">
+                           <include name="**/*.upgrade.sql"/>
+                        </fileset>
+                        <pathconvert targetos="unix" pathsep="," property="herd.postgres.upgrade.scripts" refid="herd-postgres-upgrade-scripts">
+                           <map from="${herd.postgres.upgrade.scripts.path}/" to=""/>
+                        </pathconvert>
+                     </target>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+               <!-- Set the "herd.tag.version" property based on "project.version" value
+                    by removing the "SNAPSHOT" prefix if it is there. -->
+               <execution>
+                  <id>regex-property</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                     <goal>regex-property</goal>
+                  </goals>
+                  <configuration>
+                     <name>herd.tag.version</name>
+                     <value>${project.version}</value>
+                     <regex>^([0-9]+)\.([0-9]+)\.([0-9]+)(-SNAPSHOT)?$</regex>
+                     <replacement>$1.$2.$3</replacement>
+                     <failIfNoMatch>true</failIfNoMatch>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>com.googlecode.velocity-maven-plugin</groupId>
+            <artifactId>velocity-maven-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>generate-aws-cloud-formation-template</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                     <goal>velocity</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <templateFiles>
+                  <directory>src/main/resources</directory>
+                  <includes>
+                     <include>herd.localdb.template.vm</include>
+                  </includes>
+               </templateFiles>
+               <outputDirectory>target/classes</outputDirectory>
+               <removeExtension>.vm</removeExtension>
+               <templateValues>
+                  <herdTagVersion>${herd.tag.version}</herdTagVersion>
+                  <herdLastMajorDatabaseReleaseVersion>${herd.last.major.database.release.version}</herdLastMajorDatabaseReleaseVersion>
+                  <activitiVersion>${activiti.version}</activitiVersion>
+                  <herdPostgresUpgradeScripts>${herd.postgres.upgrade.scripts}</herdPostgresUpgradeScripts>
+                  <herdUIVersion>${herd-ui.version}</herdUIVersion>
+               </templateValues>
+            </configuration>
+         </plugin>
+      </plugins>
+   </build>
+
+</project>

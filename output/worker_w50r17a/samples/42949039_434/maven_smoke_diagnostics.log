@@ -1,0 +1,12 @@
+[2026-03-17 16:24:33] [MutationLiveGate] Target overload resolved: getStorageFileEntity/2 from testGetStorageFileEntity.
+[2026-03-17 16:25:09] [IterativeHealing] Baseline failed for StorageFileDaoHelperTest; starting retry loop (max_retries=3).
+[2026-03-17 16:25:09] [IterativeHealing] Retry 1/3 for StorageFileDaoHelperTest on focal StorageFileDaoHelper.
+[2026-03-17 16:25:11] [IterativeHealing] Codex method patch generation failed on retry 1 for StorageFileDaoHelperTest.
+[2026-03-17 16:25:11] [IterativeHealing] Retry 2/3 for StorageFileDaoHelperTest on focal StorageFileDaoHelper.
+[2026-03-17 16:25:12] [IterativeHealing] Codex method patch generation failed on retry 2 for StorageFileDaoHelperTest.
+[2026-03-17 16:25:12] [IterativeHealing] Retry 3/3 for StorageFileDaoHelperTest on focal StorageFileDaoHelper.
+[2026-03-17 16:25:14] [IterativeHealing] Codex method patch generation failed on retry 3 for StorageFileDaoHelperTest.
+[2026-03-17 16:25:14] [IterativeHealing] Exhausted retries for StorageFileDaoHelperTest without baseline success.
+[2026-03-17 16:25:35] [MutationLiveGate] Target overload resolved: getStorageFileEntity/2 from testGetStorageFileEntity.
+[2026-03-17 16:26:15] [RegenerativeSync] Starting primary generation pass for StorageFileDaoHelperTest on focal StorageFileDaoHelper.
+[2026-03-17 16:26:17] [RegenerativeSync] Primary generation failed for StorageFileDaoHelperTest.

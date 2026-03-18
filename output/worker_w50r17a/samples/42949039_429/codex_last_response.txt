@@ -1,0 +1,33 @@
+@Test
+public void testModifyTagInSearchIndexSearchIndexUpdateJmsListenerDisabled()
+{
+    String originalAgoneMutationTrigger = System.getProperty("agone.mutation.trigger");
+
+    try
+    {
+        System.setProperty("agone.mutation.trigger", Boolean.TRUE.toString());
+
+        org.finra.herd.model.jpa.TagEntity tagEntity = new org.finra.herd.model.jpa.TagEntity();
+        tagEntity.setId(1L);
+
+        org.mockito.Mockito.when(configurationHelper.getProperty(org.finra.herd.model.dto.ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED))
+            .thenReturn(Boolean.FALSE.toString());
+
+        searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        org.mockito.Mockito.verify(configurationHelper)
+            .getProperty(org.finra.herd.model.dto.ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED);
+        org.mockito.Mockito.verifyZeroInteractions(notificationMessagePublishingService);
+    }
+    finally
+    {
+        if (originalAgoneMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalAgoneMutationTrigger);
+        }
+    }
+}

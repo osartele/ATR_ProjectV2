@@ -16,10 +16,35 @@ def _configure_java_8():
         print(f"Using Java 8 Path: {os.environ['JAVA_HOME_8']}")
         return
 
-    search_patterns = [
-        r"C:\Program Files\Eclipse Adoptium\jdk-8.0*",
-        r"C:\Program Files\AdoptOpenJDK\jdk-8.0*",
-    ]
+    search_patterns = []
+    custom_java_glob = os.environ.get("AGONE_JAVA8_GLOB")
+    if custom_java_glob:
+        search_patterns.extend([entry for entry in custom_java_glob.split(os.pathsep) if entry])
+
+    if os.name == "nt":
+        search_patterns.extend(
+            [
+                r"C:\Program Files\Eclipse Adoptium\jdk-8.0*",
+                r"C:\Program Files\AdoptOpenJDK\jdk-8.0*",
+                r"C:\Program Files\Java\jdk1.8*",
+            ]
+        )
+    elif sys.platform == "darwin":
+        search_patterns.extend(
+            [
+                "/Library/Java/JavaVirtualMachines/*/Contents/Home",
+                "/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home",
+            ]
+        )
+    else:
+        search_patterns.extend(
+            [
+                "/usr/lib/jvm/*8*",
+                "/usr/lib/jvm/java-8*",
+                "/opt/java/*8*",
+            ]
+        )
+
     candidates = []
     for pattern in search_patterns:
         candidates.extend(glob.glob(pattern))
@@ -41,6 +66,12 @@ def _configure_java_8():
 
 
 def _configure_maven(workspace_root):
+    explicit_maven_bin = os.environ.get("AGONE_MAVEN_BIN")
+    if explicit_maven_bin and Path(explicit_maven_bin).is_dir():
+        os.environ["PATH"] = explicit_maven_bin + os.pathsep + os.environ.get("PATH", "")
+        print(f"Using Maven Path: {explicit_maven_bin}")
+        return
+
     existing_maven = shutil.which("mvn.cmd") or shutil.which("mvn")
     if existing_maven:
         print(f"Using Maven Path: {existing_maven}")
@@ -49,8 +80,18 @@ def _configure_maven(workspace_root):
     search_patterns = [
         str(workspace_root / "tools" / "apache-maven-*" / "bin" / "mvn.cmd"),
         str(workspace_root / "tools" / "apache-maven-*" / "bin" / "mvn"),
-        r"C:\Program Files\apache-maven-*\bin\mvn.cmd",
     ]
+    if os.name == "nt":
+        search_patterns.append(r"C:\Program Files\apache-maven-*\bin\mvn.cmd")
+    else:
+        search_patterns.extend(
+            [
+                "/usr/share/maven/bin/mvn",
+                "/usr/local/bin/mvn",
+                "/opt/homebrew/bin/mvn",
+            ]
+        )
+
     candidates = []
     for pattern in search_patterns:
         candidates.extend(glob.glob(pattern))

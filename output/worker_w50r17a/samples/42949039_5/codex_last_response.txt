@@ -1,0 +1,24 @@
+@org.junit.Test
+public void test_2() throws Exception
+{
+    SwaggerGenMojo swaggerGenMojo = new SwaggerGenMojo();
+
+    java.io.File outputAsFile = java.io.File.createTempFile("swaggergen-output", ".tmp");
+    outputAsFile.deleteOnExit();
+
+    java.lang.reflect.Field outputDirectoryField = SwaggerGenMojo.class.getDeclaredField("outputDirectory");
+    outputDirectoryField.setAccessible(true);
+    outputDirectoryField.set(swaggerGenMojo, outputAsFile);
+
+    try
+    {
+        swaggerGenMojo.execute();
+        org.junit.Assert.fail("Expected MojoExecutionException.");
+    }
+    catch (org.apache.maven.plugin.MojoExecutionException e)
+    {
+        org.junit.Assert.assertTrue(e.getMessage().startsWith("Unable to create directory for output path"));
+        org.junit.Assert.assertNotNull(e.getCause());
+        org.junit.Assert.assertTrue(e.getCause() instanceof java.io.IOException);
+    }
+}

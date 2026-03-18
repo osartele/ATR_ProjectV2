@@ -1,0 +1,60 @@
+@Test
+public void testGetStorageFileEntity()
+{
+    String filePath = "path/to/storage/file";
+    StorageFileEntity storageFileEntity = new StorageFileEntity();
+
+    String originalAgoneMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.setProperty("agone.mutation.trigger", "true");
+    try
+    {
+        org.mockito.Mockito.when(storageFileDao.getStorageFileByStorageNameAndFilePath(STORAGE_NAME, filePath)).thenReturn(storageFileEntity);
+
+        StorageFileEntity result = storageFileDaoHelper.getStorageFileEntity(STORAGE_NAME, filePath);
+
+        org.junit.Assert.assertSame(storageFileEntity, result);
+        org.mockito.Mockito.verify(storageFileDao).getStorageFileByStorageNameAndFilePath(STORAGE_NAME, filePath);
+    }
+    finally
+    {
+        if (originalAgoneMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalAgoneMutationTrigger);
+        }
+    }
+}
+
+@Test
+public void testGetStorageFileEntityAgoneMutationTriggerMissing()
+{
+    String filePath = "path/to/storage/file";
+    String originalAgoneMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.clearProperty("agone.mutation.trigger");
+    try
+    {
+        try
+        {
+            storageFileDaoHelper.getStorageFileEntity(STORAGE_NAME, filePath);
+            org.junit.Assert.fail("Expected AssertionError to be thrown.");
+        }
+        catch (AssertionError e)
+        {
+            org.junit.Assert.assertEquals("AGONE_MUTATION_TRIGGER", e.getMessage());
+        }
+    }
+    finally
+    {
+        if (originalAgoneMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalAgoneMutationTrigger);
+        }
+    }
+}

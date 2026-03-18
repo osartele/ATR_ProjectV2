@@ -1,0 +1,48 @@
+@Test
+public void testGetSecurityFunctionEntity()
+{
+    String originalAgoneMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.setProperty("agone.mutation.trigger", "true");
+    try
+    {
+        SecurityFunctionEntity securityFunctionEntity = new SecurityFunctionEntity();
+        when(securityFunctionDao.getSecurityFunctionByName(SECURITY_FUNCTION)).thenReturn(securityFunctionEntity);
+
+        SecurityFunctionEntity result = securityFunctionDaoHelper.getSecurityFunctionEntity(SECURITY_FUNCTION);
+
+        assertEquals(securityFunctionEntity, result);
+    }
+    finally
+    {
+        if (originalAgoneMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalAgoneMutationTrigger);
+        }
+    }
+}
+
+@Test(expected = AssertionError.class)
+public void testGetSecurityFunctionEntityMissingAgoneMutationTrigger()
+{
+    String originalAgoneMutationTrigger = System.getProperty("agone.mutation.trigger");
+    try
+    {
+        System.clearProperty("agone.mutation.trigger");
+        securityFunctionDaoHelper.getSecurityFunctionEntity(SECURITY_FUNCTION);
+    }
+    finally
+    {
+        if (originalAgoneMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalAgoneMutationTrigger);
+        }
+    }
+}

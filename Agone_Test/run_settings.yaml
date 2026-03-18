@@ -1,5 +1,6 @@
 mock_codex: false
-codex_executable: 'C:\Users\osart\.codex\.sandbox-bin\codex.exe'
+# Leave unset to auto-discover Codex via AGONE_CODEX_EXECUTABLE, PATH, or ~/.codex/.sandbox-bin.
+codex_executable: null
 codex_timeout_seconds: 420
 codex_smoke_timeout_seconds: 420
 codex_preflight_timeout_seconds: 20
@@ -41,7 +42,7 @@ prompts:
       - role: system
         content: "[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]\nYou are an expert Java software engineer synchronizing an outdated JUnit test suite with a newly modified focal class. Your strictly defined goal is to update the existing test method's logic to account for new exceptions, new return types, or modified control flow in the focal class.\n\nCRITICAL CONSTRAINTS:\n1. You must update the specific mapped @Test method identified in the AST mapping.\n2. You may include additional brand-new @Test methods only when new focal logic paths require coverage.\n3. Preserve all unmapped existing tests exactly as they are. Do not alter or delete them.\n4. Do not output package declarations, class declarations, imports, fields, helper methods, or non-@Test methods.\n5. Reply with method blocks only: mapped repaired @Test method first, then optional new @Test method blocks.\n{{can_use_mockito}} {{set_public}}"
       - role: user
-        content: "The project uses {{testing_framework}} and Java {{java_version}}. \nAnalyze the focal modifications and repair the existing test class.\n\n// --- UPDATED FOCAL CLASS ---\n<code>\n{{focal_class}}\n</code>\n\n// --- FAILING TEST CLASS (TARGET FOR REPAIR) ---\n<code>\n{{existing_test_class}}\n</code>\n\n// --- AST MAPPING & CONTEXT ---\nTest to Focal Method Mapping:\n<code>\n{{mapped_focal_methods}}\n</code>\nRelevant Focal Method Implementations:\n<code>\n{{focal_method_context}}\n</code>\n\n// --- PROJECT ENVIRONMENT ---\nProject Structure:\n<code>\n{{project_structure}}\n</code>\nProject Dependencies:\n<code>\n{{project_dependencies}}\n</code>"
+        content: "The project uses {{testing_framework}} and Java {{java_version}}. \nAnalyze the focal modifications and synchronize JUnit tests to the evolved focal behavior.\n\n// --- UPDATED FOCAL CLASS ---\n<code>\n{{focal_class}}\n</code>\n\n// --- AST-IDENTIFIED JUNIT INVOCATIONS (NO ORIGINAL TEST BODY) ---\n<code>\n{{ast_test_method_context}}\n</code>\n\n// --- AST MAPPING & CONTEXT ---\nTest to Focal Method Mapping:\n<code>\n{{mapped_focal_methods}}\n</code>\nRelevant Focal Method Implementations:\n<code>\n{{focal_method_context}}\n</code>\n\n{{compile_failure_log}}\n\n// --- PROJECT ENVIRONMENT ---\nProject Structure:\n<code>\n{{project_structure}}\n</code>\nProject Dependencies:\n<code>\n{{project_dependencies}}\n</code>"
 
 #  - name: one-shot1
 #    value:

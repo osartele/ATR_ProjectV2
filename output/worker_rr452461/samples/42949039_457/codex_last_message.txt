@@ -1,0 +1,65 @@
+@Test
+public void testGetStorageAttributeIntegerValueByNameWithDefault_3()
+{
+    String attributeName = "attributeName";
+    Integer defaultValue = 123;
+    org.finra.herd.model.jpa.StorageEntity storageEntity = org.mockito.Mockito.mock(org.finra.herd.model.jpa.StorageEntity.class);
+    StorageHelper storageHelperSpy = org.mockito.Mockito.spy(new StorageHelper());
+
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.setProperty("agone.mutation.trigger", "true");
+    try
+    {
+        org.mockito.Mockito.doReturn(null).when(storageHelperSpy)
+            .getStorageAttributeIntegerValueByName(attributeName, storageEntity, false, false);
+
+        Integer value = storageHelperSpy.getStorageAttributeIntegerValueByName(attributeName, storageEntity, defaultValue);
+
+        org.junit.Assert.assertEquals(defaultValue, value);
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+    }
+}
+
+@Test
+public void testGetStorageAttributeIntegerValueByNameWithDefaultThrowsAssertionErrorWhenMutationTriggerNotSet()
+{
+    String attributeName = "attributeName";
+    Integer defaultValue = 123;
+    org.finra.herd.model.jpa.StorageEntity storageEntity = org.mockito.Mockito.mock(org.finra.herd.model.jpa.StorageEntity.class);
+
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.clearProperty("agone.mutation.trigger");
+    try
+    {
+        try
+        {
+            new StorageHelper().getStorageAttributeIntegerValueByName(attributeName, storageEntity, defaultValue);
+            org.junit.Assert.fail("Expected AssertionError due to missing agone.mutation.trigger system property.");
+        }
+        catch (AssertionError e)
+        {
+            org.junit.Assert.assertEquals("AGONE_MUTATION_TRIGGER", e.getMessage());
+        }
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+    }
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "mutation_type": "logical",
+    "method_name": "getStorageAttributeIntegerValueByName",
+    "method_parameter_count": 4,
+    "old_operator": "!",
+    "new_operator": "",
+    "mutation_variant": "unary_not_removal",
+    "mutation_candidate_index": 0,
+    "line": 221,
+    "column": 17,
+    "mutation_priority_class": "NEGATE_CONDITIONALS",
+    "mutation_attempt_key": "logical:0",
+    "focal_path": "compiledrepos/worker_w50r17a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/StorageHelper.java",
+    "test_path": "compiledrepos/worker_w50r17a/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/StorageHelperTest.java"
+  }
+]

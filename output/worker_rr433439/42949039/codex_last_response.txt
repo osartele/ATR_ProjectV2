@@ -1,0 +1,50 @@
+@Test
+public void testGetStorageFileEntityByStorageUnitEntityAndFilePathWithNullStorageFileEntityWithBlankDirectoryPath()
+{
+    String filePath = "path/to/file.txt";
+    String storageName = "storageName";
+    String businessObjectDataKeyAsString = "businessObjectDataKey";
+
+    org.finra.herd.model.api.xml.BusinessObjectDataKey businessObjectDataKey = new org.finra.herd.model.api.xml.BusinessObjectDataKey();
+    org.finra.herd.model.jpa.StorageEntity storageEntity = new org.finra.herd.model.jpa.StorageEntity();
+    storageEntity.setName(storageName);
+
+    org.finra.herd.model.jpa.StorageUnitEntity storageUnitEntity = new org.finra.herd.model.jpa.StorageUnitEntity();
+    storageUnitEntity.setStorage(storageEntity);
+    storageUnitEntity.setDirectoryPath("   ");
+
+    org.mockito.Mockito.when(storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, filePath)).thenReturn(null);
+    org.mockito.Mockito.when(businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)).thenReturn(businessObjectDataKeyAsString);
+
+    String originalAgoneMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.setProperty("agone.mutation.trigger", "true");
+    try
+    {
+        try
+        {
+            storageFileDaoHelper.getStorageFileEntity(storageUnitEntity, filePath, businessObjectDataKey);
+            org.junit.Assert.fail("Expected ObjectNotFoundException.");
+        }
+        catch (org.finra.herd.model.ObjectNotFoundException e)
+        {
+            org.junit.Assert.assertEquals(
+                String.format("Storage file \"%s\" doesn't exist in \"%s\" storage. Business object data: {%s}", filePath, storageName,
+                    businessObjectDataKeyAsString),
+                e.getMessage());
+        }
+
+        org.mockito.Mockito.verify(storageFileDao, org.mockito.Mockito.times(1))
+            .getStorageFileByStorageUnitEntityAndFilePath(org.mockito.Mockito.eq(storageUnitEntity), org.mockito.Mockito.anyString());
+    }
+    finally
+    {
+        if (originalAgoneMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalAgoneMutationTrigger);
+        }
+    }
+}

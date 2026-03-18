@@ -1,0 +1,495 @@
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+
+SYSTEM:
+[SYSTEM DIRECTIVE: YOU ARE IN A RESTRICTED READ-ONLY ENVIRONMENT. DO NOT USE ANY TOOLS, SHELL COMMANDS, BASH, OR POWERSHELL. YOU MUST ONLY OUTPUT THE FINAL JAVA CODE. DO NOT ATTEMPT TO SEARCH, READ, OR WRITE FILES ON THE DISK.]
+You are an expert Java software engineer synchronizing an outdated JUnit test suite with a newly modified focal class. Your strictly defined goal is to update the existing test method's logic to account for new exceptions, new return types, or modified control flow in the focal class.
+
+CRITICAL CONSTRAINTS:
+1. You must update the specific mapped @Test method identified in the AST mapping.
+2. You may include additional brand-new @Test methods only when new focal logic paths require coverage.
+3. Preserve all unmapped existing tests exactly as they are. Do not alter or delete them.
+4. Do not output package declarations, class declarations, imports, fields, helper methods, or non-@Test methods.
+5. Reply with method blocks only: mapped repaired @Test method first, then optional new @Test method blocks.
+You can use the Mockito framework. You must declare the test class and all the test methods with the public access modifier.
+
+USER:
+The project uses Junit version 4.12 and Java 1.8. 
+Analyze the focal modifications and synchronize JUnit tests to the evolved focal behavior.
+
+// --- UPDATED FOCAL CLASS ---
+<code>
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package org.finra.herd.service.helper;
+
+import com.amazonaws.services.securitytoken.model.Credentials;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomBooleanEditor;
+import org.springframework.stereotype.Component;
+
+import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.StsDao;
+import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
+import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.herd.model.jpa.StorageAttributeEntity;
+import org.finra.herd.model.jpa.StorageEntity;
+
+/**
+ * A helper class for Storage related code.
+ */
+@Component
+public class StorageHelper
+{
+    private static final Logger LOGGER = LoggerFactory.getLogger(StorageHelper.class);
+
+    @Autowired
+    protected StsDao stsDao;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
+
+    /**
+     * Gets attribute value by name from the storage entity and returns it as a boolean. Most types of boolean strings are supported (e.g. true/false, on/off,
+     * yes/no, etc.).
+     *
+     * @param attributeName the attribute name (case insensitive)
+     * @param storageEntity the storage entity
+     * @param attributeRequired specifies whether the attribute is mandatory (i.e. whether it has a value or not).
+     * @param attributeValueRequiredIfExists specifies whether the attribute value is mandatory (i.e. the attribute must exist and its value must also contain a
+     * value).
+     *
+     * @return the attribute value from the attribute with the attribute name as a boolean. If no value is configured and the attribute isn't required, then
+     *         false is returned.
+     * @throws IllegalStateException if an invalid storage attribute boolean value was configured.
+     */
+    public boolean getBooleanStorageAttributeValueByName(String attributeName, StorageEntity storageEntity, boolean attributeRequired,
+        boolean attributeValueRequiredIfExists) throws IllegalStateException
+    {
+        // Get the boolean string value.
+        // The required flag is being passed so an exception will be thrown if it is required and isn't present.
+        String booleanStringValue = getStorageAttributeValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
+
+        // If it isn't required, then treat a blank value as "false".
+        if (StringUtils.isBlank(booleanStringValue))
+        {
+            return false;
+        }
+
+        // Use custom boolean editor without allowed empty strings to convert the value of the argument to a boolean value.
+        CustomBooleanEditor customBooleanEditor = new CustomBooleanEditor(attributeRequired);
+        try
+        {
+            customBooleanEditor.setAsText(booleanStringValue);
+        }
+        catch (IllegalArgumentException e)
+        {
+            // This will produce a 500 HTTP status code error. If storage attributes are able to be updated by a REST invocation in the future,
+            // we might want to consider making this a 400 instead since the user has the ability to fix the issue on their own.
+            throw new IllegalStateException(String
+                .format("Attribute \"%s\" for \"%s\" storage has an invalid boolean value: \"%s\".", attributeName, storageEntity.getName(),
+                    booleanStringValue), e);
+        }
+
+        // Return the boolean value.
+        return (Boolean) customBooleanEditor.getValue();
+    }
+
+    /**
+     * Returns a new instance of S3FileTransferRequestParamsDto populated with all parameters, required to access an S3 bucket.
+     *
+     * @param storageEntity the storage entity that contains attributes to access an S3 bucket
+     *
+     * @return the S3FileTransferRequestParamsDto instance that can be used to access S3 bucket
+     */
+    public S3FileTransferRequestParamsDto getS3BucketAccessParams(StorageEntity storageEntity)
+    {
+        // Get S3 bucket specific configuration settings.
+        // Please note that since those values are required we pass a "true" flag.
+        String s3BucketName =
+            getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
+
+        S3FileTransferRequestParamsDto params = getS3FileTransferRequestParamsDto();
+
+        params.setAwsRegionName(configurationHelper.getProperty(ConfigurationValue.AWS_REGION_NAME));
+        params.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
+        params.setS3BucketName(s3BucketName);
+
+        return params;
+    }
+
+    /**
+     * Returns a new {@link org.finra.herd.model.dto.S3FileCopyRequestParamsDto} with proxy host and port populated from the configuration.
+     *
+     * @return {@link org.finra.herd.model.dto.S3FileCopyRequestParamsDto} with proxy host and port.
+     */
+    public S3FileCopyRequestParamsDto getS3FileCopyRequestParamsDto()
+    {
+        S3FileCopyRequestParamsDto params = new S3FileCopyRequestParamsDto();
+
+        // Update the parameters with proxy host and port retrieved from the configuration.
+        setProxyHostAndPort(params);
+        params.setAwsRegionName(configurationHelper.getProperty(ConfigurationValue.AWS_REGION_NAME));
+
+        return params;
+    }
+
+    /**
+     * Returns a new {@link S3FileTransferRequestParamsDto} with proxy host and port populated from the configuration.
+     *
+     * @return the {@link S3FileTransferRequestParamsDto} object
+     */
+    public S3FileTransferRequestParamsDto getS3FileTransferRequestParamsDto()
+    {
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+
+        // Update the parameters with proxy host and port retrieved from the configuration.
+        setProxyHostAndPort(params);
+
+        params.setAwsRegionName(configurationHelper.getProperty(ConfigurationValue.AWS_REGION_NAME));
+
+        return params;
+    }
+
+    /**
+     * Returns a new {@link S3FileTransferRequestParamsDto} with temporary credentials as per specified AWS role and session name.
+     *
+     * @param roleArn the ARN of the role
+     * @param sessionName the session name
+     * @param awsRoleDurationSeconds the AWS role duration in seconds
+     *
+     * @return the {@link S3FileTransferRequestParamsDto} object
+     */
+    public S3FileTransferRequestParamsDto getS3FileTransferRequestParamsDtoByRole(String roleArn, String sessionName, int awsRoleDurationSeconds)
+    {
+        // Get the S3 file transfer request parameters DTO with proxy host and port populated from the configuration.
+        S3FileTransferRequestParamsDto params = getS3FileTransferRequestParamsDto();
+
+        LOGGER.info("Getting AWS temporary security credentials. sessionName={}, roleArn={}, awsRoleDurationSeconds={}", sessionName, roleArn,
+            awsRoleDurationSeconds);
+
+        // Assume the specified role.
+        Credentials credentials = stsDao.getTemporarySecurityCredentials(params, sessionName, roleArn, awsRoleDurationSeconds, null);
+
+        // Update the AWS parameters DTO with the temporary credentials.
+        params.setAwsAccessKeyId(credentials.getAccessKeyId());
+        params.setAwsSecretKey(credentials.getSecretAccessKey());
+        params.setSessionToken(credentials.getSessionToken());
+
+        return params;
+    }
+
+    /**
+     * Gets a storage attribute value by name. If the attribute does not exist, returns the default value. If the attribute exists, and is defined, the value
+     * MUST be an integer, otherwise a exception is thrown.
+     *
+     * @param attributeName The name of attribute
+     * @param storageEntity The storage entity
+     * @param defaultValue The default value
+     *
+     * @return The integer value
+     */
+    public Integer getStorageAttributeIntegerValueByName(String attributeName, StorageEntity storageEntity, Integer defaultValue)
+    {
+        if (System.getProperty("agone.mutation.trigger") == null) { throw new AssertionError("AGONE_MUTATION_TRIGGER"); }
+        Integer value = getStorageAttributeIntegerValueByName(attributeName, storageEntity, false, false);
+        if (value == null)
+        {
+            value = defaultValue;
+        }
+        return value;
+    }
+
+    /**
+     * Gets a storage attribute value by name. The value must be a valid integer, otherwise a validation error is thrown.
+     *
+     * @param attributeName the attribute name (case insensitive)
+     * @param storageEntity the storage entity
+     * @param attributeRequired specifies whether the attribute is mandatory (i.e. whether it has a value or not).
+     * @param attributeValueRequiredIfExists specifies whether the attribute value is mandatory (i.e. the attribute must exist and its value must also contain a
+     * value).
+     *
+     * @return the attribute value from the attribute with the attribute name.
+     * @throws IllegalStateException if the attribute is mandatory and this storage contains no attribute with this attribute name or the value is blank. This
+     * will produce a 500 HTTP status code error. If storage attributes are able to be updated by a REST invocation in the future, we might want to consider
+     * making this a 400 instead since the user has the ability to fix the issue on their own. Also throws when the value exists, but is not a valid integer.
+     */
+    public Integer getStorageAttributeIntegerValueByName(String attributeName, StorageEntity storageEntity, boolean attributeRequired,
+        boolean attributeValueRequiredIfExists) throws IllegalStateException
+    {
+        Integer intValue = null;
+        String value = getStorageAttributeValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
+        if (value != null)
+        {
+            if (!StringUtils.isNumeric(value))
+            {
+                throw new IllegalStateException("Storage attribute \"" + attributeName + "\" must be a valid integer. Actual value is \"" + value + "\"");
+            }
+            intValue = Integer.parseInt(value.trim());
+        }
+        return intValue;
+    }
+
+    /**
+     * Gets attribute value by name from the storage object instance.
+     *
+     * @param attributeName the attribute name (case insensitive)
+     * @param storage the storage
+     * @param required specifies whether the attribute value is mandatory
+     *
+     * @return the attribute value from the attribute with the attribute name, or {@code null} if this list contains no attribute with this attribute name
+     */
+    public String getStorageAttributeValueByName(String attributeName, Storage storage, Boolean required)
+    {
+        String attributeValue = null;
+
+        for (Attribute attribute : storage.getAttributes())
+        {
+            if (attribute.getName().equalsIgnoreCase(attributeName))
+            {
+                attributeValue = attribute.getValue();
+                break;
+            }
+        }
+
+        if (required && StringUtils.isBlank(attributeValue))
+        {
+            throw new IllegalStateException(String.format("Attribute \"%s\" for \"%s\" storage must be configured.", attributeName, storage.getName()));
+        }
+
+        return attributeValue;
+    }
+
+    /**
+     * Gets attribute value by name from the storage entity while specifying whether the attribute value is required (i.e. it must exist and must have a value
+     * configured). This is a convenience method when a value must be returned (i.e. the attribute must be configured and have a value present) or is totally
+     * optional (i.e. the attribute can not exist or it can exist and have a blank value).
+     *
+     * @param attributeName the attribute name (case insensitive)
+     * @param storageEntity the storage entity
+     * @param attributeValueRequired specifies whether the attribute value is mandatory
+     *
+     * @return the attribute value from the attribute with the attribute name.
+     * @throws IllegalArgumentException if the attribute is mandatory and this storage contains no attribute with this attribute name
+     */
+    public String getStorageAttributeValueByName(String attributeName, StorageEntity storageEntity, boolean attributeValueRequired)
+        throws IllegalArgumentException
+    {
+        return getStorageAttributeValueByName(attributeName, storageEntity, attributeValueRequired, attributeValueRequired);
+    }
+
+    /**
+     * Gets attribute value by name from the storage entity while specifying whether the attribute is required and whether the attribute value is required.
+     *
+     * @param attributeName the attribute name (case insensitive)
+     * @param storageEntity the storage entity
+     * @param attributeRequired specifies whether the attribute is mandatory (i.e. whether it has a value or not).
+     * @param attributeValueRequiredIfExists specifies whether the attribute value is mandatory (i.e. the attribute must exist and its value must also contain a
+     * value).
+     *
+     * @return the attribute value from the attribute with the attribute name.
+     * @throws IllegalStateException if the attribute is mandatory and this storage contains no attribute with this attribute name or the value is blank.This
+     * will produce a 500 HTTP status code error. If storage attributes are able to be updated by a REST invocation in the future, we might want to consider
+     * making this a 400 instead since the user has the ability to fix the issue on their own.
+     */
+    public String getStorageAttributeValueByName(String attributeName, StorageEntity storageEntity, boolean attributeRequired,
+        boolean attributeValueRequiredIfExists) throws IllegalStateException
+    {
+        boolean attributeExists = false;
+        String attributeValue = null;
+
+        for (StorageAttributeEntity attributeEntity : storageEntity.getAttributes())
+        {
+            if (attributeEntity.getName().equalsIgnoreCase(attributeName))
+            {
+                attributeExists = true;
+                attributeValue = attributeEntity.getValue();
+                break;
+            }
+        }
+
+        // If the attribute must exist and doesn't, throw an exception.
+        if (attributeRequired && !attributeExists)
+        {
+            throw new IllegalStateException(String.format("Attribute \"%s\" for \"%s\" storage must be configured.", attributeName, storageEntity.getName()));
+        }
+
+        // If the attribute is configured, but has a blank value, throw an exception.
+        if (attributeExists && attributeValueRequiredIfExists && StringUtils.isBlank(attributeValue))
+        {
+            throw new IllegalStateException(
+                String.format("Attribute \"%s\" for \"%s\" storage must have a value that is not blank.", attributeName, storageEntity.getName()));
+        }
+
+        return attributeValue;
+    }
+
+    /**
+     * Gets the storage's bucket name. Throws if not defined.
+     *
+     * @param storageEntity the storage entity
+     *
+     * @return the S3 bucket name
+     */
+    public String getStorageBucketName(StorageEntity storageEntity)
+    {
+        return getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
+    }
+
+    /**
+     * Gets the storage's KMS key ID. Throws if not defined.
+     *
+     * @param storageEntity the storage entity
+     *
+     * @return the KMS key ID
+     */
+    public String getStorageKmsKeyId(StorageEntity storageEntity)
+    {
+        return getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storageEntity, true);
+    }
+
+    /**
+     * Updates an {@link S3FileTransferRequestParamsDto} instance with proxy host and port retrieved from the configuration.
+     *
+     * @param params the S3FileTransferRequestParamsDto
+     */
+    private void setProxyHostAndPort(S3FileTransferRequestParamsDto params)
+    {
+        // Get HTTP proxy configuration settings from the configuration.
+        String httpProxyHost = configurationHelper.getProperty(ConfigurationValue.HTTP_PROXY_HOST);
+        Integer httpProxyPort = configurationHelper.getProperty(ConfigurationValue.HTTP_PROXY_PORT, Integer.class);
+
+        // Update the DTO with the HTTP proxy configuration settings.
+        params.setHttpProxyHost(httpProxyHost);
+        params.setHttpProxyPort(httpProxyPort);
+    }
+}
+
+</code>
+
+// --- AST-IDENTIFIED JUNIT INVOCATIONS (NO ORIGINAL TEST BODY) ---
+<code>
+JUnit test method testGetStorageAttributeIntegerValueByNameWithDefault_7 -> getStorageAttributeIntegerValueByName:
+line 469: storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, defaultValue); -> getStorageAttributeIntegerValueByName
+</code>
+
+// --- AST MAPPING & CONTEXT ---
+Test to Focal Method Mapping:
+<code>
+{
+  "testGetStorageAttributeIntegerValueByNameWithDefault_7": [
+    "getStorageAttributeIntegerValueByName"
+  ]
+}
+</code>
+Relevant Focal Method Implementations:
+<code>
+Focal method getStorageAttributeIntegerValueByName:
+public Integer getStorageAttributeIntegerValueByName(String attributeName, StorageEntity storageEntity, Integer defaultValue)
+    {
+        if (System.getProperty("agone.mutation.trigger") == null) { throw new AssertionError("AGONE_MUTATION_TRIGGER"); }
+        Integer value = getStorageAttributeIntegerValueByName(attributeName, storageEntity, false, false);
+        if (value == null)
+        {
+            value = defaultValue;
+        }
+        return value;
+    }
+
+    /**
+     * Gets a storage attribute value by name. The value must be a valid integer, otherwise a validation error is thrown.
+     *
+     * @param attributeName the attribute name (case insensitive)
+     * @param storageEntity the storage entity
+     * @param attributeRequired specifies whether the attribute is mandatory (i.e. whether it has a value or not).
+     * @param attributeValueRequiredIfExists specifies whether the attribute value is mandatory (i.e. the attribute must exist and its value must also contain a
+     * value).
+     *
+     * @return the attribute value from the attribute with the attribute name.
+     * @throws IllegalStateException if the attribute is mandatory and this storage contains no attribute with this attribute name or the value is blank. This
+     * will produce a 500 HTTP status code error. If storage attributes are able to be updated by a REST invocation in the future, we might want to consider
+     * making this a 400 instead since the user has the ability to fix the issue on their own. Also throws when the value exists, but is not a valid integer.
+     */
+
+Focal method getStorageAttributeIntegerValueByName:
+public Integer getStorageAttributeIntegerValueByName(String attributeName, StorageEntity storageEntity, boolean attributeRequired,
+        boolean attributeValueRequiredIfExists) throws IllegalStateException
+    {
+        Integer intValue = null;
+        String value = getStorageAttributeValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
+        if (value != null)
+        {
+            if (!StringUtils.isNumeric(value))
+            {
+                throw new IllegalStateException("Storage attribute \"" + attributeName + "\" must be a valid integer. Actual value is \"" + value + "\"");
+            }
+            intValue = Integer.parseInt(value.trim());
+        }
+        return intValue;
+    }
+
+    /**
+     * Gets attribute value by name from the storage object instance.
+     *
+     * @param attributeName the attribute name (case insensitive)
+     * @param storage the storage
+     * @param required specifies whether the attribute value is mandatory
+     *
+     * @return the attribute value from the attribute with the attribute name, or {@code null} if this list contains no attribute with this attribute name
+     */
+</code>
+
+
+
+// --- PROJECT ENVIRONMENT ---
+Project Structure:
+<code>
+{'herd-build': {'herd-swaggergen-maven-plugin': {'src': {'main': {'java': {'org': {'finra': {'herd': {'swaggergen': {'DefinitionGenerator.java' , 'ExampleXmlGenerator.java' , 'FieldUtils.java' , 'ModelClassFinder.java' , 'OperationsFilter.java' , 'ResourceUtils.java' , 'RestControllerProcessor.java' , 'SwaggerGenMojo.java' , 'SwaggerNamingStrategy.java' , 'XsdNamespaceContext.java' , 'XsdParser.java' }}}}}}}}}, 'herd-code': {'herd-app': {'src': {'main': {'java': {'org': {'finra': {'herd': {'app': {'HttpSecurityHeadersFilter.java' , 'Log4jMdcLoggingFilter.java' , 'SessionInvalidationFilter.java' , 'WarInitializer.java' , 'config': {'AppSpringModuleConfig.java' }, 'security': {'ApplicationUserBuilder.java' , 'HerdUserDetailsService.java' , 'HttpHeaderApplicationUserBuilder.java' , 'HttpHeaderAuthenticationFilter.java' , 'SecurityHelper.java' , 'TrustedApplicationUserBuilder.java' , 'TrustedUserAuthenticationFilter.java' }}}}}}}}}, 'herd-core': {'src': {'main': {'java': {'org': {'finra': {'herd': {'core': {'ApplicationContextHolder.java' , 'ArgumentParser.java' , 'AutowiringQuartzSpringBeanJobFactory.java' , 'Command.java' , 'HerdDateUtils.java' , 'HerdFileUtils.java' , 'HerdStringUtils.java' , 'SuppressLogging.java' , 'config': {'CoreSpringModuleConfig.java' }, 'helper': {'ConfigurationHelper.java' , 'HerdThreadHelper.java' , 'SecurityManagerHelper.java' , 'SpelExpressionHelper.java' , 'WildcardHelper.java' }}}}}}}}}, 'herd-dao': {'src': {'main': {'java': {'org': {'finra': {'herd': {'dao': {'AllowedAttributeValueDao.java' , 'AttributeValueListDao.java' , 'AwsClientFactory.java' , 'AwsS3ClientFactory.java' , 'BaseJpaDao.java' , 'BusinessObjectDataAttributeDao.java' , 'BusinessObjectDataDao.java' , 'BusinessObjectDataNotificationRegistrationDao.java' , 'BusinessObjectDataStatusDao.java' , 'BusinessObjectDefinitionColumnDao.java' , 'BusinessObjectDefinitionDao.java' , 'BusinessObjectDefinitionDescriptionSuggestionDao.java' , 'BusinessObjectDefinitionDescriptionSuggestionStatusDao.java' , 'BusinessObjectDefinitionSubjectMatterExpertDao.java' , 'BusinessObjectDefinitionTagDao.java' , 'BusinessObjectFormatDao.java' , 'BusinessObjectFormatExternalInterfaceDao.java' , 'CacheKeyGenerator.java' , 'ConfigurationDao.java' , 'CredStashFactory.java' , 'CustomDdlDao.java' , 'DataProviderDao.java' , 'Ec2Dao.java' , 'Ec2Operations.java' , 'ElasticsearchRestHighLevelClientFactory.java' , 'EmrClusterDefinitionDao.java' , 'EmrDao.java' , 'EmrOperations.java' , 'ExpectedPartitionValueDao.java' , 'ExternalInterfaceDao.java' , 'FileTypeDao.java' , 'GlobalAttributeDefinitionDao.java' , 'GlobalAttributeDefinitionLevelDao.java' , 'HerdDao.java' , 'HttpClientOperations.java' , 'IndexFunctionsDao.java' , 'IndexSearchDao.java' , 'InputStreamFactory.java' , 'JdbcDao.java' , 'JdbcOperations.java' , 'JobDefinitionDao.java' , 'KmsDao.java' , 'KmsOperations.java' , 'LdapOperations.java' , 'Log4jOverridableConfigurer.java' , 'MessageTypeDao.java' , 'MethodLoggingAdvice.java' , 'NamespaceDao.java' , 'NamespaceIamRoleAuthorizationDao.java' , 'NotificationEventTypeDao.java' , 'NotificationMessageDao.java' , 'NotificationRegistrationDao.java' , 'NotificationRegistrationStatusDao.java' , 'PartitionKeyGroupDao.java' , 'ReloadablePropertySource.java' , 'RetentionTypeDao.java' , 'RetryPolicyFactory.java' , 'S3BatchManifest.java' , 'S3Dao.java' , 'S3Operations.java' , 'SchemaColumnDao.java' , 'SearchIndexDao.java' , 'SearchIndexStatusDao.java' , 'SearchIndexTypeDao.java' , 'SecurityFunctionDao.java' , 'SecurityRoleDao.java' , 'SecurityRoleFunctionDao.java' , 'SesDao.java' , 'SesOperations.java' , 'SimpleExponentialBackoffStrategy.java' , 'SnsDao.java' , 'SnsOperations.java' , 'SqsDao.java' , 'SqsOperations.java' , 'StorageDao.java' , 'StorageFileDao.java' , 'StoragePlatformDao.java' , 'StoragePolicyDao.java' , 'StoragePolicyRuleTypeDao.java' , 'StoragePolicyStatusDao.java' , 'StoragePolicyTransitionTypeDao.java' , 'StorageUnitDao.java' , 'StorageUnitNotificationRegistrationDao.java' , 'StorageUnitStatusDao.java' , 'StsDao.java' , 'StsOperations.java' , 'SubjectMatterExpertDao.java' , 'TagDao.java' , 'TagTypeDao.java' , 'TrustingAccountDao.java' , 'UrlOperations.java' , 'UserDao.java' , 'UserNamespaceAuthorizationDao.java' , 'config': {'DaoEnvSpringModuleConfig.java' , 'DaoSpringModuleConfig.java' }, 'credstash': {'CredStash.java' , 'JCredStashWrapper.java' }, 'exception': {'CredStashGetCredentialFailedException.java' , 'ElasticsearchRestClientException.java' , 'S3BatchJobIncompleteException.java' }, 'helper': {'AwsHelper.java' , 'CredStashHelper.java' , 'ElasticsearchClientImpl.java' , 'ElasticsearchHelper.java' , 'EmrHelper.java' , 'EmrPricingHelper.java' , 'EmrVpcPricingStateFormatter.java' , 'HerdCharacterEscapeHandler.java' , 'HerdCollectionHelper.java' , 'HerdDaoSecurityHelper.java' , 'HerdSearchQueryHelper.java' , 'HerdStringHelper.java' , 'JavaPropertiesHelper.java' , 'JsonHelper.java' , 'KmsHelper.java' , 'S3BatchHelper.java' , 'TagDaoHelper.java' , 'TrustingAccountDaoHelper.java' , 'UrlHelper.java' , 'XmlHelper.java' }, 'impl': {'AbstractHerdDao.java' , 'AbstractNotificationRegistrationDao.java' , 'AllowedAttributeValueDaoImpl.java' , 'AttributeValueListDaoImpl.java' , 'BaseJpaDaoImpl.java' , 'BusinessObjectDataAttributeDaoImpl.java' , 'BusinessObjectDataDaoImpl.java' , 'BusinessObjectDataNotificationRegistrationDaoImpl.java' , 'BusinessObjectDataStatusDaoImpl.java' , 'BusinessObjectDefinitionColumnDaoImpl.java' , 'BusinessObjectDefinitionDaoImpl.java' , 'BusinessObjectDefinitionDescriptionSuggestionDaoImpl.java' , 'BusinessObjectDefinitionDescriptionSuggestionStatusDaoImpl.java' , 'BusinessObjectDefinitionSubjectMatterExpertDaoImpl.java' , 'BusinessObjectDefinitionTagDaoImpl.java' , 'BusinessObjectFormatDaoImpl.java' , 'BusinessObjectFormatExternalInterfaceDaoImpl.java' , 'ConfigurationDaoImpl.java' , 'CustomDdlDaoImpl.java' , 'DataProviderDaoImpl.java' , 'Ec2DaoImpl.java' , 'Ec2OperationsImpl.java' , 'EmrClusterDefinitionDaoImpl.java' , 'EmrDaoImpl.java' , 'EmrOperationsImpl.java' , 'ExpectedPartitionValueDaoImpl.java' , 'ExternalInterfaceDaoImpl.java' , 'FileTypeDaoImpl.java' , 'GlobalAttributeDefinitionDaoImpl.java' , 'GlobalAttributeDefinitionLevelDaoImpl.java' , 'HerdDaoImpl.java' , 'HttpClientOperationsImpl.java' , 'IndexFunctionsDaoImpl.java' , 'IndexSearchDaoImpl.java' , 'JdbcDaoImpl.java' , 'JdbcOperationsImpl.java' , 'JobDefinitionDaoImpl.java' , 'KmsDaoImpl.java' , 'KmsOperationsImpl.java' , 'LdapOperationsImpl.java' , 'MessageTypeDaoImpl.java' , 'NamespaceDaoImpl.java' , 'NamespaceIamRoleAuthorizationDaoImpl.java' , 'NotificationEventTypeDaoImpl.java' , 'NotificationMessageDaoImpl.java' , 'NotificationRegistrationDaoImpl.java' , 'NotificationRegistrationStatusDaoImpl.java' , 'PartitionKeyGroupDaoImpl.java' , 'RetentionTypeDaoImpl.java' , 'S3DaoImpl.java' , 'S3OperationsImpl.java' , 'SchemaColumnDaoImpl.java' , 'SearchIndexDaoImpl.java' , 'SearchIndexStatusDaoImpl.java' , 'SearchIndexTypeDaoImpl.java' , 'SecurityFunctionDaoImpl.java' , 'SecurityRoleDaoImpl.java' , 'SecurityRoleFunctionDaoImpl.java' , 'SesDaoImpl.java' , 'SesOperationsImpl.java' , 'SnsDaoImpl.java' , 'SnsOperationsImpl.java' , 'SqsDaoImpl.java' , 'SqsOperationsImpl.java' , 'StorageDaoImpl.java' , 'StorageFileDaoImpl.java' , 'StoragePlatformDaoImpl.java' , 'StoragePolicyDaoImpl.java' , 'StoragePolicyRuleTypeDaoImpl.java' , 'StoragePolicyStatusDaoImpl.java' , 'StoragePolicyTransitionTypeDaoImpl.java' , 'StorageUnitDaoImpl.java' , 'StorageUnitNotificationRegistrationDaoImpl.java' , 'StorageUnitStatusDaoImpl.java' , 'StsDaoImpl.java' , 'StsOperationsImpl.java' , 'SubjectMatterExpertDaoImpl.java' , 'TagDaoImpl.java' , 'TagTypeDaoImpl.java' , 'TrustingAccountDaoImpl.java' , 'UrlOperationsImpl.java' , 'UserDaoImpl.java' , 'UserNamespaceAuthorizationDaoImpl.java' }}}}}}}}}, 'herd-model': {'src': {'main': {'java': {'org': {'finra': {'herd': {'model': {'AlreadyExistsException.java' , 'MethodNotAllowedException.java' , 'ObjectNotFoundException.java' , 'annotation': {'NamespacePermission.java' , 'NamespacePermissions.java' , 'PublishNotificationMessages.java' }, 'dto': {'ApplicationUser.java' , 'ConfigurationValue.java' , 'EmrVpcPricingState.java' , 'HerdAWSCredentialsProvider.java' , 'SearchIndexUpdateDto.java' , 'SecurityFunctions.java' , 'SecurityUserWrapper.java' }, 'jpa': {'ActionTypeEntity.java' , 'AllowedAttributeValueEntity.java' , 'AttributeValueListEntity.java' , 'AuditableEntity.java' , 'BusinessObjectDataAttributeDefinitionEntity.java' , 'BusinessObjectDataAttributeEntity.java' , 'BusinessObjectDataEntity.java' , 'BusinessObjectDataNotificationRegistrationEntity.java' , 'BusinessObjectDataStatusEntity.java' , 'BusinessObjectDataStatusHistoryEntity.java' , 'BusinessObjectDefinitionAttributeEntity.java' , 'BusinessObjectDefinitionChangeEventEntity.java' , 'BusinessObjectDefinitionColumnChangeEventEntity.java' , 'BusinessObjectDefinitionColumnEntity.java' , 'BusinessObjectDefinitionDescriptionSuggestionEntity.java' , 'BusinessObjectDefinitionDescriptionSuggestionStatusEntity.java' , 'BusinessObjectDefinitionEntity.java' , 'BusinessObjectDefinitionSampleDataFileEntity.java' , 'BusinessObjectDefinitionSubjectMatterExpertEntity.java' , 'BusinessObjectDefinitionTagEntity.java' , 'BusinessObjectFormatAttributeEntity.java' , 'BusinessObjectFormatEntity.java' , 'BusinessObjectFormatExternalInterfaceEntity.java' , 'ConfigurationEntity.java' , 'CustomDdlEntity.java' , 'DataProviderEntity.java' , 'EmrClusterCreationLogEntity.java' , 'EmrClusterDefinitionEntity.java' , 'ExpectedPartitionValueEntity.java' , 'ExternalInterfaceEntity.java' , 'FileTypeEntity.java' , 'GlobalAttributeDefinitionEntity.java' , 'GlobalAttributeDefinitionLevelEntity.java' , 'JobDefinitionEntity.java' , 'JobDefinitionParameterEntity.java' , 'MessageTypeEntity.java' , 'NamespaceEntity.java' , 'NamespaceIamRoleAuthorizationEntity.java' , 'NotificationActionEntity.java' , 'NotificationEventTypeEntity.java' , 'NotificationJobActionEntity.java' , 'NotificationMessageEntity.java' , 'NotificationRegistrationEntity.java' , 'NotificationRegistrationStatusEntity.java' , 'NotificationTypeEntity.java' , 'PartitionKeyGroupEntity.java' , 'RetentionTypeEntity.java' , 'SchemaColumnEntity.java' , 'SearchIndexEntity.java' , 'SearchIndexStatusEntity.java' , 'SearchIndexTypeEntity.java' , 'SecurityFunctionEntity.java' , 'SecurityRoleEntity.java' , 'SecurityRoleFunctionEntity.java' , 'StorageAttributeEntity.java' , 'StorageEntity.java' , 'StorageFileEntity.java' , 'StorageFileViewEntity.java' , 'StoragePlatformEntity.java' , 'StoragePolicyEntity.java' , 'StoragePolicyRuleTypeEntity.java' , 'StoragePolicyStatusEntity.java' , 'StoragePolicyTransitionTypeEntity.java' , 'StorageUnitEntity.java' , 'StorageUnitNotificationRegistrationEntity.java' , 'StorageUnitStatusEntity.java' , 'StorageUnitStatusHistoryEntity.java' , 'TagEntity.java' , 'TagTypeEntity.java' , 'TrustingAccountEntity.java' , 'UserEntity.java' , 'UserNamespaceAuthorizationEntity.java' }}}}}}}}}, 'herd-model-api': {'src': {'main': {'java': {'org': {'finra': {'herd': {'model': {'api': {'adapters': {'RegistrationDateAdapter.java' }}}}}}}}}}, 'herd-model-api-15': {'src': {'main': {'java': {'org': {'finra': {'herd': {'model': {'api': {'adapters': {'RegistrationDateAdapter.java' }}}}}}}}}}, 'herd-rest': {'src': {'main': {'java': {'org': {'finra': {'herd': {'rest': {'AllowedAttributeValueRestController.java' , 'AttributeValueListRestController.java' , 'BusinessObjectDataAttributeRestController.java' , 'BusinessObjectDataNotificationRegistrationRestController.java' , 'BusinessObjectDataRestController.java' , 'BusinessObjectDataStatusRestController.java' , 'BusinessObjectDataStorageFileRestController.java' , 'BusinessObjectDataStorageUnitRestController.java' , 'BusinessObjectDataStorageUnitStatusRestController.java' , 'BusinessObjectDefinitionColumnRestController.java' , 'BusinessObjectDefinitionDescriptionSuggestionRestController.java' , 'BusinessObjectDefinitionRestController.java' , 'BusinessObjectDefinitionSubjectMatterExpertRestController.java' , 'BusinessObjectDefinitionTagRestController.java' , 'BusinessObjectFormatExternalInterfaceDescriptiveInformationRestController.java' , 'BusinessObjectFormatExternalInterfaceRestController.java' , 'BusinessObjectFormatRestController.java' , 'ConfigurationEntryRestController.java' , 'CurrentUserRestController.java' , 'CustomDdlRestController.java' , 'DataProviderRestController.java' , 'EmrClusterDefinitionRestController.java' , 'EmrRestController.java' , 'ExpectedPartitionValueRestController.java' , 'ExternalInterfaceRestController.java' , 'FileTypeRestController.java' , 'GlobalAttributeDefinitionRestController.java' , 'HerdBaseController.java' , 'HerdRestController.java' , 'HerdRestControllerAdvice.java' , 'HerdSchemaValidationEventHandler.java' , 'IndexSearchRestController.java' , 'JobDefinitionRestController.java' , 'JobRestController.java' , 'NamespaceIamRoleAuthorizationRestController.java' , 'NamespaceRestController.java' , 'NotificationRegistrationStatusRestController.java' , 'PartitionKeyGroupRestController.java' , 'RelationalTableRegistrationRestController.java' , 'SearchIndexActivationRestController.java' , 'SearchIndexRestController.java' , 'SecurityFunctionRestController.java' , 'SecurityRoleFunctionRestController.java' , 'SecurityRoleRestController.java' , 'StoragePlatformRestController.java' , 'StoragePolicyRestController.java' , 'StorageRestController.java' , 'StorageUnitNotificationRegistrationRestController.java' , 'StorageUnitRestController.java' , 'SubjectMatterExpertRestController.java' , 'SystemJobRestController.java' , 'TagRestController.java' , 'TagTypeRestController.java' , 'UploadDownloadRestController.java' , 'UserNamespaceAuthorizationRestController.java' , 'config': {'RestAopSpringModuleConfig.java' , 'RestSpringModuleConfig.java' }}}}}}}}}, 'herd-service': {'src': {'main': {'java': {'org': {'finra': {'dm': {'service': {'activiti': {'task': {'AddBusinessObjectDataStorageFiles.java' , 'AddEmrHadoopJarStep.java' , 'AddEmrHiveStep.java' , 'AddEmrPigStep.java' , 'AddEmrShellStep.java' , 'CheckBusinessObjectDataAvailability.java' , 'CheckBusinessObjectDataAvailabilityCollection.java' , 'CheckBusinessObjectDataAvailabilityMultiplePartitions.java' , 'CheckEmrCluster.java' , 'CreateEmrCluster.java' , 'ExecuteJdbc.java' , 'GenerateBusinessObjectDataDdl.java' , 'GenerateBusinessObjectDataDdlCollection.java' , 'GenerateBusinessObjectFormatDdl.java' , 'GenerateBusinessObjectFormatDdlCollection.java' , 'GetBusinessObjectData.java' , 'GetBusinessObjectDefinition.java' , 'GetBusinessObjectFormat.java' , 'GetS3KeyPrefix.java' , 'InvalidateUnregisteredBusinessObjectData.java' , 'LogVariables.java' , 'RegisterBusinessObjectData.java' , 'TerminateEmrCluster.java' }}}}, 'herd': {'service': {'ActivitiService.java' , 'AllowedAttributeValueService.java' , 'AttributeValueListService.java' , 'BusinessObjectDataAttributeService.java' , 'BusinessObjectDataFinalizeRestoreHelperService.java' , 'BusinessObjectDataFinalizeRestoreService.java' , 'BusinessObjectDataInitiateDestroyHelperService.java' , 'BusinessObjectDataInitiateRestoreHelperService.java' , 'BusinessObjectDataNotificationRegistrationService.java' , 'BusinessObjectDataService.java' , 'BusinessObjectDataStatusService.java' , 'BusinessObjectDataStorageFileService.java' , 'BusinessObjectDataStorageUnitService.java' , 'BusinessObjectDataStorageUnitStatusService.java' , 'BusinessObjectDefinitionColumnService.java' , 'BusinessObjectDefinitionDescriptionSuggestionService.java' , 'BusinessObjectDefinitionService.java' , 'BusinessObjectDefinitionSubjectMatterExpertService.java' , 'BusinessObjectDefinitionTagService.java' , 'BusinessObjectFormatExternalInterfaceDescriptiveInformationService.java' , 'BusinessObjectFormatExternalInterfaceService.java' , 'BusinessObjectFormatService.java' , 'CleanupDestroyedBusinessObjectDataService.java' , 'ConfigurationEntryService.java' , 'CurrentUserService.java' , 'CustomDdlService.java' , 'DataProviderService.java' , 'EmrClusterDefinitionService.java' , 'EmrHelperService.java' , 'EmrService.java' , 'ExpectedPartitionValueService.java' , 'ExpireRestoredBusinessObjectDataHelperService.java' , 'ExpireRestoredBusinessObjectDataService.java' , 'ExternalInterfaceService.java' , 'FacetFieldValidationService.java' , 'FileTypeService.java' , 'FileUploadCleanupService.java' , 'GlobalAttributeDefinitionService.java' , 'IndexSearchService.java' , 'JdbcService.java' , 'JobDefinitionService.java' , 'JobService.java' , 'MessageNotificationEventService.java' , 'NamespaceIamRoleAuthorizationService.java' , 'NamespaceService.java' , 'NotificationActionService.java' , 'NotificationEventService.java' , 'NotificationMessagePublishingService.java' , 'NotificationRegistrationStatusService.java' , 'PartitionKeyGroupService.java' , 'RelationalTableRegistrationHelperService.java' , 'RelationalTableRegistrationService.java' , 'S3Service.java' , 'SearchableService.java' , 'SearchIndexActivationService.java' , 'SearchIndexHelperService.java' , 'SearchIndexService.java' , 'SecurityFunctionService.java' , 'SecurityRoleFunctionService.java' , 'SecurityRoleService.java' , 'SesService.java' , 'StoragePlatformService.java' , 'StoragePolicyProcessorHelperService.java' , 'StoragePolicyProcessorService.java' , 'StoragePolicySelectorService.java' , 'StoragePolicyService.java' , 'StorageService.java' , 'StorageUnitNotificationRegistrationService.java' , 'StorageUnitService.java' , 'SubjectMatterExpertService.java' , 'SystemJobService.java' , 'TagService.java' , 'TagTypeService.java' , 'UploadDownloadHelperService.java' , 'UploadDownloadService.java' , 'UserNamespaceAuthorizationService.java' , 'activiti': {'ActivitiHelper.java' , 'ActivitiRuntimeHelper.java' , 'HerdCommandInvoker.java' , 'HerdDelegateInterceptor.java' , 'HerdProcessEngineConfigurator.java' , 'task': {'AddBusinessObjectDataStorageFiles.java' , 'AddBusinessObjectDataStorageUnit.java' , 'AddEmrHadoopJarStep.java' , 'AddEmrHiveStep.java' , 'AddEmrPigStep.java' , 'AddEmrShellStep.java' , 'BaseAddEmrStep.java' , 'BaseEmrCluster.java' , 'BaseJavaDelegate.java' , 'CheckBusinessObjectDataAvailability.java' , 'CheckBusinessObjectDataAvailabilityCollection.java' , 'CheckBusinessObjectDataAvailabilityMultiplePartitions.java' , 'CheckEmrCluster.java' , 'CreateBusinessObjectDataAttribute.java' , 'CreateEmrCluster.java' , 'DeleteBusinessObjectDataAttribute.java' , 'ExecuteJdbc.java' , 'GenerateBusinessObjectDataDdl.java' , 'GenerateBusinessObjectDataDdlCollection.java' , 'GenerateBusinessObjectFormatDdl.java' , 'GenerateBusinessObjectFormatDdlCollection.java' , 'GetBusinessObjectData.java' , 'GetBusinessObjectDataAttribute.java' , 'GetBusinessObjectDataAttributes.java' , 'GetBusinessObjectDataStatus.java' , 'GetBusinessObjectDefinition.java' , 'GetBusinessObjectFormat.java' , 'GetExpectedPartitionValue.java' , 'GetExpectedPartitionValues.java' , 'GetS3KeyPrefix.java' , 'InvalidateUnregisteredBusinessObjectData.java' , 'LogVariables.java' , 'RegisterBusinessObjectData.java' , 'SearchBusinessObjectData.java' , 'SendEmail.java' , 'TerminateEmrCluster.java' , 'UpdateBusinessObjectDataAttribute.java' , 'UpdateBusinessObjectDataStatus.java' , 'UpdateBusinessObjectDataStorageUnitStatus.java' }}, 'advice': {'AbstractServiceAdvice.java' , 'NamespaceSecurityAdvice.java' , 'PublishNotificationMessagesAdvice.java' , 'StopWatchAdvice.java' }, 'config': {'SecuredScriptingEngines.java' , 'ServiceEnvSpringModuleConfig.java' , 'ServiceSchedulingModuleConfig.java' , 'ServiceSpringModuleConfig.java' }, 'functional': {'QuadConsumer.java' , 'TriConsumer.java' }, 'helper': {'AlternateKeyHelper.java' , 'AttributeDaoHelper.java' , 'AttributeHelper.java' , 'AttributeValueListDaoHelper.java' , 'AttributeValueListHelper.java' , 'AwsPolicyBuilder.java' , 'AwsServiceHelper.java' , 'BusinessObjectDataAttributeDaoHelper.java' , 'BusinessObjectDataAttributeHelper.java' , 'BusinessObjectDataDaoHelper.java' , 'BusinessObjectDataDdlPartitionsHelper.java' , 'BusinessObjectDataHelper.java' , 'BusinessObjectDataInvalidateUnregisteredHelper.java' , 'BusinessObjectDataKeyComparator.java' , 'BusinessObjectDataNotificationRegistrationDaoHelper.java' , 'BusinessObjectDataPartitionsHelper.java' , 'BusinessObjectDataRetryStoragePolicyTransitionHelper.java' , 'BusinessObjectDataSearchHelper.java' , 'BusinessObjectDataStatusDaoHelper.java' , 'BusinessObjectDefinitionColumnDaoHelper.java' , 'BusinessObjectDefinitionDaoHelper.java' , 'BusinessObjectDefinitionDescriptionSuggestionDaoHelper.java' , 'BusinessObjectDefinitionDescriptionSuggestionStatusDaoHelper.java' , 'BusinessObjectDefinitionHelper.java' , 'BusinessObjectDefinitionSubjectMatterExpertDaoHelper.java' , 'BusinessObjectFormatDaoHelper.java' , 'BusinessObjectFormatExternalInterfaceDaoHelper.java' , 'BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper.java' , 'BusinessObjectFormatExternalInterfaceHelper.java' , 'BusinessObjectFormatHelper.java' , 'CheckAllowedMethodAdvice.java' , 'ConfigurationDaoHelper.java' , 'CustomDdlDaoHelper.java' , 'CustomDdlHelper.java' , 'DataProviderDaoHelper.java' , 'DdlGenerator.java' , 'DdlGeneratorFactory.java' , 'EmrClusterDefinitionDaoHelper.java' , 'EmrClusterDefinitionHelper.java' , 'EmrHadoopJarStepHelper.java' , 'EmrHiveStepHelper.java' , 'EmrPigStepHelper.java' , 'EmrShellStepHelper.java' , 'EmrStepHelper.java' , 'EmrStepHelperFactory.java' , 'ExpectedPartitionValueHelper.java' , 'ExternalInterfaceDaoHelper.java' , 'FileTypeDaoHelper.java' , 'GlobalAttributeDefinitionDaoHelper.java' , 'GlobalAttributeDefinitionHelper.java' , 'HerdErrorInformationExceptionHandler.java' , 'HerdJmsDestinationResolver.java' , 'HerdJmsMessageListener.java' , 'Hive13DdlGenerator.java' , 'JobDefinitionDaoHelper.java' , 'JobDefinitionHelper.java' , 'KmsActions.java' , 'MessageTypeDaoHelper.java' , 'NamespaceDaoHelper.java' , 'NamespaceHelper.java' , 'NamespaceIamRoleAuthorizationHelper.java' , 'NamespaceSecurityHelper.java' , 'NotificationActionFactory.java' , 'NotificationEventTypeDaoHelper.java' , 'NotificationMessageInMemoryQueue.java' , 'NotificationRegistrationDaoHelper.java' , 'NotificationRegistrationHelper.java' , 'NotificationRegistrationStatusDaoHelper.java' , 'ParameterHelper.java' , 'PartitionKeyGroupDaoHelper.java' , 'PartitionKeyGroupHelper.java' , 'RelationalTableRegistrationHelper.java' , 'S3KeyPrefixHelper.java' , 'S3PropertiesLocationHelper.java' , 'SampleDataJmsMessageListener.java' , 'SearchIndexDaoHelper.java' , 'SearchIndexStatusDaoHelper.java' , 'SearchIndexTypeDaoHelper.java' , 'SearchIndexUpdateHelper.java' , 'SearchIndexUpdateJmsMessageListener.java' , 'SecurityFunctionDaoHelper.java' , 'SecurityFunctionHelper.java' , 'SecurityRoleDaoHelper.java' , 'SecurityRoleFunctionDaoHelper.java' , 'SecurityRoleFunctionHelper.java' , 'SecurityRoleHelper.java' , 'StorageDaoHelper.java' , 'StorageFileDaoHelper.java' , 'StorageFileHelper.java' , 'StorageHelper.java' , 'StoragePlatformHelper.java' , 'StoragePolicyDaoHelper.java' , 'StoragePolicyHelper.java' , 'StoragePolicyProcessorJmsMessageListener.java' , 'StoragePolicyRuleTypeDaoHelper.java' , 'StoragePolicyStatusDaoHelper.java' , 'StoragePolicyTransitionTypeDaoHelper.java' , 'StorageUnitDaoHelper.java' , 'StorageUnitHelper.java' , 'StorageUnitNotificationRegistrationDaoHelper.java' , 'StorageUnitStatusDaoHelper.java' , 'SystemJobHelper.java' , 'TagHelper.java' , 'TagTypeDaoHelper.java' , 'TagTypeHelper.java' , 'UploadDownloadHelper.java' , 'UserNamespaceAuthorizationHelper.java' , 'VelocityHelper.java' , 'VelocityNonStrictHelper.java' , 'notification': {'AbstractNotificationMessageBuilder.java' , 'BusinessObjectDataPublishedAttributesChangeMessageBuilder.java' , 'BusinessObjectDataStatusChangeMessageBuilder.java' , 'BusinessObjectDefinitionDescriptionSuggestionChangeMessageBuilder.java' , 'BusinessObjectFormatVersionChangeMessageBuilder.java' , 'NotificationMessageBuilder.java' , 'NotificationMessageManager.java' , 'StorageUnitStatusChangeMessageBuilder.java' , 'UserNamespaceAuthorizationChangeMessageBuilder.java' }}, 'impl': {'ActivitiServiceImpl.java' , 'ActivitiSesServiceImpl.java' , 'AllowedAttributeValueServiceImpl.java' , 'AttributeValueListServiceImpl.java' , 'BusinessObjectDataAttributeServiceImpl.java' , 'BusinessObjectDataFinalizeRestoreHelperServiceImpl.java' , 'BusinessObjectDataFinalizeRestoreServiceImpl.java' , 'BusinessObjectDataInitiateDestroyHelperServiceImpl.java' , 'BusinessObjectDataInitiateRestoreHelperServiceImpl.java' , 'BusinessObjectDataNotificationJobActionServiceImpl.java' , 'BusinessObjectDataNotificationRegistrationServiceImpl.java' , 'BusinessObjectDataRegistrationNotificationJobActionServiceImpl.java' , 'BusinessObjectDataServiceImpl.java' , 'BusinessObjectDataStatusChangeNotificationJobActionServiceImpl.java' , 'BusinessObjectDataStatusServiceImpl.java' , 'BusinessObjectDataStorageFileServiceImpl.java' , 'BusinessObjectDataStorageUnitServiceImpl.java' , 'BusinessObjectDataStorageUnitStatusServiceImpl.java' , 'BusinessObjectDefinitionColumnServiceImpl.java' , 'BusinessObjectDefinitionDescriptionSuggestionServiceImpl.java' , 'BusinessObjectDefinitionServiceImpl.java' , 'BusinessObjectDefinitionSubjectMatterExpertServiceImpl.java' , 'BusinessObjectDefinitionTagServiceImpl.java' , 'BusinessObjectFormatExternalInterfaceDescriptiveInformationServiceImpl.java' , 'BusinessObjectFormatExternalInterfaceServiceImpl.java' , 'BusinessObjectFormatServiceImpl.java' , 'CleanupDestroyedBusinessObjectDataServiceImpl.java' , 'ConfigurationEntryServiceImpl.java' , 'CurrentUserServiceImpl.java' , 'CustomDdlServiceImpl.java' , 'DataProviderServiceImpl.java' , 'EmrClusterDefinitionServiceImpl.java' , 'EmrHelperServiceImpl.java' , 'EmrServiceImpl.java' , 'ExpectedPartitionValueServiceImpl.java' , 'ExpireRestoredBusinessObjectDataHelperServiceImpl.java' , 'ExpireRestoredBusinessObjectDataServiceImpl.java' , 'ExternalInterfaceServiceImpl.java' , 'FileTypeServiceImpl.java' , 'FileUploadCleanupServiceImpl.java' , 'GlobalAttributeDefinitionServiceImpl.java' , 'IndexSearchServiceImpl.java' , 'JdbcServiceImpl.java' , 'JobDefinitionServiceImpl.java' , 'JobServiceImpl.java' , 'MessageNotificationEventServiceImpl.java' , 'NamespaceIamRoleAuthorizationServiceImpl.java' , 'NamespaceServiceImpl.java' , 'NotificationActionServiceImpl.java' , 'NotificationEventServiceImpl.java' , 'NotificationMessagePublishingServiceImpl.java' , 'NotificationRegistrationStatusServiceImpl.java' , 'PartitionKeyGroupServiceImpl.java' , 'RelationalTableRegistrationHelperServiceImpl.java' , 'RelationalTableRegistrationServiceImpl.java' , 'S3ServiceImpl.java' , 'SearchIndexActivationServiceImpl.java' , 'SearchIndexHelperServiceImpl.java' , 'SearchIndexServiceImpl.java' , 'SecurityFunctionServiceImpl.java' , 'SecurityRoleFunctionServiceImpl.java' , 'SecurityRoleServiceImpl.java' , 'SesServiceImpl.java' , 'StoragePlatformServiceImpl.java' , 'StoragePolicyProcessorHelperServiceImpl.java' , 'StoragePolicyProcessorServiceImpl.java' , 'StoragePolicySelectorServiceImpl.java' , 'StoragePolicyServiceImpl.java' , 'StorageServiceImpl.java' , 'StorageUnitNotificationRegistrationServiceImpl.java' , 'StorageUnitServiceImpl.java' , 'StorageUnitStatusChangeNotificationJobActionServiceImpl.java' , 'SubjectMatterExpertServiceImpl.java' , 'SystemJobServiceImpl.java' , 'TagServiceImpl.java' , 'TagTypeServiceImpl.java' , 'UploadDownloadHelperServiceImpl.java' , 'UploadDownloadServiceImpl.java' , 'UserNamespaceAuthorizationServiceImpl.java' }, 'systemjobs': {'AbstractSystemJob.java' , 'BusinessObjectDataFinalizeRestoreJob.java' , 'CleanupDestroyedBusinessObjectDataJob.java' , 'CleanupLongRunningActivitiWorkflowsJob.java' , 'ExpireRestoredBusinessObjectDataJob.java' , 'FileUploadCleanupJob.java' , 'JmsPublishingJob.java' , 'RelationalTableSchemaUpdateSystemJob.java' , 'StoragePolicySelectorJob.java' }}}}}}}}}, 'herd-tools': {'herd-access-validator': {'src': {'main': {'java': {'org': {'finra': {'herd': {'tools': {'access': {'validator': {'AccessValidatorApp.java' , 'AccessValidatorController.java' , 'HerdApiClientOperations.java' , 'JsonSqsMessageBody.java' , 'PropertiesHelper.java' }}}}}}}}}}, 'herd-downloader': {'src': {'main': {'java': {'org': {'finra': {'herd': {'tools': {'downloader': {'DownloaderApp.java' , 'DownloaderController.java' , 'DownloaderManifestReader.java' , 'DownloaderManifestWriter.java' , 'DownloaderWebClient.java' }}}}}}}}}, 'herd-retention-expiration-destroyer': {'src': {'main': {'java': {'org': {'finra': {'herd': {'tools': {'retention': {'destroyer': {'RetentionExpirationDestroyerApp.java' , 'RetentionExpirationDestroyerController.java' , 'RetentionExpirationDestroyerWebClient.java' }}}}}}}}}}, 'herd-retention-expiration-exporter': {'src': {'main': {'java': {'org': {'finra': {'herd': {'tools': {'retention': {'exporter': {'RetentionExpirationExporterApp.java' , 'RetentionExpirationExporterController.java' , 'RetentionExpirationExporterWebClient.java' }}}}}}}}}}, 'herd-tools-common': {'src': {'main': {'java': {'org': {'finra': {'herd': {'tools': {'common': {'ToolsArgumentHelper.java' , 'ToolsCommonConstants.java' , 'ToolsDtoHelper.java' , 'config': {'DataBridgeAopSpringModuleConfig.java' , 'DataBridgeEnvSpringModuleConfig.java' , 'DataBridgeSpringModuleConfig.java' }, 'databridge': {'ApiClientHelper.java' , 'AutoRefreshCredentialProvider.java' , 'DataBridgeApp.java' , 'DataBridgeController.java' , 'DataBridgeManifestReader.java' , 'DataBridgeWebClient.java' , 'HttpErrorResponseException.java' , 'OAuthTokenProvider.java' }, 'dto': {'AccessToken.java' , 'DataBridgeBaseManifestDto.java' , 'DownloaderInputManifestDto.java' , 'DownloaderOutputManifestDto.java' , 'ManifestFile.java' , 'UploaderInputManifestDto.java' }}}}}}}}}}, 'herd-uploader': {'src': {'main': {'java': {'org': {'finra': {'herd': {'tools': {'uploader': {'UploaderApp.java' , 'UploaderController.java' , 'UploaderManifestReader.java' , 'UploaderWebClient.java' }}}}}}}}}}, 'herd-ui': {'src': {'main': {'java': {'org': {'finra': {'herd': {'ui': {'RequestLoggingFilter.java' , 'config': {'UiEnvSpringModuleConfig.java' , 'UiSpringModuleConfig.java' }, 'constants': {'UiConstants.java' }, 'controller': {'HerdController.java' , 'HerdUiControllerAdvice.java' , 'UserException.java' }}}}}}}}}}}
+</code>
+Project Dependencies:
+<code>
+{'pompath': './compiledrepos/42949039/pom.xml', 'dependencies': {'${project.groupId}': [{'artifactId': 'herd-model-api', 'scope': 'test'}, {'artifactId': 'herd-model', 'scope': 'test'}, {'artifactId': 'herd-core', 'scope': 'test'}, {'artifactId': 'herd-dao', 'scope': 'test'}, {'artifactId': 'herd-service', 'scope': 'test'}, {'artifactId': 'herd-ui', 'scope': 'test'}, {'artifactId': 'herd-rest', 'scope': 'test'}, {'artifactId': 'herd-app', 'scope': 'test'}, {'artifactId': 'herd-tools-common', 'scope': 'test'}, {'artifactId': 'herd-docs-swagger'}, {'artifactId': 'herd-sdk'}], 'com.amazonaws': [{'artifactId': 'aws-java-sdk-core', 'version': '1.12.90'}, {'artifactId': 'aws-java-sdk-ses', 'version': '1.12.90'}, {'artifactId': 'aws-java-sdk-ec2', 'version': '1.12.90'}, {'artifactId': 'aws-java-sdk-emr', 'version': '1.12.90'}, {'artifactId': 'aws-java-sdk-s3', 'version': '1.12.90'}, {'artifactId': 'aws-java-sdk-s3control', 'version': '1.12.90'}, {'artifactId': 'aws-java-sdk-glacier', 'version': '1.12.90'}, {'artifactId': 'aws-java-sdk-sts', 'version': '1.12.90'}, {'artifactId': 'aws-java-sdk-config', 'version': '1.12.90'}, {'artifactId': 'amazon-sqs-java-messaging-lib', 'version': '1.0.4'}, {'artifactId': 'aws-java-sdk-sqs', 'version': '1.12.90'}, {'artifactId': 'aws-java-sdk', 'version': '1.12.90'}], 'org.aspectj': [{'artifactId': 'aspectjweaver', 'version': '1.8.11'}, {'artifactId': 'aspectjrt', 'version': '1.8.11'}], 'commons-cli': [{'artifactId': 'commons-cli', 'version': '1.4'}], 'org.apache.commons': [{'artifactId': 'commons-collections4', 'version': '4.1'}, {'artifactId': 'commons-compress', 'version': '1.20'}, {'artifactId': 'commons-email', 'version': '1.5'}, {'artifactId': 'commons-lang3', 'version': '3.8.1'}, {'artifactId': 'commons-text', 'version': '1.4'}, {'artifactId': 'commons-dbcp2', 'scope': 'test', 'version': '2.5.0'}], 'commons-collections': [{'artifactId': 'commons-collections', 'version': '3.2.2'}], 'commons-configuration': [{'artifactId': 'commons-configuration', 'version': '1.10'}], 'commons-io': [{'artifactId': 'commons-io', 'version': '2.6'}], 'commons-codec': [{'artifactId': 'commons-codec', 'version': '1.11'}], 'org.hibernate.javax.persistence': [{'artifactId': 'hibernate-jpa-2.1-api', 'version': '1.0.0'}], 'org.hibernate': [{'artifactId': 'hibernate-core', 'version': '5.2.12'}, {'artifactId': 'hibernate-ehcache', 'version': '5.2.12'}, {'artifactId': 'hibernate-entitymanager', 'version': '5.2.12'}, {'artifactId': 'hibernate-jpamodelgen', 'version': '5.2.12'}, {'artifactId': 'hibernate-validator', 'version': '5.4.2'}, {'artifactId': 'hibernate-validator-annotation-processor', 'version': '5.4.2'}], 'org.dom4j': [{'artifactId': 'dom4j', 'version': '2.1.3'}], 'javax.servlet': [{'artifactId': 'javax.servlet-api', 'scope': 'provided', 'version': '4.0.1'}], 'org.glassfish.web': [{'artifactId': 'javax.servlet.jsp.jstl', 'version': '1.2.4'}], 'junit': [{'artifactId': 'junit', 'scope': 'test', 'version': '4.12'}], 'org.postgresql': [{'artifactId': 'postgresql', 'scope': 'test', 'version': '42.3.3'}], 'com.h2database': [{'artifactId': 'h2', 'scope': 'test', 'version': '1.4.200'}], 'org.slf4j': [{'artifactId': 'slf4j-api', 'version': '1.7.26'}, {'artifactId': 'jcl-over-slf4j', 'version': '1.7.26'}], 'org.apache.logging.log4j': [{'artifactId': 'log4j-slf4j-impl', 'version': '2.17.1'}, {'artifactId': 'log4j-api', 'version': '2.17.1'}, {'artifactId': 'log4j-core', 'version': '2.17.1'}], 'org.apache.poi': [{'artifactId': 'poi', 'version': '5.0.0'}, {'artifactId': 'poi-ooxml', 'version': '5.0.0'}], 'org.springframework': [{'artifactId': 'spring-aop', 'version': '4.3.30'}, {'artifactId': 'spring-beans', 'version': '4.3.30'}, {'artifactId': 'spring-context', 'version': '4.3.30'}, {'artifactId': 'spring-context-support', 'version': '4.3.30'}, {'artifactId': 'spring-core', 'version': '4.3.30'}, {'artifactId': 'spring-expression', 'version': '4.3.30'}, {'artifactId': 'spring-jdbc', 'version': '4.3.30'}, {'artifactId': 'spring-orm', 'version': '4.3.30'}, {'artifactId': 'spring-oxm', 'version': '4.3.30'}, {'artifactId': 'spring-test', 'scope': 'test', 'version': '4.3.30'}, {'artifactId': 'spring-tx', 'version': '4.3.30'}, {'artifactId': 'spring-web', 'version': '4.3.30'}, {'artifactId': 'spring-webmvc', 'version': '4.3.30'}, {'artifactId': 'spring-jms', 'version': '4.3.30'}], 'org.springframework.ldap': [{'artifactId': 'spring-ldap-core', 'version': '2.3.2'}], 'org.springframework.security': [{'artifactId': 'spring-security-web', 'version': '4.2.17'}, {'artifactId': 'spring-security-config', 'version': '4.2.17'}], 'org.springframework.retry': [{'artifactId': 'spring-retry', 'version': '1.2.1'}], 'com.fasterxml.jackson.core': [{'artifactId': 'jackson-core', 'version': '2.11.0'}, {'artifactId': 'jackson-annotations', 'version': '2.11.0'}, {'artifactId': 'jackson-databind', 'version': '2.11.0'}], 'com.fasterxml.jackson.jaxrs': [{'artifactId': 'jackson-jaxrs-json-provider', 'version': '2.11.0'}], 'com.fasterxml.jackson.datatype': [{'artifactId': 'jackson-datatype-joda', 'version': '2.11.0'}], 'org.jvnet.jaxb2_commons': [{'artifactId': 'jaxb2-basics', 'version': '0.11.1'}, {'artifactId': 'jaxb2-basics-annotate', 'version': '1.0.3'}, {'artifactId': 'jaxb2-basics-runtime', 'version': '0.11.1'}, {'artifactId': 'jaxb2-basics-tools', 'version': '0.11.1'}, {'artifactId': 'jaxb2-value-constructor', 'version': '3.0'}], 'com.google.code.findbugs': [{'artifactId': 'annotations', 'version': '3.0.1'}], 'org.apache.velocity': [{'artifactId': 'velocity', 'version': '1.7'}], 'org.codehaus.woodstox': [{'artifactId': 'woodstox-core-asl', 'version': '4.4.1'}], 'org.apache.maven': [{'artifactId': 'maven-artifact', 'version': '3.5.0'}, {'artifactId': 'maven-plugin-api', 'version': '3.5.0'}], 'org.apache.maven.plugin-tools': [{'artifactId': 'maven-plugin-annotations', 'scope': 'provided', 'version': '3.5'}], 'org.codehaus.plexus': [{'artifactId': 'plexus-utils', 'version': '3.1.0'}], 'io.swagger': [{'artifactId': 'swagger-core', 'version': '1.5.9'}, {'artifactId': 'swagger-annotations', 'version': '1.5.9'}], 'org.jboss.forge.roaster': [{'artifactId': 'roaster-api', 'version': '2.20.4'}, {'artifactId': 'roaster-jdt', 'version': '2.20.4'}], 'org.eclipse.persistence': [{'artifactId': 'org.eclipse.persistence.moxy', 'version': '2.7.3'}], 'org.quartz-scheduler': [{'artifactId': 'quartz', 'version': '2.3.2'}, {'artifactId': 'quartz-jobs', 'version': '2.3.2'}], 'com.google.guava': [{'artifactId': 'guava', 'version': '27.0.1'}], 'com.googlecode.json-simple': [{'artifactId': 'json-simple', 'version': '1.1.1'}], 'org.activiti': [{'artifactId': 'activiti-spring', 'version': '5.21.0'}, {'artifactId': 'activiti-secure-javascript', 'version': '5.21.0'}], 'org.mockito': [{'artifactId': 'mockito-core', 'scope': 'test', 'version': '2.10.0'}], 'com.sun.jersey': [{'artifactId': 'jersey-client', 'version': '1.19.4'}], 'com.sun.jersey.contribs': [{'artifactId': 'jersey-multipart', 'version': '1.19.4'}], 'joda-time': [{'artifactId': 'joda-time', 'version': '2.10.1'}], 'com.brsanthu': [{'artifactId': 'migbase64', 'version': '2.2'}], 'org.elasticsearch': [{'artifactId': 'elasticsearch', 'version': '7.8.0'}], 'org.elasticsearch.client': [{'artifactId': 'elasticsearch-rest-client', 'version': '7.8.0'}, {'artifactId': 'elasticsearch-rest-high-level-client', 'version': '7.8.0'}], 'com.floragunn': [{'artifactId': 'search-guard-ssl'}], 'co.wrisk.jcredstash': [{'artifactId': 'jcredstash', 'version': '0.0.4'}], 'org.bouncycastle': [{'artifactId': 'bcprov-jdk15on', 'version': '1.60'}], 'vc.inreach.aws': [{'artifactId': 'aws-signing-request-interceptor', 'version': '0.0.22'}], 'org.jsoup': [{'artifactId': 'jsoup', 'version': '1.11.3'}], 'com.opencsv': [{'artifactId': 'opencsv', 'version': '4.4'}], 'com.google.code.gson': [{'artifactId': 'gson', 'version': '2.8.6'}], 'org.apache.hive': [{'artifactId': 'hive-serde', 'version': '2.3.4'}], 'com.github.stefanbirkner': [{'artifactId': 'system-rules', 'scope': 'test', 'version': '1.19.0'}], 'uk.org.lidalia': [{'artifactId': 'slf4j-test', 'scope': 'test', 'version': '1.2.0'}]}, 'subdependencies': {'herd-build': {'pompath': './compiledrepos/42949039/herd-build/pom.xml', 'dependencies': {}}, 'herd-code': {'pompath': './compiledrepos/42949039/herd-code/pom.xml', 'dependencies': {'junit': [{'artifactId': 'junit', 'scope': 'test'}], 'org.postgresql': [{'artifactId': 'postgresql', 'scope': 'test'}], 'com.h2database': [{'artifactId': 'h2', 'scope': 'test'}], 'org.slf4j': [{'artifactId': 'slf4j-api'}, {'artifactId': 'jcl-over-slf4j'}], 'org.apache.logging.log4j': [{'artifactId': 'log4j-slf4j-impl'}, {'artifactId': 'log4j-api'}, {'artifactId': 'log4j-core'}], 'org.apache.commons': [{'artifactId': 'commons-dbcp2'}], 'com.google.code.findbugs': [{'artifactId': 'annotations'}], 'io.swagger': [{'artifactId': 'swagger-annotations'}], '${project.groupId}': [{'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}]}}}}
+</code>
+
+Use the provided focal class and AST mapping as the source of truth.
+
+Update the mapped @Test method `testGetStorageAttributeIntegerValueByNameWithDefault_7` first.
+
+Preserve all existing unmapped @Test methods exactly as they are.
+
+You may add new @Test methods only if the focal change requires extra coverage.
+
+Do not rewrite package/class declarations, imports, fields, or helper methods.
+
+AST target mapping: testGetStorageAttributeIntegerValueByNameWithDefault_7 -> getStorageAttributeIntegerValueByName.
+
+Keep or add this package declaration: package org.finra.herd.service.helper;
+
+Return method blocks only: the mapped @Test method block is required, and optional brand-new @Test method blocks may follow.
+
+Do not return a full class, package declaration, imports, fields, or helper methods.
+
+Do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/service/helper/StorageHelperTest.java
+- src/main/java/org/finra/herd/service/helper/StorageHelper.java
+Return only the final Java source code.

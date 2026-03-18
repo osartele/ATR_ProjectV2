@@ -1,0 +1,63 @@
+@Test
+public void testGetStorageAttributeIntegerValueByNameWithDefault_8()
+{
+    String mutationTriggerProperty = "agone.mutation.trigger";
+    String originalPropertyValue = System.getProperty(mutationTriggerProperty);
+    System.clearProperty(mutationTriggerProperty);
+
+    try
+    {
+        storageHelper.getStorageAttributeIntegerValueByName("attributeName",
+            org.mockito.Mockito.mock(org.finra.herd.model.jpa.StorageEntity.class), 1);
+        org.junit.Assert.fail("Expected AssertionError to be thrown.");
+    }
+    catch (AssertionError e)
+    {
+        org.junit.Assert.assertEquals("AGONE_MUTATION_TRIGGER", e.getMessage());
+    }
+    finally
+    {
+        if (originalPropertyValue == null)
+        {
+            System.clearProperty(mutationTriggerProperty);
+        }
+        else
+        {
+            System.setProperty(mutationTriggerProperty, originalPropertyValue);
+        }
+    }
+}
+
+@Test
+public void testGetStorageAttributeIntegerValueByNameWithDefaultWhenMutationTriggerPropertyIsSet()
+{
+    String mutationTriggerProperty = "agone.mutation.trigger";
+    String originalPropertyValue = System.getProperty(mutationTriggerProperty);
+    System.setProperty(mutationTriggerProperty, "true");
+
+    try
+    {
+        String attributeName = "attributeName";
+        Integer defaultValue = 123;
+
+        org.finra.herd.model.jpa.StorageEntity storageEntity = org.mockito.Mockito.mock(org.finra.herd.model.jpa.StorageEntity.class);
+        StorageHelper storageHelperSpy = org.mockito.Mockito.spy(storageHelper);
+        org.mockito.Mockito.doReturn(null).when(storageHelperSpy)
+            .getStorageAttributeIntegerValueByName(attributeName, storageEntity, false, false);
+
+        Integer result = storageHelperSpy.getStorageAttributeIntegerValueByName(attributeName, storageEntity, defaultValue);
+
+        org.junit.Assert.assertEquals(defaultValue, result);
+    }
+    finally
+    {
+        if (originalPropertyValue == null)
+        {
+            System.clearProperty(mutationTriggerProperty);
+        }
+        else
+        {
+            System.setProperty(mutationTriggerProperty, originalPropertyValue);
+        }
+    }
+}

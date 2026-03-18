@@ -1,0 +1,81 @@
+[Surefire Report] C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50r17b\42949039\herd-code\herd-service\target\surefire-reports\org.finra.herd.service.helper.StorageHelperTest.txt
+-------------------------------------------------------------------------------
+Test set: org.finra.herd.service.helper.StorageHelperTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 24.095 s <<< FAILURE! - in org.finra.herd.service.helper.StorageHelperTest
+testGetStorageAttributeIntegerValueByNameWithDefault_5(org.finra.herd.service.helper.StorageHelperTest)  Time elapsed: 0.493 s  <<< FAILURE!
+java.lang.AssertionError: AGONE_MUTATION_TRIGGER
+	at org.finra.herd.service.helper.StorageHelperTest.testGetStorageAttributeIntegerValueByNameWithDefault_5(StorageHelperTest.java:425)
+
+[Maven Output]
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< org.finra.herd:herd-service >---------------------
+[INFO] Building herd service 0.176.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (default-cli) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_w50r17b\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/StorageHelper*,output=file
+[INFO] 
+[INFO] --- jacoco:0.8.7:prepare-agent (jacoco-initialize) @ herd-service ---
+[INFO] surefireArgLine set to -javaagent:C:\\Users\\osart\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.7\\org.jacoco.agent-0.8.7-runtime.jar=destfile=C:\\Users\\osart\\ATR_ProjectV2\\compiledrepos\\worker_w50r17b\\42949039\\herd-code\\herd-service\\target\\jacoco.exec,includes=org/finra/herd/service/helper/StorageHelper*,output=file
+[INFO] 
+[INFO] --- build-helper:3.0.0:add-source (default) @ herd-service ---
+[INFO] Source directory: C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50r17b\42949039\herd-code\herd-service\target\generated-sources added.
+[INFO] 
+[INFO] --- resources:3.0.2:resources (default-resources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50r17b\42949039\herd-code\herd-service\src\main\resources
+[INFO] 
+[INFO] --- flatten:1.1.0:flatten (flatten) @ herd-service ---
+[INFO] Generating flattened POM of project org.finra.herd:herd-service:jar:0.176.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.7.0:compile (default-compile) @ herd-service ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.0.2:testResources (default-testResources) @ herd-service ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 17 resources
+[INFO] 
+[INFO] --- compiler:3.7.0:testCompile (default-testCompile) @ herd-service ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- surefire:2.22.2:test (default-test) @ herd-service ---
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running org.finra.herd.service.helper.StorageHelperTest
+Using Log4J configuration location "classpath:herd-log4j-test.xml".
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 24.095 s <<< FAILURE! - in org.finra.herd.service.helper.StorageHelperTest
+[ERROR] testGetStorageAttributeIntegerValueByNameWithDefault_5(org.finra.herd.service.helper.StorageHelperTest)  Time elapsed: 0.493 s  <<< FAILURE!
+java.lang.AssertionError: AGONE_MUTATION_TRIGGER
+	at org.finra.herd.service.helper.StorageHelperTest.testGetStorageAttributeIntegerValueByNameWithDefault_5(StorageHelperTest.java:425)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   StorageHelperTest.testGetStorageAttributeIntegerValueByNameWithDefault_5:425 AGONE_MUTATION_TRIGGER
+[INFO] 
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[ERROR] There are test failures.
+
+Please refer to C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50r17b\42949039\herd-code\herd-service\target\surefire-reports for the individual test results.
+Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[INFO] 
+[INFO] --- jacoco:0.8.7:report (jacoco-site) @ herd-service ---
+[INFO] Loading execution data file C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50r17b\42949039\herd-code\herd-service\target\jacoco.exec
+[INFO] Analyzed bundle 'herd service' with 1 classes
+[INFO] 
+[INFO] --- jacoco:0.8.7:report (default-cli) @ herd-service ---
+[INFO] Loading execution data file C:\Users\osart\ATR_ProjectV2\compiledrepos\worker_w50r17b\42949039\herd-code\herd-service\target\jacoco.exec
+[INFO] Analyzed bundle 'herd service' with 1 classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  36.760 s
+[INFO] Finished at: 2026-03-17T17:18:36-04:00
+[INFO] ------------------------------------------------------------------------

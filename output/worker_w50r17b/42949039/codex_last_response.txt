@@ -1,0 +1,124 @@
+@org.junit.Test
+public void testRetryStoragePolicyTransitionLowerCaseParameters()
+{
+    org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper helper =
+        new org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper();
+
+    org.finra.herd.dao.helper.AwsHelper awsHelperLocal = org.mockito.Mockito.mock(org.finra.herd.dao.helper.AwsHelper.class);
+    org.finra.herd.service.helper.BusinessObjectDataDaoHelper businessObjectDataDaoHelperLocal =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.BusinessObjectDataDaoHelper.class);
+    org.finra.herd.service.helper.BusinessObjectDataHelper businessObjectDataHelperLocal =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.BusinessObjectDataHelper.class);
+    org.finra.herd.core.helper.ConfigurationHelper configurationHelperLocal =
+        org.mockito.Mockito.mock(org.finra.herd.core.helper.ConfigurationHelper.class);
+    org.finra.herd.dao.helper.JsonHelper jsonHelperLocal = org.mockito.Mockito.mock(org.finra.herd.dao.helper.JsonHelper.class);
+    org.finra.herd.service.helper.S3KeyPrefixHelper s3KeyPrefixHelperLocal =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.S3KeyPrefixHelper.class);
+    org.finra.herd.dao.SqsDao sqsDaoLocal = org.mockito.Mockito.mock(org.finra.herd.dao.SqsDao.class);
+    org.finra.herd.service.helper.StoragePolicyDaoHelper storagePolicyDaoHelperLocal =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.StoragePolicyDaoHelper.class);
+    org.finra.herd.service.helper.StoragePolicyHelper storagePolicyHelperLocal =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.StoragePolicyHelper.class);
+    org.finra.herd.dao.StorageUnitDao storageUnitDaoLocal = org.mockito.Mockito.mock(org.finra.herd.dao.StorageUnitDao.class);
+    org.finra.herd.service.helper.StorageUnitDaoHelper storageUnitDaoHelperLocal =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.StorageUnitDaoHelper.class);
+
+    java.util.function.BiConsumer<String, Object> setField = (fieldName, value) -> {
+        try
+        {
+            java.lang.reflect.Field field =
+                org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper.class.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(helper, value);
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    };
+
+    setField.accept("awsHelper", awsHelperLocal);
+    setField.accept("businessObjectDataDaoHelper", businessObjectDataDaoHelperLocal);
+    setField.accept("businessObjectDataHelper", businessObjectDataHelperLocal);
+    setField.accept("configurationHelper", configurationHelperLocal);
+    setField.accept("jsonHelper", jsonHelperLocal);
+    setField.accept("s3KeyPrefixHelper", s3KeyPrefixHelperLocal);
+    setField.accept("sqsDao", sqsDaoLocal);
+    setField.accept("storagePolicyDaoHelper", storagePolicyDaoHelperLocal);
+    setField.accept("storagePolicyHelper", storagePolicyHelperLocal);
+    setField.accept("storageUnitDao", storageUnitDaoLocal);
+    setField.accept("storageUnitDaoHelper", storageUnitDaoHelperLocal);
+
+    org.finra.herd.model.api.xml.BusinessObjectDataKey businessObjectDataKey =
+        org.mockito.Mockito.mock(org.finra.herd.model.api.xml.BusinessObjectDataKey.class);
+    org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest request =
+        org.mockito.Mockito.mock(org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest.class);
+    org.finra.herd.model.api.xml.StoragePolicyKey storagePolicyKey =
+        org.mockito.Mockito.mock(org.finra.herd.model.api.xml.StoragePolicyKey.class);
+
+    org.finra.herd.model.jpa.BusinessObjectDataEntity businessObjectDataEntity =
+        org.mockito.Mockito.mock(org.finra.herd.model.jpa.BusinessObjectDataEntity.class);
+    org.finra.herd.model.jpa.BusinessObjectFormatEntity businessObjectFormatEntity =
+        org.mockito.Mockito.mock(org.finra.herd.model.jpa.BusinessObjectFormatEntity.class);
+    org.finra.herd.model.jpa.StoragePolicyEntity storagePolicyEntity =
+        org.mockito.Mockito.mock(org.finra.herd.model.jpa.StoragePolicyEntity.class);
+    org.finra.herd.model.jpa.StorageEntity storageEntity =
+        org.mockito.Mockito.mock(org.finra.herd.model.jpa.StorageEntity.class);
+    org.finra.herd.model.jpa.StorageUnitEntity storageUnitEntity =
+        org.mockito.Mockito.mock(org.finra.herd.model.jpa.StorageUnitEntity.class);
+    org.finra.herd.model.jpa.StorageUnitStatusEntity storageUnitStatusEntity =
+        org.mockito.Mockito.mock(org.finra.herd.model.jpa.StorageUnitStatusEntity.class);
+
+    org.finra.herd.model.api.xml.BusinessObjectData expectedBusinessObjectData =
+        org.mockito.Mockito.mock(org.finra.herd.model.api.xml.BusinessObjectData.class);
+
+    org.mockito.Mockito.when(request.getStoragePolicyKey()).thenReturn(storagePolicyKey);
+    org.mockito.Mockito.when(businessObjectDataDaoHelperLocal.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
+    org.mockito.Mockito.when(storagePolicyDaoHelperLocal.getStoragePolicyEntityByKey(storagePolicyKey)).thenReturn(storagePolicyEntity);
+
+    org.mockito.Mockito.when(businessObjectDataEntity.getBusinessObjectFormat()).thenReturn(businessObjectFormatEntity);
+    org.mockito.Mockito.when(storagePolicyEntity.getBusinessObjectDefinition()).thenReturn(null);
+    org.mockito.Mockito.when(storagePolicyEntity.getUsage()).thenReturn("");
+    org.mockito.Mockito.when(businessObjectFormatEntity.getUsage()).thenReturn("");
+    org.mockito.Mockito.when(storagePolicyEntity.getFileType()).thenReturn(null);
+    org.mockito.Mockito.when(storagePolicyEntity.getStorage()).thenReturn(storageEntity);
+    org.mockito.Mockito.when(storagePolicyEntity.getVersion()).thenReturn(1);
+
+    org.mockito.Mockito.when(storageUnitDaoLocal.getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity)).thenReturn(storageUnitEntity);
+    org.mockito.Mockito.when(storageUnitEntity.getStatus()).thenReturn(storageUnitStatusEntity);
+    org.mockito.Mockito.when(storageUnitStatusEntity.getCode()).thenReturn(org.finra.herd.model.jpa.StorageUnitStatusEntity.ARCHIVING);
+    org.mockito.Mockito.when(storageUnitEntity.getBusinessObjectData()).thenReturn(businessObjectDataEntity);
+    org.mockito.Mockito.when(storageUnitEntity.getStorageFiles()).thenReturn(
+        java.util.Arrays.<org.finra.herd.model.jpa.StorageFileEntity>asList(
+            org.mockito.Mockito.mock(org.finra.herd.model.jpa.StorageFileEntity.class)));
+    org.mockito.Mockito.when(storageUnitEntity.getStorage()).thenReturn(storageEntity);
+    org.mockito.Mockito.when(storageEntity.getName()).thenReturn("test-storage");
+
+    org.mockito.Mockito.when(
+        s3KeyPrefixHelperLocal.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey)).thenReturn("test/s3/key/prefix");
+
+    org.mockito.Mockito.when(
+        configurationHelperLocal.getProperty(org.finra.herd.model.dto.ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE_NAME))
+        .thenReturn("test-sqs-queue");
+
+    org.mockito.Mockito.when(storagePolicyHelperLocal.getStoragePolicyKey(storagePolicyEntity)).thenReturn(storagePolicyKey);
+    org.mockito.Mockito.when(awsHelperLocal.getAwsParamsDto()).thenReturn(new org.finra.herd.model.dto.AwsParamsDto());
+    org.mockito.Mockito.when(
+        jsonHelperLocal.objectToJson(org.mockito.ArgumentMatchers.any(org.finra.herd.model.dto.StoragePolicySelection.class)))
+        .thenReturn("{\"message\":\"ok\"}");
+    org.mockito.Mockito.when(businessObjectDataHelperLocal.createBusinessObjectDataFromEntity(businessObjectDataEntity)).thenReturn(expectedBusinessObjectData);
+
+    org.finra.herd.model.api.xml.BusinessObjectData businessObjectData =
+        helper.retryStoragePolicyTransition(businessObjectDataKey, request);
+
+    org.junit.Assert.assertSame(expectedBusinessObjectData, businessObjectData);
+    org.mockito.Mockito.verify(businessObjectDataHelperLocal).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+    org.mockito.Mockito.verify(storagePolicyHelperLocal).validateStoragePolicyKey(storagePolicyKey);
+    org.mockito.Mockito.verify(storageUnitDaoHelperLocal).validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(
+        storageEntity, businessObjectFormatEntity, businessObjectDataKey, "test/s3/key/prefix");
+    org.mockito.Mockito.verify(sqsDaoLocal).sendMessage(
+        org.mockito.ArgumentMatchers.any(org.finra.herd.model.dto.AwsParamsDto.class),
+        org.mockito.ArgumentMatchers.eq("test-sqs-queue"),
+        org.mockito.ArgumentMatchers.eq("{\"message\":\"ok\"}"),
+        org.mockito.ArgumentMatchers.isNull());
+}

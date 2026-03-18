@@ -1,0 +1,36 @@
+@Test
+public void testGetStorageAttributeIntegerValueByName_8()
+{
+    String attributeName = "attributeName";
+    org.finra.herd.model.jpa.StorageEntity storageEntity = new org.finra.herd.model.jpa.StorageEntity();
+    storageEntity.setName("storageName");
+    storageEntity.setAttributes(new java.util.ArrayList<org.finra.herd.model.jpa.StorageAttributeEntity>());
+    boolean attributeRequired = false;
+    boolean attributeValueRequiredIfExists = false;
+
+    String originalTriggerValue = System.getProperty("agone.mutation.trigger");
+    System.clearProperty("agone.mutation.trigger");
+    try
+    {
+        try
+        {
+            storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
+            org.junit.Assert.fail("Expected AssertionError to be thrown.");
+        }
+        catch (AssertionError e)
+        {
+            org.junit.Assert.assertEquals("AGONE_MUTATION_TRIGGER", e.getMessage());
+        }
+    }
+    finally
+    {
+        if (originalTriggerValue == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalTriggerValue);
+        }
+    }
+}

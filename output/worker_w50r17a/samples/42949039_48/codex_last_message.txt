@@ -1,0 +1,59 @@
+@Test
+public void testGetPropertyNoTargetType()
+{
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.setProperty("agone.mutation.trigger", "true");
+    try
+    {
+        org.finra.herd.model.dto.ConfigurationValue configurationValue = null;
+        Object[] enumConstants = org.finra.herd.model.dto.ConfigurationValue.class.getEnumConstants();
+        if (enumConstants != null)
+        {
+            for (Object enumConstant : enumConstants)
+            {
+                org.finra.herd.model.dto.ConfigurationValue candidate = (org.finra.herd.model.dto.ConfigurationValue) enumConstant;
+                Object defaultValue = candidate.getDefaultValue();
+                if (defaultValue == null || defaultValue instanceof String)
+                {
+                    configurationValue = candidate;
+                    break;
+                }
+            }
+        }
+
+        if (configurationValue == null)
+        {
+            try
+            {
+                java.lang.reflect.Constructor<?> constructor =
+                    org.finra.herd.model.dto.ConfigurationValue.class.getDeclaredConstructor(String.class, Object.class);
+                constructor.setAccessible(true);
+                configurationValue = (org.finra.herd.model.dto.ConfigurationValue) constructor.newInstance("test.configuration.key", null);
+            }
+            catch (Exception e)
+            {
+                org.junit.Assert.fail("Unable to create ConfigurationValue instance for test.");
+            }
+        }
+
+        org.junit.Assert.assertNotNull("Expected a non-null ConfigurationValue for test.", configurationValue);
+
+        String expectedValue = "testValue";
+        org.springframework.mock.env.MockEnvironment environment = new org.springframework.mock.env.MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), expectedValue);
+
+        String value = ConfigurationHelper.getProperty(configurationValue, environment);
+        org.junit.Assert.assertEquals(expectedValue, value);
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+    }
+}

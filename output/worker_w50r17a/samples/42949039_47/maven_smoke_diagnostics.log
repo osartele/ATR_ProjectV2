@@ -1,0 +1,15 @@
+[2026-03-17 14:55:20] [MutationLiveGate] Target overload resolved: getProperty/3 from testGetPropertyValidationThrowsWhenTargetTypeIsNull.
+[2026-03-17 14:55:35] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/worker_w50r17a/42949039/herd-code/herd-core/src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java; starting prioritized retries (limit=2).
+[2026-03-17 14:55:35] [MutationLiveGate] Retry 1 applied mutation type=logical variant=logical:0 class=NEGATE_CONDITIONALS.
+[2026-03-17 14:55:49] [MutationLiveGate] Retry 1 caused context/bootstrap failure; continuing search for context-safe active mutation.
+[2026-03-17 14:55:49] [MutationLiveGate] Retry 2 applied mutation type=exception variant=exception:catch_block class=ASSERTION_ERROR_FALLBACK.
+[2026-03-17 14:56:03] [MutationLiveGate] No context-safe active mutation found after 3 attempts for focal=compiledrepos/worker_w50r17a/42949039/herd-code/herd-core/src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java.
+[2026-03-17 14:56:03] [IterativeHealing] Skipping Codex/PIT for ConfigurationHelperTest: no_context_safe_active_mutant.
+[2026-03-17 14:56:04] [MutationLiveGate] Target overload resolved: getProperty/3 from testGetPropertyValidationThrowsWhenTargetTypeIsNull.
+[2026-03-17 14:56:19] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/worker_w50r17a/42949039/herd-code/herd-core/src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java; starting prioritized retries (limit=2).
+[2026-03-17 14:56:19] [MutationLiveGate] Retry 1 applied mutation type=logical variant=logical:0 class=NEGATE_CONDITIONALS.
+[2026-03-17 14:56:34] [MutationLiveGate] Retry 1 caused context/bootstrap failure; continuing search for context-safe active mutation.
+[2026-03-17 14:56:34] [MutationLiveGate] Retry 2 applied mutation type=exception variant=exception:method_entry class=ASSERTION_ERROR_FALLBACK.
+[2026-03-17 14:56:48] [MutationLiveGate] Retry 2 caused context/bootstrap failure; continuing search for context-safe active mutation.
+[2026-03-17 14:56:48] [MutationLiveGate] No context-safe active mutation found after 3 attempts for focal=compiledrepos/worker_w50r17a/42949039/herd-code/herd-core/src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java.
+[2026-03-17 14:56:48] [RegenerativeSync] Skipping Codex/PIT for ConfigurationHelperTest: no_context_safe_active_mutant.

@@ -1,6 +1,0 @@
-[inspecta] Queue size: 2
-[inspecta] (1/2) Running 42949039_5
-[inspecta] (1/2) 42949039_5 -> OK (exit=0, outputs=1, data_rows=3)
-[inspecta] (2/2) Running 42949039_43
-[inspecta] (2/2) 42949039_43 -> OK (exit=0, outputs=1, data_rows=3)
-[inspecta] Queue completed.

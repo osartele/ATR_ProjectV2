@@ -2196,6 +2196,10 @@ def _compact_prompt_data_for_smoke(prompt_data, technique, test_file_content):
         compact_prompt_data.get("failure_log", ""),
         900,
     )
+    compact_prompt_data["compile_failure_log"] = _truncate_prompt_text(
+        compact_prompt_data.get("compile_failure_log", ""),
+        900,
+    )
     return compact_prompt_data
 
 
@@ -2343,13 +2347,36 @@ def _summarize_codex_execution(execution_result):
 
 
 def _resolve_codex_executable():
-    configured_executable = os.getenv("AGONE_CODEX_EXECUTABLE") or _get_run_setting("codex_executable", None)
+    configured_executable = os.getenv("AGONE_CODEX_EXECUTABLE")
+    if configured_executable is None:
+        configured_executable = _get_run_setting("codex_executable", None)
+
     if configured_executable:
-        configured_executable = os.path.abspath(os.path.expandvars(os.path.expanduser(str(configured_executable))))
-        return configured_executable
-    sandbox_binary = os.path.join(os.path.expanduser("~"), ".codex", ".sandbox-bin", "codex.exe")
-    if os.path.isfile(sandbox_binary):
-        return sandbox_binary
+        configured_value = str(configured_executable).strip().strip('"').strip("'")
+        if configured_value:
+            expanded_value = os.path.expandvars(os.path.expanduser(configured_value))
+            looks_like_path = (
+                os.path.isabs(expanded_value)
+                or os.path.sep in expanded_value
+                or (os.path.altsep is not None and os.path.altsep in expanded_value)
+            )
+            if looks_like_path:
+                return os.path.abspath(expanded_value)
+
+            resolved_from_path = shutil.which(expanded_value)
+            if resolved_from_path:
+                return resolved_from_path
+            return expanded_value
+
+    sandbox_directory = os.path.join(os.path.expanduser("~"), ".codex", ".sandbox-bin")
+    sandbox_candidates = [
+        os.path.join(sandbox_directory, "codex.exe"),
+        os.path.join(sandbox_directory, "codex"),
+    ]
+    for sandbox_binary in sandbox_candidates:
+        if os.path.isfile(sandbox_binary):
+            return sandbox_binary
+
     executable_candidates = ["codex.cmd", "codex.exe", "codex"]
     for executable_name in executable_candidates:
         executable_path = shutil.which(executable_name)
@@ -2378,7 +2405,7 @@ def _resolve_codex_diagnostic_log_path(target_files_list):
     return os.path.join(output_directory, "codex_cli_diagnostics.log")
 
 
-def _resolve_codex_last_message_path(target_files_list):
+def _resolve_codex_output_path(target_files_list, file_name):
     project_id = None
     for file_path in target_files_list or []:
         detected_project = PATH_CONTEXT.extract_project_id(file_path)
@@ -2391,7 +2418,19 @@ def _resolve_codex_last_message_path(target_files_list):
     else:
         output_directory = PATH_CONTEXT.get_output_path()
     os.makedirs(output_directory, exist_ok=True)
-    return os.path.join(output_directory, "codex_last_message.txt")
+    return os.path.join(output_directory, file_name)
+
+
+def _resolve_codex_last_message_path(target_files_list):
+    return _resolve_codex_output_path(target_files_list, "codex_last_message.txt")
+
+
+def _resolve_codex_last_prompt_path(target_files_list):
+    return _resolve_codex_output_path(target_files_list, "codex_last_prompt.txt")
+
+
+def _resolve_codex_last_response_path(target_files_list):
+    return _resolve_codex_output_path(target_files_list, "codex_last_response.txt")
 
 
 def _resolve_failure_log_path_for_file(file_path):
@@ -2601,9 +2640,21 @@ def run_codex_agent(prompt_instruction, target_files_list):
     usage_metadata = {"prompt_tokens": 0, "completion_tokens": 0}
     diagnostic_log_path = _resolve_codex_diagnostic_log_path(normalized_files)
     last_message_path = _resolve_codex_last_message_path(normalized_files)
+    prompt_path = _resolve_codex_last_prompt_path(normalized_files)
+    response_path = _resolve_codex_last_response_path(normalized_files)
+
+    def _write_codex_snapshot(file_path, content):
+        try:
+            with open(file_path, "w", encoding="utf-8", errors="replace") as snapshot_file:
+                snapshot_file.write(content or "")
+        except Exception:
+            pass
+
+    _write_codex_snapshot(prompt_path, scoped_prompt)
 
     if _is_mock_codex_enabled():
         _append_codex_diagnostic(diagnostic_log_path, "mock_codex enabled; Codex subprocess skipped.")
+        _write_codex_snapshot(response_path, "mock_codex enabled; skipped Codex subprocess.")
         return {
             "success": True,
             "returncode": 0,
@@ -2614,6 +2665,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
             "diagnostic_log": diagnostic_log_path,
             "last_message": "",
             "last_message_path": last_message_path,
+            "prompt_path": prompt_path,
+            "response_path": response_path,
         }
 
     codex_timeout_seconds = get_subprocess_timeout_seconds("codex_timeout_seconds", 300)
@@ -2632,6 +2685,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
 
     print(f"Codex diagnostic log: {os.path.abspath(diagnostic_log_path)}")
     print(f"Codex last message path: {os.path.abspath(last_message_path)}")
+    print(f"Codex last prompt path: {os.path.abspath(prompt_path)}")
+    print(f"Codex last response path: {os.path.abspath(response_path)}")
     print(f"Codex executable resolved to: {codex_executable}")
     print(f"Codex working root: {working_root}")
     print(f"Codex target files count: {len(normalized_files)}")
@@ -2652,6 +2707,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
     if not preflight_ok:
         print(f"Codex preflight failed: {preflight_message}")
         diagnostic_tail = _read_text_tail(diagnostic_log_path)
+        response_snapshot = (preflight_message or "").strip() or diagnostic_tail
+        _write_codex_snapshot(response_path, response_snapshot)
         return {
             "success": False,
             "returncode": 1,
@@ -2662,6 +2719,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
             "diagnostic_log": diagnostic_log_path,
             "last_message": _read_text_file(last_message_path),
             "last_message_path": last_message_path,
+            "prompt_path": prompt_path,
+            "response_path": response_path,
         }
 
     start_time = time.monotonic()
@@ -2690,16 +2749,20 @@ def run_codex_agent(prompt_instruction, target_files_list):
             f"Codex subprocess timed out after {elapsed:.2f}s.",
         )
         print(f"Codex subprocess timed out after {elapsed:.2f}s. Diagnostic log: {os.path.abspath(diagnostic_log_path)}")
+        timeout_message = f"Codex CLI timed out after {codex_timeout_seconds} seconds."
+        _write_codex_snapshot(response_path, timeout_message)
         return {
             "success": False,
             "returncode": 124,
             "stdout": _read_text_tail(diagnostic_log_path),
-            "stderr": f"Codex CLI timed out after {codex_timeout_seconds} seconds.",
+            "stderr": timeout_message,
             "command": command,
             "usage": usage_metadata,
             "diagnostic_log": diagnostic_log_path,
             "last_message": _read_text_file(last_message_path),
             "last_message_path": last_message_path,
+            "prompt_path": prompt_path,
+            "response_path": response_path,
         }
     except Exception as e:
         elapsed = time.monotonic() - start_time
@@ -2708,6 +2771,7 @@ def run_codex_agent(prompt_instruction, target_files_list):
             f"Codex subprocess raised {type(e).__name__} after {elapsed:.2f}s: {e}",
         )
         print(f"Codex subprocess raised {type(e).__name__}: {e}")
+        _write_codex_snapshot(response_path, str(e))
         return {
             "success": False,
             "returncode": 1,
@@ -2718,6 +2782,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
             "diagnostic_log": diagnostic_log_path,
             "last_message": _read_text_file(last_message_path),
             "last_message_path": last_message_path,
+            "prompt_path": prompt_path,
+            "response_path": response_path,
         }
 
     elapsed = time.monotonic() - start_time
@@ -2729,6 +2795,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
     )
     print(f"Codex subprocess finished in {elapsed:.2f}s with returncode={result.returncode}.")
     print(f"Codex diagnostic log available at: {os.path.abspath(diagnostic_log_path)}")
+    response_snapshot = (last_message or "").strip() or diagnostic_tail
+    _write_codex_snapshot(response_path, response_snapshot)
 
     return {
         "success": result.returncode == 0,
@@ -2740,6 +2808,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
         "diagnostic_log": diagnostic_log_path,
         "last_message": last_message,
         "last_message_path": last_message_path,
+        "prompt_path": prompt_path,
+        "response_path": response_path,
     }
 
 
@@ -2760,6 +2830,7 @@ def generate_test_with_codex(
     target_test_method=None,
     target_focal_method=None,
     failure_log_override=None,
+    compile_failure_log_override=None,
 ):
     """
     Expands the configured prompt template and asks Codex CLI to generate test
@@ -2803,6 +2874,19 @@ def generate_test_with_codex(
         if failure_log_override is not None and str(failure_log_override).strip()
         else _load_failure_log_for_path(test_path)
     )
+    compile_failure_log_text = (
+        str(compile_failure_log_override).strip()
+        if compile_failure_log_override is not None and str(compile_failure_log_override).strip()
+        else ""
+    )
+    compile_failure_log_section = ""
+    if compile_failure_log_text:
+        compile_failure_log_section = (
+            "// --- COMPILER FAILURE LOG (REGENERATIVE RETRY ONLY) ---\n"
+            "<code>\n"
+            f"{compile_failure_log_text}\n"
+            "</code>"
+        )
 
     normalized_target_test_method = _normalize_method_name(target_test_method)
     normalized_target_focal_method = _normalize_method_name(target_focal_method)
@@ -2826,6 +2910,7 @@ def generate_test_with_codex(
         "focal_method_context": focal_class,
         "mapped_test_method_anchor": "",
         "failure_log": failure_log_text,
+        "compile_failure_log": compile_failure_log_section,
     }
 
     selected_test_methods = None

@@ -1,0 +1,196 @@
+@org.junit.Test
+public void testRetryStoragePolicyTransition()
+{
+    org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper businessObjectDataRetryStoragePolicyTransitionHelper =
+        new org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper();
+
+    org.finra.herd.dao.helper.AwsHelper awsHelper = org.mockito.Mockito.mock(org.finra.herd.dao.helper.AwsHelper.class);
+    org.finra.herd.service.helper.BusinessObjectDataDaoHelper businessObjectDataDaoHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.BusinessObjectDataDaoHelper.class);
+    org.finra.herd.service.helper.BusinessObjectDataHelper businessObjectDataHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.BusinessObjectDataHelper.class);
+    org.finra.herd.core.helper.ConfigurationHelper configurationHelper =
+        org.mockito.Mockito.mock(org.finra.herd.core.helper.ConfigurationHelper.class);
+    org.finra.herd.dao.helper.JsonHelper jsonHelper = org.mockito.Mockito.mock(org.finra.herd.dao.helper.JsonHelper.class);
+    org.finra.herd.service.helper.S3KeyPrefixHelper s3KeyPrefixHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.S3KeyPrefixHelper.class);
+    org.finra.herd.dao.SqsDao sqsDao = org.mockito.Mockito.mock(org.finra.herd.dao.SqsDao.class);
+    org.finra.herd.service.helper.StoragePolicyDaoHelper storagePolicyDaoHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.StoragePolicyDaoHelper.class);
+    org.finra.herd.service.helper.StoragePolicyHelper storagePolicyHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.StoragePolicyHelper.class);
+    org.finra.herd.dao.StorageUnitDao storageUnitDao = org.mockito.Mockito.mock(org.finra.herd.dao.StorageUnitDao.class);
+    org.finra.herd.service.helper.StorageUnitDaoHelper storageUnitDaoHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.StorageUnitDaoHelper.class);
+
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "awsHelper", awsHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "businessObjectDataDaoHelper",
+        businessObjectDataDaoHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "businessObjectDataHelper",
+        businessObjectDataHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "configurationHelper", configurationHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "jsonHelper", jsonHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "s3KeyPrefixHelper", s3KeyPrefixHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "sqsDao", sqsDao);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "storagePolicyDaoHelper",
+        storagePolicyDaoHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "storagePolicyHelper",
+        storagePolicyHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "storageUnitDao", storageUnitDao);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "storageUnitDaoHelper",
+        storageUnitDaoHelper);
+
+    org.finra.herd.model.api.xml.BusinessObjectDataKey businessObjectDataKey = new org.finra.herd.model.api.xml.BusinessObjectDataKey();
+    org.finra.herd.model.api.xml.StoragePolicyKey requestStoragePolicyKey = new org.finra.herd.model.api.xml.StoragePolicyKey();
+    org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest request =
+        new org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest();
+    request.setStoragePolicyKey(requestStoragePolicyKey);
+
+    org.finra.herd.model.jpa.BusinessObjectDataEntity businessObjectDataEntity = new org.finra.herd.model.jpa.BusinessObjectDataEntity();
+    org.finra.herd.model.jpa.BusinessObjectFormatEntity businessObjectFormatEntity = new org.finra.herd.model.jpa.BusinessObjectFormatEntity();
+    businessObjectFormatEntity.setUsage("");
+    businessObjectFormatEntity.setBusinessObjectDefinition(new org.finra.herd.model.jpa.BusinessObjectDefinitionEntity());
+    businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+
+    org.finra.herd.model.jpa.StorageEntity storageEntity = new org.finra.herd.model.jpa.StorageEntity();
+    storageEntity.setName("S3_MANAGED");
+
+    org.finra.herd.model.jpa.StoragePolicyEntity storagePolicyEntity = new org.finra.herd.model.jpa.StoragePolicyEntity();
+    storagePolicyEntity.setStorage(storageEntity);
+    storagePolicyEntity.setBusinessObjectDefinition(null);
+    storagePolicyEntity.setUsage("");
+    storagePolicyEntity.setFileType(null);
+    storagePolicyEntity.setVersion(1);
+
+    org.finra.herd.model.jpa.StorageUnitEntity storageUnitEntity = new org.finra.herd.model.jpa.StorageUnitEntity();
+    storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
+    storageUnitEntity.setStorage(storageEntity);
+    org.finra.herd.model.jpa.StorageUnitStatusEntity storageUnitStatusEntity = new org.finra.herd.model.jpa.StorageUnitStatusEntity();
+    storageUnitStatusEntity.setCode(org.finra.herd.model.jpa.StorageUnitStatusEntity.ARCHIVING);
+    storageUnitEntity.setStatus(storageUnitStatusEntity);
+    java.util.List<org.finra.herd.model.jpa.StorageFileEntity> storageFiles = new java.util.ArrayList<org.finra.herd.model.jpa.StorageFileEntity>();
+    storageFiles.add(new org.finra.herd.model.jpa.StorageFileEntity());
+    storageUnitEntity.setStorageFiles(storageFiles);
+
+    org.finra.herd.model.dto.AwsParamsDto awsParamsDto = new org.finra.herd.model.dto.AwsParamsDto();
+    org.finra.herd.model.api.xml.StoragePolicyKey storagePolicyKeyFromEntity = new org.finra.herd.model.api.xml.StoragePolicyKey();
+    org.finra.herd.model.api.xml.BusinessObjectData expectedBusinessObjectData = new org.finra.herd.model.api.xml.BusinessObjectData();
+
+    org.mockito.Mockito.when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
+    org.mockito.Mockito.when(storagePolicyDaoHelper.getStoragePolicyEntityByKey(requestStoragePolicyKey)).thenReturn(storagePolicyEntity);
+    org.mockito.Mockito.when(storageUnitDao.getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity)).thenReturn(storageUnitEntity);
+    org.mockito.Mockito.when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey)).thenReturn("testS3KeyPrefix");
+    org.mockito.Mockito.when(configurationHelper.getProperty(org.finra.herd.model.dto.ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE_NAME))
+        .thenReturn("testSqsQueueName");
+    org.mockito.Mockito.when(storagePolicyHelper.getStoragePolicyKey(storagePolicyEntity)).thenReturn(storagePolicyKeyFromEntity);
+    org.mockito.Mockito.when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
+    org.mockito.Mockito.when(jsonHelper.objectToJson(org.mockito.Mockito.any(org.finra.herd.model.dto.StoragePolicySelection.class)))
+        .thenReturn("storagePolicySelectionMessage");
+    org.mockito.Mockito.when(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity)).thenReturn(expectedBusinessObjectData);
+
+    org.finra.herd.model.api.xml.BusinessObjectData businessObjectData =
+        businessObjectDataRetryStoragePolicyTransitionHelper.retryStoragePolicyTransition(businessObjectDataKey, request);
+
+    org.junit.Assert.assertSame(expectedBusinessObjectData, businessObjectData);
+    org.mockito.Mockito.verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+    org.mockito.Mockito.verify(storagePolicyHelper).validateStoragePolicyKey(requestStoragePolicyKey);
+    org.mockito.Mockito.verify(storagePolicyDaoHelper).validateStoragePolicyFilterStorage(storageEntity);
+    org.mockito.Mockito.verify(storageUnitDaoHelper).validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageEntity,
+        businessObjectFormatEntity, businessObjectDataKey, "testS3KeyPrefix");
+    org.mockito.Mockito.verify(sqsDao).sendMessage(awsParamsDto, "testSqsQueueName", "storagePolicySelectionMessage", null);
+}
+
+@org.junit.Test
+public void testRetryStoragePolicyTransitionThrowsIllegalStateExceptionWhenSqsQueueNameIsBlank()
+{
+    org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper businessObjectDataRetryStoragePolicyTransitionHelper =
+        new org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper();
+
+    org.finra.herd.dao.helper.AwsHelper awsHelper = org.mockito.Mockito.mock(org.finra.herd.dao.helper.AwsHelper.class);
+    org.finra.herd.service.helper.BusinessObjectDataDaoHelper businessObjectDataDaoHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.BusinessObjectDataDaoHelper.class);
+    org.finra.herd.service.helper.BusinessObjectDataHelper businessObjectDataHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.BusinessObjectDataHelper.class);
+    org.finra.herd.core.helper.ConfigurationHelper configurationHelper =
+        org.mockito.Mockito.mock(org.finra.herd.core.helper.ConfigurationHelper.class);
+    org.finra.herd.dao.helper.JsonHelper jsonHelper = org.mockito.Mockito.mock(org.finra.herd.dao.helper.JsonHelper.class);
+    org.finra.herd.service.helper.S3KeyPrefixHelper s3KeyPrefixHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.S3KeyPrefixHelper.class);
+    org.finra.herd.dao.SqsDao sqsDao = org.mockito.Mockito.mock(org.finra.herd.dao.SqsDao.class);
+    org.finra.herd.service.helper.StoragePolicyDaoHelper storagePolicyDaoHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.StoragePolicyDaoHelper.class);
+    org.finra.herd.service.helper.StoragePolicyHelper storagePolicyHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.StoragePolicyHelper.class);
+    org.finra.herd.dao.StorageUnitDao storageUnitDao = org.mockito.Mockito.mock(org.finra.herd.dao.StorageUnitDao.class);
+    org.finra.herd.service.helper.StorageUnitDaoHelper storageUnitDaoHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.StorageUnitDaoHelper.class);
+
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "awsHelper", awsHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "businessObjectDataDaoHelper",
+        businessObjectDataDaoHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "businessObjectDataHelper",
+        businessObjectDataHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "configurationHelper", configurationHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "jsonHelper", jsonHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "s3KeyPrefixHelper", s3KeyPrefixHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "sqsDao", sqsDao);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "storagePolicyDaoHelper",
+        storagePolicyDaoHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "storagePolicyHelper",
+        storagePolicyHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "storageUnitDao", storageUnitDao);
+    org.springframework.test.util.ReflectionTestUtils.setField(businessObjectDataRetryStoragePolicyTransitionHelper, "storageUnitDaoHelper",
+        storageUnitDaoHelper);
+
+    org.finra.herd.model.api.xml.BusinessObjectDataKey businessObjectDataKey = new org.finra.herd.model.api.xml.BusinessObjectDataKey();
+    org.finra.herd.model.api.xml.StoragePolicyKey requestStoragePolicyKey = new org.finra.herd.model.api.xml.StoragePolicyKey();
+    org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest request =
+        new org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest();
+    request.setStoragePolicyKey(requestStoragePolicyKey);
+
+    org.finra.herd.model.jpa.BusinessObjectDataEntity businessObjectDataEntity = new org.finra.herd.model.jpa.BusinessObjectDataEntity();
+    org.finra.herd.model.jpa.BusinessObjectFormatEntity businessObjectFormatEntity = new org.finra.herd.model.jpa.BusinessObjectFormatEntity();
+    businessObjectFormatEntity.setUsage("");
+    businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+
+    org.finra.herd.model.jpa.StorageEntity storageEntity = new org.finra.herd.model.jpa.StorageEntity();
+    storageEntity.setName("S3_MANAGED");
+
+    org.finra.herd.model.jpa.StoragePolicyEntity storagePolicyEntity = new org.finra.herd.model.jpa.StoragePolicyEntity();
+    storagePolicyEntity.setStorage(storageEntity);
+    storagePolicyEntity.setBusinessObjectDefinition(null);
+    storagePolicyEntity.setUsage("");
+    storagePolicyEntity.setFileType(null);
+
+    org.finra.herd.model.jpa.StorageUnitEntity storageUnitEntity = new org.finra.herd.model.jpa.StorageUnitEntity();
+    storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
+    storageUnitEntity.setStorage(storageEntity);
+    org.finra.herd.model.jpa.StorageUnitStatusEntity storageUnitStatusEntity = new org.finra.herd.model.jpa.StorageUnitStatusEntity();
+    storageUnitStatusEntity.setCode(org.finra.herd.model.jpa.StorageUnitStatusEntity.ARCHIVING);
+    storageUnitEntity.setStatus(storageUnitStatusEntity);
+    java.util.List<org.finra.herd.model.jpa.StorageFileEntity> storageFiles = new java.util.ArrayList<org.finra.herd.model.jpa.StorageFileEntity>();
+    storageFiles.add(new org.finra.herd.model.jpa.StorageFileEntity());
+    storageUnitEntity.setStorageFiles(storageFiles);
+
+    org.mockito.Mockito.when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
+    org.mockito.Mockito.when(storagePolicyDaoHelper.getStoragePolicyEntityByKey(requestStoragePolicyKey)).thenReturn(storagePolicyEntity);
+    org.mockito.Mockito.when(storageUnitDao.getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity)).thenReturn(storageUnitEntity);
+    org.mockito.Mockito.when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey)).thenReturn("testS3KeyPrefix");
+    org.mockito.Mockito.when(configurationHelper.getProperty(org.finra.herd.model.dto.ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE_NAME))
+        .thenReturn("  ");
+
+    try
+    {
+        businessObjectDataRetryStoragePolicyTransitionHelper.retryStoragePolicyTransition(businessObjectDataKey, request);
+        org.junit.Assert.fail("Expected IllegalStateException when SQS queue name is blank.");
+    }
+    catch (IllegalStateException e)
+    {
+        org.junit.Assert.assertTrue(
+            e.getMessage().contains(org.finra.herd.model.dto.ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE_NAME.getKey()));
+    }
+
+    org.mockito.Mockito.verifyZeroInteractions(sqsDao);
+    org.mockito.Mockito.verify(businessObjectDataHelper, org.mockito.Mockito.never())
+        .createBusinessObjectDataFromEntity(org.mockito.Mockito.any(org.finra.herd.model.jpa.BusinessObjectDataEntity.class));
+}

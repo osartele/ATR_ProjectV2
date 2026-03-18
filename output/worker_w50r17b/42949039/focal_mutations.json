@@ -1,0 +1,17 @@
+[
+  {
+    "mutation_type": "logical",
+    "method_name": "retryStoragePolicyTransition",
+    "method_parameter_count": 2,
+    "old_operator": "||",
+    "new_operator": "&&",
+    "mutation_variant": "binary_operator_swap",
+    "mutation_candidate_index": 0,
+    "line": 107,
+    "column": 66,
+    "mutation_priority_class": "NEGATE_CONDITIONALS",
+    "mutation_attempt_key": "logical:0",
+    "focal_path": "compiledrepos/worker_w50r17b/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/BusinessObjectDataRetryStoragePolicyTransitionHelper.java",
+    "test_path": "compiledrepos/worker_w50r17b/42949039/herd-code/herd-service/src/test/java/org/finra/herd/service/helper/BusinessObjectDataRetryStoragePolicyTransitionHelperTest.java"
+  }
+]

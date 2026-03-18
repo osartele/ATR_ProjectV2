@@ -1,7 +1,0 @@
-SwaggerGenMojo.java,org.finra.herd.swaggergen.SwaggerGenMojo,org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator,execute,164,KILLED,org.finra.herd.swaggergen.SwaggerGenMojoTest.test_2(org.finra.herd.swaggergen.SwaggerGenMojoTest)
-SwaggerGenMojo.java,org.finra.herd.swaggergen.SwaggerGenMojo,org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator,execute,188,KILLED,org.finra.herd.swaggergen.SwaggerGenMojoTest.test_2(org.finra.herd.swaggergen.SwaggerGenMojoTest)
-SwaggerGenMojo.java,org.finra.herd.swaggergen.SwaggerGenMojo,org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator,execute,196,KILLED,org.finra.herd.swaggergen.SwaggerGenMojoTest.test_2(org.finra.herd.swaggergen.SwaggerGenMojoTest)
-SwaggerGenMojo.java,org.finra.herd.swaggergen.SwaggerGenMojo,org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator,execute,196,NO_COVERAGE,none
-SwaggerGenMojo.java,org.finra.herd.swaggergen.SwaggerGenMojo,org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator,execute,162,SURVIVED,none
-SwaggerGenMojo.java,org.finra.herd.swaggergen.SwaggerGenMojo,org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator,execute,201,NO_COVERAGE,none
-SwaggerGenMojo.java,org.finra.herd.swaggergen.SwaggerGenMojo,org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator,execute,205,KILLED,org.finra.herd.swaggergen.SwaggerGenMojoTest.test_2(org.finra.herd.swaggergen.SwaggerGenMojoTest)

@@ -1,0 +1,41 @@
+@org.junit.Test
+public void testGetPropertyInstanceNoTargetType()
+{
+    org.finra.herd.model.dto.ConfigurationValue selectedConfigurationValue = null;
+    for (org.finra.herd.model.dto.ConfigurationValue candidate : org.finra.herd.model.dto.ConfigurationValue.values())
+    {
+        Object defaultValue = candidate.getDefaultValue();
+        if (defaultValue == null || defaultValue instanceof String)
+        {
+            selectedConfigurationValue = candidate;
+            break;
+        }
+    }
+    org.junit.Assert.assertNotNull("Expected a configuration value with a null or String default value.", selectedConfigurationValue);
+
+    org.springframework.mock.env.MockEnvironment testEnvironment = new org.springframework.mock.env.MockEnvironment();
+    String expectedValue = "testValue";
+    testEnvironment.setProperty(selectedConfigurationValue.getKey(), expectedValue);
+
+    ConfigurationHelper configurationHelper = new ConfigurationHelper();
+    org.springframework.test.util.ReflectionTestUtils.setField(configurationHelper, "environment", testEnvironment);
+
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.setProperty("agone.mutation.trigger", "true");
+    try
+    {
+        String value = configurationHelper.getProperty(selectedConfigurationValue);
+        org.junit.Assert.assertEquals(expectedValue, value);
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+    }
+}

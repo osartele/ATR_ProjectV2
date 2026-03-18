@@ -1,0 +1,41 @@
+@Test
+public void testGetBigDecimalRequiredPropertyValue()
+{
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+    String propertyKey = "test.big.decimal.required.property.value";
+    String originalPropertyValue = System.getProperty(propertyKey);
+
+    System.setProperty("agone.mutation.trigger", "enabled");
+    System.setProperty(propertyKey, "123.45");
+
+    try
+    {
+        org.finra.herd.model.dto.ConfigurationValue configurationValue =
+            new org.finra.herd.model.dto.ConfigurationValue(propertyKey, "0");
+        java.math.BigDecimal actualBigDecimalValue =
+            new org.finra.herd.core.helper.ConfigurationHelper().getBigDecimalRequiredProperty(configurationValue,
+                new org.springframework.core.env.StandardEnvironment());
+
+        org.junit.Assert.assertEquals(new java.math.BigDecimal("123.45"), actualBigDecimalValue);
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+
+        if (originalPropertyValue == null)
+        {
+            System.clearProperty(propertyKey);
+        }
+        else
+        {
+            System.setProperty(propertyKey, originalPropertyValue);
+        }
+    }
+}

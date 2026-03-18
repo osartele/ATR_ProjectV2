@@ -12,6 +12,8 @@ LOGICAL_SWAP_MAP = {
     ">=": "<",
     "==": "!=",
     "!=": "==",
+    "&&": "||",
+    "||": "&&",
 }
 
 IMMUTABLE_SOURCE_ROOTS = {"repos", "Classes2Test"}
@@ -80,6 +82,115 @@ def _line_col_from_index(source, index):
     else:
         column = index - line_start
     return line, column
+
+
+def _is_null_literal(node):
+    return (
+        isinstance(node, javalang.tree.Literal)
+        and str(getattr(node, "value", "")).strip().lower() == "null"
+    )
+
+
+def _find_prefix_not_index(source, line_offsets, node):
+    node_position = getattr(node, "position", None)
+    if node_position is None:
+        return None
+
+    node_start_index = _index_from_line_col(line_offsets, node_position.line, node_position.column)
+    scan_index = node_start_index - 1
+    while scan_index >= 0 and source[scan_index].isspace():
+        scan_index -= 1
+    if scan_index < 0 or source[scan_index] != "!":
+        return None
+    return scan_index
+
+
+def _collect_logical_mutation_candidates(
+    source,
+    line_offsets,
+    contexts,
+    target_method=None,
+    target_parameter_count=None,
+):
+    candidates = []
+    seen_keys = set()
+
+    for context in contexts:
+        if target_method is not None and context["name"] != target_method:
+            continue
+        if (
+            target_parameter_count is not None
+            and len(context.get("parameters", []) or []) != target_parameter_count
+        ):
+            continue
+
+        for _, node in context["node"]:
+            if not isinstance(node, javalang.tree.BinaryOperation):
+                continue
+            if node.operator not in LOGICAL_SWAP_MAP:
+                continue
+            if _is_null_literal(getattr(node, "operandl", None)) or _is_null_literal(getattr(node, "operandr", None)):
+                continue
+
+            left_position = getattr(node.operandl, "position", None)
+            right_position = getattr(node.operandr, "position", None)
+            if left_position is None or right_position is None:
+                continue
+
+            left_index = _index_from_line_col(line_offsets, left_position.line, left_position.column)
+            right_index = _index_from_line_col(line_offsets, right_position.line, right_position.column)
+            operator_fragment = source[left_index:right_index]
+            operator_offset = operator_fragment.rfind(node.operator)
+            if operator_offset == -1:
+                continue
+
+            operator_index = left_index + operator_offset
+            new_operator = LOGICAL_SWAP_MAP[node.operator]
+            candidate_key = ("binary", operator_index, node.operator, new_operator)
+            if candidate_key in seen_keys:
+                continue
+            seen_keys.add(candidate_key)
+            candidates.append(
+                {
+                    "kind": "binary_operator_swap",
+                    "context": context,
+                    "operator_index": operator_index,
+                    "operator_length": len(node.operator),
+                    "old_operator": node.operator,
+                    "new_operator": new_operator,
+                    "mutation_variant": "binary_operator_swap",
+                }
+            )
+
+        for _, node in context["node"]:
+            if not isinstance(node, (javalang.tree.MethodInvocation, javalang.tree.MemberReference)):
+                continue
+            prefix_operators = list(getattr(node, "prefix_operators", []) or [])
+            if "!" not in prefix_operators:
+                continue
+
+            not_index = _find_prefix_not_index(source, line_offsets, node)
+            if not_index is None:
+                continue
+
+            candidate_key = ("unary_not", not_index)
+            if candidate_key in seen_keys:
+                continue
+            seen_keys.add(candidate_key)
+            candidates.append(
+                {
+                    "kind": "unary_not_removal",
+                    "context": context,
+                    "operator_index": not_index,
+                    "operator_length": 1,
+                    "old_operator": "!",
+                    "new_operator": "",
+                    "mutation_variant": "unary_not_removal",
+                }
+            )
+
+    candidates.sort(key=lambda candidate: candidate["operator_index"])
+    return candidates
 
 
 def _scan_matching_delimiter(source, start_index, opener, closer):
@@ -151,6 +262,38 @@ def _scan_matching_delimiter(source, start_index, opener, closer):
         index += 1
 
     return None
+
+
+def _find_catch_body_open_in_range(source, search_start, search_end):
+    if search_start is None or search_end is None or search_start >= search_end:
+        return None
+
+    catch_match = re.search(r"\bcatch\s*\(", source[search_start:search_end])
+    if catch_match is None:
+        return None
+
+    catch_index = search_start + catch_match.start()
+    paren_open_index = source.find("(", catch_index, search_end)
+    if paren_open_index == -1:
+        return None
+
+    paren_close_index = _scan_matching_delimiter(source, paren_open_index, "(", ")")
+    if paren_close_index is None or paren_close_index >= search_end:
+        return None
+
+    catch_body_open_index = _find_method_body_open(source, paren_close_index + 1)
+    if (
+        catch_body_open_index is None
+        or catch_body_open_index <= paren_close_index
+        or catch_body_open_index >= search_end
+    ):
+        return None
+
+    catch_body_close_index = _scan_matching_delimiter(source, catch_body_open_index, "{", "}")
+    if catch_body_close_index is None or catch_body_close_index > search_end:
+        return None
+
+    return catch_body_open_index
 
 
 def _find_method_body_open(source, search_start):
@@ -267,12 +410,22 @@ def _collect_method_contexts(file_path):
     return source, line_offsets, contexts
 
 
-def _select_method_context(contexts, target_method=None, predicate=None):
+def _select_method_context(
+    contexts,
+    target_method=None,
+    target_parameter_count=None,
+    predicate=None,
+):
     filtered_contexts = []
     for context in contexts:
         if context["body_open_index"] is None or context["body_close_index"] is None:
             continue
         if target_method is not None and context["name"] != target_method:
+            continue
+        if (
+            target_parameter_count is not None
+            and len(context.get("parameters", []) or []) != target_parameter_count
+        ):
             continue
         if predicate is not None and not predicate(context):
             continue
@@ -283,55 +436,69 @@ def _select_method_context(contexts, target_method=None, predicate=None):
     return filtered_contexts[0]
 
 
-def apply_logical_mutation(file_path, target_method=None):
+def apply_logical_mutation(
+    file_path,
+    target_method=None,
+    target_parameter_count=None,
+    preferred_candidate_index=None,
+):
     source, line_offsets, contexts = _collect_method_contexts(file_path)
+    logical_candidates = _collect_logical_mutation_candidates(
+        source,
+        line_offsets,
+        contexts,
+        target_method=target_method,
+        target_parameter_count=target_parameter_count,
+    )
 
-    candidate_contexts = []
-    for context in contexts:
-        if target_method is not None and context["name"] != target_method:
-            continue
-        for _, node in context["node"]:
-            if isinstance(node, javalang.tree.BinaryOperation) and node.operator in LOGICAL_SWAP_MAP:
-                left_position = getattr(node.operandl, "position", None)
-                right_position = getattr(node.operandr, "position", None)
-                if left_position is None or right_position is None:
-                    continue
-                candidate_contexts.append((context, node, left_position, right_position))
-                break
-
-    if not candidate_contexts:
+    if not logical_candidates:
         raise ValueError("No logical mutation candidate was found in the focal class.")
 
-    context, binary_node, left_position, right_position = candidate_contexts[0]
-    left_index = _index_from_line_col(line_offsets, left_position.line, left_position.column)
-    right_index = _index_from_line_col(line_offsets, right_position.line, right_position.column)
-    operator_fragment = source[left_index:right_index]
-    operator_offset = operator_fragment.rfind(binary_node.operator)
-    if operator_offset == -1:
-        raise ValueError("Failed to locate the binary operator in the source text.")
+    try:
+        candidate_index = (
+            int(preferred_candidate_index)
+            if preferred_candidate_index is not None
+            else 0
+        )
+    except (TypeError, ValueError):
+        raise ValueError(
+            f"Invalid logical mutation candidate index: {preferred_candidate_index!r}"
+        )
+    if candidate_index < 0 or candidate_index >= len(logical_candidates):
+        raise ValueError(f"No logical mutation candidate at index {candidate_index}.")
 
-    operator_index = left_index + operator_offset
-    new_operator = LOGICAL_SWAP_MAP[binary_node.operator]
+    selected_candidate = logical_candidates[candidate_index]
+    context = selected_candidate["context"]
+    operator_index = selected_candidate["operator_index"]
+    old_operator = selected_candidate["old_operator"]
+    new_operator = selected_candidate["new_operator"]
     mutated_source = (
         source[:operator_index]
         + new_operator
-        + source[operator_index + len(binary_node.operator):]
+        + source[operator_index + selected_candidate["operator_length"]:]
     )
     _write_source(file_path, mutated_source)
     operator_line, operator_column = _line_col_from_index(source, operator_index)
     return {
         "mutation_type": "logical",
         "method_name": context["name"],
-        "old_operator": binary_node.operator,
+        "method_parameter_count": len(context.get("parameters", []) or []),
+        "old_operator": old_operator,
         "new_operator": new_operator,
+        "mutation_variant": selected_candidate.get("mutation_variant"),
+        "mutation_candidate_index": candidate_index,
         "line": operator_line,
         "column": operator_column,
     }
 
 
-def apply_signature_mutation(file_path, target_method=None):
+def apply_signature_mutation(file_path, target_method=None, target_parameter_count=None):
     source, line_offsets, contexts = _collect_method_contexts(file_path)
-    context = _select_method_context(contexts, target_method=target_method)
+    context = _select_method_context(
+        contexts,
+        target_method=target_method,
+        target_parameter_count=target_parameter_count,
+    )
     if context is None:
         raise ValueError("No method declaration with a body was found for signature mutation.")
 
@@ -382,6 +549,7 @@ def apply_signature_mutation(file_path, target_method=None):
     return {
         "mutation_type": "signature",
         "method_name": context["name"],
+        "method_parameter_count": len(context.get("parameters", []) or []),
         "inserted_parameter": "behavioral-mutation",
         "line": mutation_line,
         "column": mutation_column,
@@ -389,7 +557,12 @@ def apply_signature_mutation(file_path, target_method=None):
     }
 
 
-def apply_exception_mutation(file_path, target_method=None):
+def apply_exception_mutation(
+    file_path,
+    target_method=None,
+    target_parameter_count=None,
+    preferred_injection_scope=None,
+):
     source, _, contexts = _collect_method_contexts(file_path)
 
     def _can_add_exception(context):
@@ -400,15 +573,45 @@ def apply_exception_mutation(file_path, target_method=None):
         method_body = source[body_open_index:body_close_index + 1]
         return "AGONE_MUTATION_TRIGGER" not in method_body
 
-    context = _select_method_context(contexts, target_method=target_method, predicate=_can_add_exception)
+    context = _select_method_context(
+        contexts,
+        target_method=target_method,
+        target_parameter_count=target_parameter_count,
+        predicate=_can_add_exception,
+    )
     if context is None:
         raise ValueError("No method body was available for exception fallback mutation.")
 
     body_open_index = context["body_open_index"]
-    insertion_index = body_open_index + 1
-    line_start = source.rfind("\n", 0, body_open_index) + 1
-    method_indent = re.match(r"[ \t]*", source[line_start:body_open_index]).group(0)
-    body_indent = method_indent + "    "
+    body_close_index = context["body_close_index"]
+    catch_body_open_index = _find_catch_body_open_in_range(
+        source,
+        body_open_index + 1,
+        body_close_index,
+    )
+
+    normalized_preferred_scope = str(preferred_injection_scope or "").strip().lower() or None
+    if normalized_preferred_scope not in {None, "catch_block", "method_entry"}:
+        raise ValueError(
+            f"Unsupported exception mutation scope preference: {preferred_injection_scope!r}"
+        )
+
+    if normalized_preferred_scope == "catch_block":
+        if catch_body_open_index is None:
+            raise ValueError("No catch block was available for exception catch-block mutation.")
+        insertion_anchor_index = catch_body_open_index
+        insertion_scope = "catch_block"
+    elif normalized_preferred_scope == "method_entry":
+        insertion_anchor_index = body_open_index
+        insertion_scope = "method_entry"
+    else:
+        insertion_anchor_index = catch_body_open_index if catch_body_open_index is not None else body_open_index
+        insertion_scope = "catch_block" if catch_body_open_index is not None else "method_entry"
+
+    insertion_index = insertion_anchor_index + 1
+    line_start = source.rfind("\n", 0, insertion_anchor_index) + 1
+    anchor_indent = re.match(r"[ \t]*", source[line_start:insertion_anchor_index]).group(0)
+    body_indent = anchor_indent + "    "
     insertion_text = (
         f"\n{body_indent}if (System.getProperty(\"agone.mutation.trigger\") == null) "
         "{ throw new AssertionError(\"AGONE_MUTATION_TRIGGER\"); }"
@@ -420,13 +623,16 @@ def apply_exception_mutation(file_path, target_method=None):
     return {
         "mutation_type": "exception",
         "method_name": context["name"],
+        "method_parameter_count": len(context.get("parameters", []) or []),
         "added_exception": "AssertionError(\"AGONE_MUTATION_TRIGGER\")",
+        "injection_scope": insertion_scope,
+        "mutation_variant": insertion_scope,
         "line": mutation_line,
         "column": mutation_column,
     }
 
 
-def apply_random_mutation(file_path, target_method=None, rng=None):
+def apply_random_mutation(file_path, target_method=None, target_parameter_count=None, rng=None):
     rng = rng or random.Random()
     mutation_functions = [
         apply_logical_mutation,
@@ -435,7 +641,11 @@ def apply_random_mutation(file_path, target_method=None, rng=None):
     ]
     for mutation_function in rng.sample(mutation_functions, len(mutation_functions)):
         try:
-            return mutation_function(file_path, target_method=target_method)
+            return mutation_function(
+                file_path,
+                target_method=target_method,
+                target_parameter_count=target_parameter_count,
+            )
         except ValueError:
             continue
     raise ValueError("Unable to apply any supported mutation to the focal class.")

@@ -1,0 +1,74 @@
+@Test
+public void testModifyTagsInSearchIndex() throws Exception
+{
+    org.finra.herd.service.helper.SearchIndexUpdateHelper searchIndexUpdateHelper = new org.finra.herd.service.helper.SearchIndexUpdateHelper();
+    org.finra.herd.core.helper.ConfigurationHelper configurationHelper =
+        org.mockito.Mockito.mock(org.finra.herd.core.helper.ConfigurationHelper.class);
+    org.finra.herd.dao.helper.JsonHelper jsonHelper = org.mockito.Mockito.mock(org.finra.herd.dao.helper.JsonHelper.class);
+    org.finra.herd.service.NotificationMessagePublishingService notificationMessagePublishingService =
+        org.mockito.Mockito.mock(org.finra.herd.service.NotificationMessagePublishingService.class);
+    org.finra.herd.service.helper.SystemJobHelper systemJobHelper =
+        org.mockito.Mockito.mock(org.finra.herd.service.helper.SystemJobHelper.class);
+
+    org.springframework.test.util.ReflectionTestUtils.setField(searchIndexUpdateHelper, "configurationHelper", configurationHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(searchIndexUpdateHelper, "jsonHelper", jsonHelper);
+    org.springframework.test.util.ReflectionTestUtils.setField(searchIndexUpdateHelper, "notificationMessagePublishingService",
+        notificationMessagePublishingService);
+    org.springframework.test.util.ReflectionTestUtils.setField(searchIndexUpdateHelper, "systemJobHelper", systemJobHelper);
+
+    org.finra.herd.model.jpa.TagEntity tagEntity1 = new org.finra.herd.model.jpa.TagEntity();
+    tagEntity1.setId(1L);
+    org.finra.herd.model.jpa.TagEntity tagEntity2 = new org.finra.herd.model.jpa.TagEntity();
+    tagEntity2.setId(2L);
+    java.util.List<org.finra.herd.model.jpa.TagEntity> tagEntityList = java.util.Arrays.asList(tagEntity1, tagEntity2);
+
+    org.mockito.Mockito.when(configurationHelper.getProperty(org.finra.herd.model.dto.ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED))
+        .thenReturn(Boolean.FALSE.toString());
+
+    searchIndexUpdateHelper.modifyTagsInSearchIndex(tagEntityList, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+    org.mockito.ArgumentCaptor<org.finra.herd.model.dto.SearchIndexUpdateDto> argumentCaptor =
+        org.mockito.ArgumentCaptor.forClass(org.finra.herd.model.dto.SearchIndexUpdateDto.class);
+    org.mockito.Mockito.verify(jsonHelper).objectToJson(argumentCaptor.capture());
+
+    org.finra.herd.model.dto.SearchIndexUpdateDto capturedDto = argumentCaptor.getValue();
+    java.util.List<?> capturedIds = null;
+    String capturedMessageType = null;
+    String capturedModificationType = null;
+
+    for (java.lang.reflect.Field field : org.finra.herd.model.dto.SearchIndexUpdateDto.class.getDeclaredFields())
+    {
+        if (java.lang.reflect.Modifier.isStatic(field.getModifiers()))
+        {
+            continue;
+        }
+
+        field.setAccessible(true);
+        Object value = field.get(capturedDto);
+
+        if (value instanceof java.util.List)
+        {
+            capturedIds = (java.util.List<?>) value;
+        }
+        else if (value instanceof String)
+        {
+            String stringValue = (String) value;
+            if (org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE.equals(stringValue) ||
+                org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_TAG_UPDATE.equals(stringValue))
+            {
+                capturedMessageType = stringValue;
+            }
+            else
+            {
+                capturedModificationType = stringValue;
+            }
+        }
+    }
+
+    org.junit.Assert.assertEquals(org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE,
+        capturedMessageType);
+    org.junit.Assert.assertEquals(SEARCH_INDEX_UPDATE_TYPE_UPDATE, capturedModificationType);
+    org.junit.Assert.assertEquals(java.util.Arrays.asList(1L, 2L), capturedIds);
+
+    org.mockito.Mockito.verifyZeroInteractions(notificationMessagePublishingService, systemJobHelper);
+}

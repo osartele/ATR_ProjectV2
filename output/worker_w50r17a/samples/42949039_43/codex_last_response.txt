@@ -1,0 +1,28 @@
+@Test
+public void testGetPropertyReturnDefaultWhenValueConversionFails()
+{
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.setProperty("agone.mutation.trigger", "true");
+    try
+    {
+        org.springframework.core.env.Environment environment =
+            new org.springframework.mock.env.MockEnvironment().withProperty("test.configuration.key", "not_an_integer");
+        org.finra.herd.model.dto.ConfigurationValue configurationValue =
+            new org.finra.herd.model.dto.ConfigurationValue("test.configuration.key", Integer.valueOf(123));
+
+        Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+
+        org.junit.Assert.assertEquals(Integer.valueOf(123), value);
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+    }
+}

@@ -1,0 +1,31 @@
+viti-secure-javascript', 'version': '5.21.0'}], 'org.mockito': [{'artifactId': 'mockito-core', 'scope': 'test', 'version': '2.10.0'}], 'com.sun.jersey': [{'artifactId': 'jersey-client', 'version': '1.19.4'}], 'com.sun.jersey.contribs': [{'artifactId': 'jersey-multipart', 'version': '1.19.4'}], 'joda-time': [{'artifactId': 'joda-time', 'version': '2.10.1'}], 'com.brsanthu': [{'artifactId': 'migbase64', 'version': '2.2'}], 'org.elasticsearch': [{'artifactId': 'elasticsearch', 'version': '7.8.0'}], 'org.elasticsearch.client': [{'artifactId': 'elasticsearch-rest-client', 'version': '7.8.0'}, {'artifactId': 'elasticsearch-rest-high-level-client', 'version': '7.8.0'}], 'com.floragunn': [{'artifactId': 'search-guard-ssl'}], 'co.wrisk.jcredstash': [{'artifactId': 'jcredstash', 'version': '0.0.4'}], 'org.bouncycastle': [{'artifactId': 'bcprov-jdk15on', 'version': '1.60'}], 'vc.inreach.aws': [{'artifactId': 'aws-signing-request-interceptor', 'version': '0.0.22'}], 'org.jsoup': [{'artifactId': 'jsoup', 'version': '1.11.3'}], 'com.opencsv': [{'artifactId': 'opencsv', 'version': '4.4'}], 'com.google.code.gson': [{'artifactId': 'gson', 'version': '2.8.6'}], 'org.apache.hive': [{'artifactId': 'hive-serde', 'version': '2.3.4'}], 'com.github.stefanbirkner': [{'artifactId': 'system-rules', 'scope': 'test', 'version': '1.19.0'}], 'uk.org.lidalia': [{'artifactId': 'slf4j-test', 'scope': 'test', 'version': '1.2.0'}]}, 'subdependencies': {'herd-build': {'pompath': './compiledrepos/42949039/herd-build/pom.xml', 'dependencies': {}}, 'herd-code': {'pompath': './compiledrepos/42949039/herd-code/pom.xml', 'dependencies': {'junit': [{'artifactId': 'junit', 'scope': 'test'}], 'org.postgresql': [{'artifactId': 'postgresql', 'scope': 'test'}], 'com.h2database': [{'artifactId': 'h2', 'scope': 'test'}], 'org.slf4j': [{'artifactId': 'slf4j-api'}, {'artifactId': 'jcl-over-slf4j'}], 'org.apache.logging.log4j': [{'artifactId': 'log4j-slf4j-impl'}, {'artifactId': 'log4j-api'}, {'artifactId': 'log4j-core'}], 'org.apache.commons': [{'artifactId': 'commons-dbcp2'}], 'com.google.code.findbugs': [{'artifactId': 'annotations'}], 'io.swagger': [{'artifactId': 'swagger-annotations'}], '${project.groupId}': [{'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}, {'artifactId': 'herd-build-tools'}]}}}}
+</code>
+
+Use the provided focal class and AST mapping as the source of truth.
+
+Update the mapped @Test method `testGetStorageFileEntityByStorageUnitEntityAndFilePath` first.
+
+Preserve all existing unmapped @Test methods exactly as they are.
+
+You may add new @Test methods only if the focal change requires extra coverage.
+
+Do not rewrite package/class declarations, imports, fields, or helper methods.
+
+AST target mapping: testGetStorageFileEntityByStorageUnitEntityAndFilePath -> getStorageFileEntity.
+
+Keep or add this package declaration: package org.finra.herd.service.helper;
+
+Return method blocks only: the mapped @Test method block is required, and optional brand-new @Test method blocks may follow.
+
+Do not return a full class, package declaration, imports, fields, or helper methods.
+
+Do not include markdown fences or explanations.
+
+Reference file scope (read-only context):
+- src/test/java/org/finra/herd/service/helper/StorageFileDaoHelperTest.java
+- src/main/java/org/finra/herd/service/helper/StorageFileDaoHelper.java
+Return only the final Java source code.
+mcp startup: no servers
+2026-03-17T20:33:39.688895Z  WARN codex_core::codex: startup websocket prewarm setup failed: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 5:33 PM.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 5:33 PM.
+Warning: no last agent message; wrote empty content to C:\Users\osart\ATR_ProjectV2\output\worker_w50r17a\42949039\codex_last_message.txt

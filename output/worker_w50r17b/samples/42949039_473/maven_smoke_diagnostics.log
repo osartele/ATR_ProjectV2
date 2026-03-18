@@ -1,0 +1,11 @@
+[2026-03-17 18:13:18] [MutationLiveGate] Target overload resolved: retryStoragePolicyTransition/2 from testRetryStoragePolicyTransitionBusinessObjectDataNoExists.
+[2026-03-17 18:14:10] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/worker_w50r17b/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/BusinessObjectDataRetryStoragePolicyTransitionHelper.java; starting prioritized retries (limit=2).
+[2026-03-17 18:14:10] [MutationLiveGate] Retry 1 applied mutation type=logical variant=logical:0 class=NEGATE_CONDITIONALS.
+[2026-03-17 18:15:02] [MutationLiveGate] Retry 2 applied mutation type=exception variant=exception:method_entry class=ASSERTION_ERROR_FALLBACK.
+[2026-03-17 18:15:55] [MutationLiveGate] Retry 2 activated a live mutation.
+[2026-03-17 18:15:55] [IterativeHealing] Baseline failed for BusinessObjectDataRetryStoragePolicyTransitionHelperTest; starting retry loop (max_retries=3).
+[2026-03-17 18:15:55] [IterativeHealing] Retry 1/3 for BusinessObjectDataRetryStoragePolicyTransitionHelperTest on focal BusinessObjectDataRetryStoragePolicyTransitionHelper.
+[2026-03-17 18:17:19] [IterativeHealing] Baseline passed on retry 1 for BusinessObjectDataRetryStoragePolicyTransitionHelperTest; running targeted PIT.
+[2026-03-17 18:18:25] [MutationLiveGate] Target overload resolved: retryStoragePolicyTransition/2 from testRetryStoragePolicyTransitionBusinessObjectDataNoExists.
+[2026-03-17 18:19:22] [RegenerativeSync] Starting primary generation pass for BusinessObjectDataRetryStoragePolicyTransitionHelperTest on focal BusinessObjectDataRetryStoragePolicyTransitionHelper.
+[2026-03-17 18:22:10] [RegenerativeSync] Baseline failed for BusinessObjectDataRetryStoragePolicyTransitionHelperTest without eligible compile-only retry.

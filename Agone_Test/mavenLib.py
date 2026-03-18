@@ -84,6 +84,13 @@ SUREFIRE_FAILURE_PATTERNS = [
     ),
 ]
 
+CONTEXT_BOOT_FAILURE_PATTERNS = [
+    re.compile(r"Failed to load ApplicationContext", re.IGNORECASE),
+    re.compile(r"BeanCreationException", re.IGNORECASE),
+    re.compile(r"UnsatisfiedDependencyException", re.IGNORECASE),
+    re.compile(r"Error creating bean with name", re.IGNORECASE),
+]
+
 
 def _normalize_method_name(method_name):
     if method_name is None:
@@ -146,6 +153,48 @@ def _extract_ast_method_pair(test_path, focal_path, preferred_test_method=None, 
     selected_test = sorted(normalized_mapping.keys())[0]
     selected_focal = normalized_mapping[selected_test][0]
     return selected_test, selected_focal
+
+
+def _infer_target_focal_parameter_count(test_path, target_test_method, target_focal_method):
+    normalized_test_method = _normalize_method_name(target_test_method)
+    normalized_focal_method = _normalize_method_name(target_focal_method)
+    if (
+        normalized_test_method is None
+        or normalized_focal_method is None
+        or not test_path
+        or not os.path.isfile(test_path)
+    ):
+        return None
+
+    try:
+        with open(test_path, "r", encoding="utf-8", errors="replace") as test_file:
+            test_source = test_file.read()
+        parsed_tree = javalang.parse.parse(test_source)
+    except Exception:
+        return None
+
+    invocation_argument_counts = []
+    for class_declaration in getattr(parsed_tree, "types", []) or []:
+        if not isinstance(class_declaration, javalang.tree.ClassDeclaration):
+            continue
+        for method_declaration in class_declaration.methods:
+            if method_declaration.name != normalized_test_method:
+                continue
+            for _, invocation in method_declaration.filter(javalang.tree.MethodInvocation):
+                if getattr(invocation, "member", None) != normalized_focal_method:
+                    continue
+                invocation_argument_counts.append(
+                    len(getattr(invocation, "arguments", []) or [])
+                )
+
+    if not invocation_argument_counts:
+        return None
+
+    # Prefer the most frequent arity if multiple invocations are present.
+    frequency_by_count = {}
+    for argument_count in invocation_argument_counts:
+        frequency_by_count[argument_count] = frequency_by_count.get(argument_count, 0) + 1
+    return max(frequency_by_count, key=lambda count: (frequency_by_count[count], -count))
 
 
 def _extract_ast_scope_from_dataframe(project_dataframe):
@@ -344,7 +393,41 @@ def _focal_mutations_file_path(project_id):
     return _worker_project_output_path(project_id, "focal_mutations.json")
 
 
-def _current_mutation_type_for_focal(project_id, focal_path):
+def _mutation_attempt_key(mutation_type, mutation_record=None):
+    if isinstance(mutation_record, dict):
+        explicit_attempt_key = str(mutation_record.get("mutation_attempt_key", "")).strip()
+        if explicit_attempt_key:
+            return explicit_attempt_key
+
+    normalized_type = str(mutation_type or "").strip()
+    if not normalized_type:
+        return None
+
+    if normalized_type == "logical" and isinstance(mutation_record, dict):
+        try:
+            candidate_index = int(mutation_record.get("mutation_candidate_index"))
+            return f"logical:{candidate_index}"
+        except (TypeError, ValueError):
+            return "logical"
+
+    if normalized_type != "exception":
+        return normalized_type
+
+    injection_scope = None
+    if isinstance(mutation_record, dict):
+        scope_candidate = mutation_record.get("injection_scope") or mutation_record.get("mutation_variant")
+        injection_scope = str(scope_candidate or "").strip().lower()
+    if injection_scope in {"catch_block", "method_entry"}:
+        return f"exception:{injection_scope}"
+    return "exception"
+
+
+def _current_mutation_type_for_focal(
+    project_id,
+    focal_path,
+    target_method_name=None,
+    target_parameter_count=None,
+):
     if project_id is None or not focal_path:
         return None
     records = _load_json_file(_focal_mutations_file_path(project_id), [])
@@ -355,9 +438,20 @@ def _current_mutation_type_for_focal(project_id, focal_path):
         if not isinstance(record, dict):
             continue
         if str(record.get("focal_path", "")).replace("\\", "/") == normalized_focal_path:
-            mutation_type = record.get("mutation_type")
-            if mutation_type:
-                return str(mutation_type).strip()
+            if target_method_name:
+                record_method = _normalize_method_name(record.get("method_name"))
+                if record_method != _normalize_method_name(target_method_name):
+                    continue
+            if target_parameter_count is not None:
+                try:
+                    record_parameter_count = int(record.get("method_parameter_count"))
+                except (TypeError, ValueError):
+                    continue
+                if record_parameter_count != target_parameter_count:
+                    continue
+            mutation_key = _mutation_attempt_key(record.get("mutation_type"), mutation_record=record)
+            if mutation_key:
+                return mutation_key
     return None
 
 
@@ -392,16 +486,78 @@ def _upsert_focal_mutation_record(project_id, focal_path, test_path, mutation_re
     _write_json_file(records_path, filtered_records)
 
 
-def _apply_prioritized_retry_mutation(focal_path, target_focal_method, attempted_mutation_types):
-    attempted_types = {str(item).strip() for item in (attempted_mutation_types or set()) if str(item).strip()}
+def _apply_prioritized_retry_mutation(
+    focal_path,
+    target_focal_method,
+    attempted_mutation_types,
+    target_focal_parameter_count=None,
+):
+    attempted_keys = {str(item).strip() for item in (attempted_mutation_types or set()) if str(item).strip()}
     failed_attempts = []
     for mutation_type, mutation_class, mutation_function in MUTATION_RETRY_PRIORITIES:
-        if mutation_type in attempted_types:
+        if mutation_type == "logical":
+            if "logical" in attempted_keys:
+                continue
+            max_logical_variants = 12
+            for candidate_index in range(max_logical_variants):
+                variant_key = f"logical:{candidate_index}"
+                if variant_key in attempted_keys:
+                    continue
+                try:
+                    mutation_result = mutation_function(
+                        focal_path,
+                        target_method=target_focal_method,
+                        target_parameter_count=target_focal_parameter_count,
+                        preferred_candidate_index=candidate_index,
+                    )
+                    mutation_result = dict(mutation_result or {})
+                    mutation_result["mutation_priority_class"] = mutation_class
+                    mutation_result["mutation_attempt_key"] = variant_key
+                    mutation_result.setdefault("mutation_candidate_index", candidate_index)
+                    return mutation_result, mutation_type, ""
+                except ValueError as error:
+                    error_text = str(error or "")
+                    if "No logical mutation candidate at index" in error_text:
+                        if candidate_index == 0:
+                            failed_attempts.append(f"{mutation_type}: {error}")
+                        break
+                    failed_attempts.append(f"{variant_key}: {error}")
+            continue
+
+        if mutation_type == "exception":
+            if "exception" in attempted_keys:
+                continue
+            exception_variant_keys = ["exception:catch_block", "exception:method_entry"]
+            for variant_key in exception_variant_keys:
+                if variant_key in attempted_keys:
+                    continue
+                preferred_scope = variant_key.split(":", 1)[1]
+                try:
+                    mutation_result = mutation_function(
+                        focal_path,
+                        target_method=target_focal_method,
+                        target_parameter_count=target_focal_parameter_count,
+                        preferred_injection_scope=preferred_scope,
+                    )
+                    mutation_result = dict(mutation_result or {})
+                    mutation_result["mutation_priority_class"] = mutation_class
+                    mutation_result["mutation_attempt_key"] = variant_key
+                    return mutation_result, mutation_type, ""
+                except ValueError as error:
+                    failed_attempts.append(f"{variant_key}: {error}")
+            continue
+
+        if mutation_type in attempted_keys:
             continue
         try:
-            mutation_result = mutation_function(focal_path, target_method=target_focal_method)
+            mutation_result = mutation_function(
+                focal_path,
+                target_method=target_focal_method,
+                target_parameter_count=target_focal_parameter_count,
+            )
             mutation_result = dict(mutation_result or {})
             mutation_result["mutation_priority_class"] = mutation_class
+            mutation_result["mutation_attempt_key"] = mutation_type
             return mutation_result, mutation_type, ""
         except ValueError as error:
             failed_attempts.append(f"{mutation_type}: {error}")
@@ -419,6 +575,21 @@ def _normalize_failure_signal_line(signal_line, max_chars=500):
     if len(normalized_line) > max_chars:
         return normalized_line[:max_chars].rstrip() + "..."
     return normalized_line
+
+
+def _is_context_bootstrap_failure(result_payload):
+    if isinstance(result_payload, dict):
+        failure_text = "\n".join(
+            [
+                str(result_payload.get("error_text", "") or ""),
+                str(result_payload.get("failure_log", "") or ""),
+            ]
+        )
+    else:
+        failure_text = str(result_payload or "")
+    if not failure_text.strip():
+        return False
+    return any(pattern.search(failure_text) for pattern in CONTEXT_BOOT_FAILURE_PATTERNS)
 
 
 def _extract_concise_failure_signal(failure_log_text):
@@ -484,6 +655,21 @@ def verify_mutation_is_live(
     resolved_test_path = test_path or scoped_test_path
     normalized_ast_test_method = _normalize_method_name(ast_test_method)
     normalized_ast_focal_method = _normalize_method_name(ast_focal_method)
+    target_focal_parameter_count = _infer_target_focal_parameter_count(
+        resolved_test_path,
+        normalized_ast_test_method,
+        normalized_ast_focal_method,
+    )
+    if (
+        normalized_ast_test_method is not None
+        and normalized_ast_focal_method is not None
+        and target_focal_parameter_count is not None
+    ):
+        _log_flow_event(
+            maven_execution_path,
+            f"[MutationLiveGate] Target overload resolved: "
+            f"{normalized_ast_focal_method}/{target_focal_parameter_count} from {normalized_ast_test_method}.",
+        )
 
     if normalized_ast_focal_method is None:
         baseline_result = run_maven_baseline_stage(
@@ -509,15 +695,23 @@ def verify_mutation_is_live(
         ast_test_method=normalized_ast_test_method,
         ast_focal_method=normalized_ast_focal_method,
     )
+    context_unsafe_active_detected = False
     if not baseline_result.get("ok"):
-        return {
-            "is_live": True,
-            "baseline_result": baseline_result,
-            "high_signal": 1,
-            "signal_reason": "active_mutation",
-            "attempts_used": 0,
-            "attempted_mutation_types": [],
-        }
+        if not _is_context_bootstrap_failure(baseline_result):
+            return {
+                "is_live": True,
+                "baseline_result": baseline_result,
+                "high_signal": 1,
+                "signal_reason": "active_mutation",
+                "attempts_used": 0,
+                "attempted_mutation_types": [],
+            }
+        context_unsafe_active_detected = True
+        _log_flow_event(
+            maven_execution_path,
+            "[MutationLiveGate] Initial mutation failed at Spring/context bootstrap; "
+            "searching for context-safe active mutation.",
+        )
 
     if not resolved_focal_path or not os.path.isfile(resolved_focal_path):
         return {
@@ -533,9 +727,14 @@ def verify_mutation_is_live(
     retry_limit = max(retry_limit, 0)
     retries_executed = 0
     attempted_mutation_types = set()
-    current_mutation_type = _current_mutation_type_for_focal(project_id, resolved_focal_path)
-    if current_mutation_type:
-        attempted_mutation_types.add(current_mutation_type)
+    current_mutation_key = _current_mutation_type_for_focal(
+        project_id,
+        resolved_focal_path,
+        target_method_name=normalized_ast_focal_method,
+        target_parameter_count=target_focal_parameter_count,
+    )
+    if current_mutation_key:
+        attempted_mutation_types.add(current_mutation_key)
 
     _log_flow_event(
         maven_execution_path,
@@ -556,6 +755,7 @@ def verify_mutation_is_live(
             resolved_focal_path,
             normalized_ast_focal_method,
             attempted_mutation_types,
+            target_focal_parameter_count=target_focal_parameter_count,
         )
         if mutation_result is None or mutation_type is None:
             _log_flow_event(
@@ -564,13 +764,19 @@ def verify_mutation_is_live(
             )
             break
 
-        attempted_mutation_types.add(mutation_type)
+        mutation_attempt_key = mutation_result.get("mutation_attempt_key") or _mutation_attempt_key(
+            mutation_type,
+            mutation_record=mutation_result,
+        )
+        if mutation_attempt_key:
+            attempted_mutation_types.add(str(mutation_attempt_key).strip())
         mutation_result["focal_path"] = str(resolved_focal_path).replace("\\", "/")
         mutation_result["test_path"] = str(resolved_test_path).replace("\\", "/") if resolved_test_path else ""
         _upsert_focal_mutation_record(project_id, resolved_focal_path, resolved_test_path, mutation_result)
         _log_flow_event(
             maven_execution_path,
             f"[MutationLiveGate] Retry {retry_number} applied mutation type={mutation_type} "
+            f"variant={mutation_result.get('mutation_attempt_key', mutation_result.get('injection_scope', '-'))} "
             f"class={mutation_result.get('mutation_priority_class', '-')}.",
         )
 
@@ -582,6 +788,14 @@ def verify_mutation_is_live(
             ast_focal_method=normalized_ast_focal_method,
         )
         if not baseline_result.get("ok"):
+            if _is_context_bootstrap_failure(baseline_result):
+                context_unsafe_active_detected = True
+                _log_flow_event(
+                    maven_execution_path,
+                    f"[MutationLiveGate] Retry {retry_number} caused context/bootstrap failure; "
+                    "continuing search for context-safe active mutation.",
+                )
+                continue
             _log_flow_event(
                 maven_execution_path,
                 f"[MutationLiveGate] Retry {retry_number} activated a live mutation.",
@@ -596,6 +810,21 @@ def verify_mutation_is_live(
             }
 
     total_attempts = 1 + retries_executed
+    if context_unsafe_active_detected:
+        _log_flow_event(
+            maven_execution_path,
+            f"[MutationLiveGate] No context-safe active mutation found after {total_attempts} attempts "
+            f"for focal={resolved_focal_path}.",
+        )
+        return {
+            "is_live": False,
+            "baseline_result": baseline_result,
+            "high_signal": 0,
+            "signal_reason": "no_context_safe_active_mutant",
+            "attempts_used": retries_executed,
+            "attempted_mutation_types": sorted(attempted_mutation_types),
+        }
+
     quiet_reason = f"quiet_mutation_after_{total_attempts}_attempts"
     _log_flow_event(
         maven_execution_path,
@@ -2003,6 +2232,21 @@ def _execute_iterative_healing_flow(
                 "high_signal": high_signal,
                 "signal_reason": signal_reason,
             }
+        if str(signal_reason) == "no_context_safe_active_mutant":
+            _log_flow_event(
+                maven_execution_path,
+                f"[IterativeHealing] Skipping Codex/PIT for {name_test_class}: {signal_reason}.",
+            )
+            return {
+                "success": True,
+                "last_execution": True,
+                "chance": 0,
+                "iterations_to_pass": 0,
+                "total_prompt_tokens": 0,
+                "total_completion_tokens": 0,
+                "high_signal": high_signal,
+                "signal_reason": signal_reason,
+            }
         _log_flow_event(
             maven_execution_path,
             f"[IterativeHealing] Mutation-live verification failed for {name_test_class}: {signal_reason}",
@@ -2196,6 +2440,9 @@ def _execute_regenerative_sync_flow(
         }
 
     def run_generation_pass(pass_label, failure_log_text):
+        compile_failure_context = ""
+        if str(pass_label).startswith("compile_retry_"):
+            compile_failure_context = str(failure_log_text or "").strip()
         try:
             with open(focal_path, "r", encoding="utf-8", errors="replace") as focal_file:
                 focal_class_snapshot = focal_file.read()
@@ -2218,6 +2465,7 @@ def _execute_regenerative_sync_flow(
             target_test_method=normalized_ast_test_method,
             target_focal_method=normalized_ast_focal_method,
             failure_log_override=failure_log_text,
+            compile_failure_log_override=compile_failure_context,
         )
         return generated_test_content, usage_metadata
 
@@ -2238,6 +2486,21 @@ def _execute_regenerative_sync_flow(
     latest_failure_log = baseline_preflight_result.get("failure_log", "")
     if not is_live_mutation:
         if str(signal_reason).startswith("quiet_mutation_after_"):
+            _log_flow_event(
+                maven_execution_path,
+                f"[RegenerativeSync] Skipping Codex/PIT for {name_test_class}: {signal_reason}.",
+            )
+            return {
+                "success": True,
+                "last_execution": True,
+                "chance": 0,
+                "iterations_to_pass": 0,
+                "total_prompt_tokens": 0,
+                "total_completion_tokens": 0,
+                "high_signal": high_signal,
+                "signal_reason": signal_reason,
+            }
+        if str(signal_reason) == "no_context_safe_active_mutant":
             _log_flow_event(
                 maven_execution_path,
                 f"[RegenerativeSync] Skipping Codex/PIT for {name_test_class}: {signal_reason}.",

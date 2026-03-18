@@ -1,0 +1,43 @@
+@Test
+public void testGetStorageAttributeIntegerValueByName_5()
+{
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+    System.setProperty("agone.mutation.trigger", "true");
+    try
+    {
+        String attributeName = "testAttribute";
+        boolean attributeRequired = false;
+        boolean attributeValueRequiredIfExists = false;
+        String invalidIntegerValue = "NOT_A_NUMBER";
+
+        org.finra.herd.service.helper.StorageHelper storageHelperSpy = org.mockito.Mockito.spy(new org.finra.herd.service.helper.StorageHelper());
+        org.finra.herd.model.jpa.StorageEntity storageEntity =
+            org.mockito.Mockito.mock(org.finra.herd.model.jpa.StorageEntity.class);
+
+        org.mockito.Mockito.doReturn(invalidIntegerValue).when(storageHelperSpy)
+            .getStorageAttributeValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
+
+        try
+        {
+            storageHelperSpy.getStorageAttributeIntegerValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
+            org.junit.Assert.fail("Expected IllegalStateException to be thrown.");
+        }
+        catch (IllegalStateException e)
+        {
+            org.junit.Assert.assertEquals(
+                "Storage attribute \"" + attributeName + "\" must be a valid integer. Actual value is \"" + invalidIntegerValue + "\"",
+                e.getMessage());
+        }
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+    }
+}

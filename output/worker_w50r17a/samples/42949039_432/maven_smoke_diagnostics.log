@@ -1,0 +1,18 @@
+[2026-03-17 16:12:49] [MutationLiveGate] Target overload resolved: modifyTagsInSearchIndex/2 from testModifyTagsInSearchIndexNoSqsQueueName.
+[2026-03-17 16:13:47] [MutationLiveGate] Quiet mutation detected for focal=compiledrepos/worker_w50r17a/42949039/herd-code/herd-service/src/main/java/org/finra/herd/service/helper/SearchIndexUpdateHelper.java; starting prioritized retries (limit=2).
+[2026-03-17 16:13:47] [MutationLiveGate] Retry 1 applied mutation type=signature variant=signature class=MATH_PRIMITIVE_RETURNS.
+[2026-03-17 16:14:40] [MutationLiveGate] Retry 1 activated a live mutation.
+[2026-03-17 16:14:40] [IterativeHealing] Baseline failed for SearchIndexUpdateHelperTest; starting retry loop (max_retries=3).
+[2026-03-17 16:14:40] [IterativeHealing] Retry 1/3 for SearchIndexUpdateHelperTest on focal SearchIndexUpdateHelper.
+[2026-03-17 16:15:15] [IterativeHealing] Retry 1 style-lock rejection captured: Codex output rejected for iterative-healing: iterative style-lock validation failed (failed to parse original mapped method declaration (candidate method block must contain exactly one method declaration)).
+[2026-03-17 16:15:15] [IterativeHealing] Codex method patch generation failed on retry 1 for SearchIndexUpdateHelperTest.
+[2026-03-17 16:15:15] [IterativeHealing] Retry 2/3 for SearchIndexUpdateHelperTest on focal SearchIndexUpdateHelper.
+[2026-03-17 16:15:52] [IterativeHealing] Retry 2 style-lock rejection captured: Codex output rejected for iterative-healing: iterative style-lock validation failed (failed to parse original mapped method declaration (candidate method block must contain exactly one method declaration)).
+[2026-03-17 16:15:52] [IterativeHealing] Codex method patch generation failed on retry 2 for SearchIndexUpdateHelperTest.
+[2026-03-17 16:15:52] [IterativeHealing] Retry 3/3 for SearchIndexUpdateHelperTest on focal SearchIndexUpdateHelper.
+[2026-03-17 16:16:15] [IterativeHealing] Retry 3 style-lock rejection captured: Codex output rejected for iterative-healing: iterative style-lock validation failed (failed to parse original mapped method declaration (candidate method block must contain exactly one method declaration)).
+[2026-03-17 16:16:15] [IterativeHealing] Codex method patch generation failed on retry 3 for SearchIndexUpdateHelperTest.
+[2026-03-17 16:16:15] [IterativeHealing] Exhausted retries for SearchIndexUpdateHelperTest without baseline success.
+[2026-03-17 16:17:21] [MutationLiveGate] Target overload resolved: modifyTagsInSearchIndex/2 from testModifyTagsInSearchIndexNoSqsQueueName.
+[2026-03-17 16:18:26] [RegenerativeSync] Starting primary generation pass for SearchIndexUpdateHelperTest on focal SearchIndexUpdateHelper.
+[2026-03-17 16:18:28] [RegenerativeSync] Primary generation failed for SearchIndexUpdateHelperTest.

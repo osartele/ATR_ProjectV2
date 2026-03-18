@@ -1,0 +1,74 @@
+@Test
+public void testGetStorageFileEntityByStorageUnitEntityAndFilePathWithFileOnlyPrefix()
+{
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+    try
+    {
+        System.setProperty("agone.mutation.trigger", "true");
+
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        storageUnitEntity.setDirectoryPath("testDirectoryPath");
+
+        String filePath = "testDirectoryPath/testFile.txt";
+        String filePathWithFileOnlyPrefix = "testFile.txt";
+        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+
+        StorageFileEntity storageFileEntity = new StorageFileEntity();
+
+        org.mockito.Mockito.when(storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, filePath)).thenReturn(null);
+        org.mockito.Mockito.when(storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, filePathWithFileOnlyPrefix))
+            .thenReturn(storageFileEntity);
+
+        StorageFileEntity result = storageFileDaoHelper.getStorageFileEntity(storageUnitEntity, filePath, businessObjectDataKey);
+
+        org.junit.Assert.assertSame(storageFileEntity, result);
+        org.mockito.Mockito.verify(storageFileDao).getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, filePath);
+        org.mockito.Mockito.verify(storageFileDao).getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, filePathWithFileOnlyPrefix);
+        org.mockito.Mockito.verifyNoMoreInteractions(storageFileDao);
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+    }
+}
+
+@Test
+public void testGetStorageFileEntityByStorageUnitEntityAndFilePathThrowsAssertionErrorWhenMutationTriggerIsMissing()
+{
+    String originalMutationTrigger = System.getProperty("agone.mutation.trigger");
+    try
+    {
+        System.clearProperty("agone.mutation.trigger");
+
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+
+        try
+        {
+            storageFileDaoHelper.getStorageFileEntity(storageUnitEntity, "testDirectoryPath/testFile.txt", businessObjectDataKey);
+            org.junit.Assert.fail("Expected an AssertionError to be thrown.");
+        }
+        catch (AssertionError e)
+        {
+            org.junit.Assert.assertEquals("AGONE_MUTATION_TRIGGER", e.getMessage());
+        }
+    }
+    finally
+    {
+        if (originalMutationTrigger == null)
+        {
+            System.clearProperty("agone.mutation.trigger");
+        }
+        else
+        {
+            System.setProperty("agone.mutation.trigger", originalMutationTrigger);
+        }
+    }
+}
