@@ -267,6 +267,61 @@ public class SampleTest {
         self.assertFalse(style_ok)
         self.assertIn("local focal-class instantiation", style_reason)
 
+    def test_style_lock_accepts_local_focal_instantiation_when_original_uses_it(self):
+        original_with_local_instantiation = """package demo;
+
+import org.junit.Test;
+
+public class SampleTest {
+
+    @Test
+    public void targetTest() {
+        SampleService sampleService = new SampleService();
+        org.junit.Assert.assertNotNull(sampleService);
+    }
+}
+"""
+        candidate_patch = """@Test
+    public void targetTest() {
+        SampleService sampleService = new SampleService();
+        org.junit.Assert.assertNotNull(sampleService);
+        org.junit.Assert.assertTrue(sampleService != null);
+    }"""
+        style_ok, style_reason = utils._validate_iterative_method_style_lock(
+            original_with_local_instantiation,
+            candidate_patch,
+            "targetTest",
+            "SampleService",
+        )
+        self.assertTrue(style_ok, msg=style_reason)
+
+    def test_style_lock_rejects_removing_local_focal_instantiation_when_original_uses_it(self):
+        original_with_local_instantiation = """package demo;
+
+import org.junit.Test;
+
+public class SampleTest {
+
+    @Test
+    public void targetTest() {
+        SampleService sampleService = new SampleService();
+        org.junit.Assert.assertNotNull(sampleService);
+    }
+}
+"""
+        candidate_patch = """@Test
+    public void targetTest() {
+        org.junit.Assert.assertNotNull(this);
+    }"""
+        style_ok, style_reason = utils._validate_iterative_method_style_lock(
+            original_with_local_instantiation,
+            candidate_patch,
+            "targetTest",
+            "SampleService",
+        )
+        self.assertFalse(style_ok)
+        self.assertIn("requires local focal-class instantiation", style_reason)
+
     def test_style_lock_rejects_new_helper_call_not_in_original_class(self):
         candidate_patch = """@Test
     public void targetTest() {

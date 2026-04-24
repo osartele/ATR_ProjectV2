@@ -1,4 +1,4 @@
-import os
+﻿import os
 import pandas as pd
 import subprocess
 import shutil
@@ -16,6 +16,7 @@ import mavenLib
 from dotenv import load_dotenv
 from execution_manager import ExecutionManager
 import project_structure_analyzer as psa
+from path_context import get_path_context
 
 load_dotenv()
 
@@ -65,6 +66,15 @@ ITERATIVE_STYLE_ALLOWED_UNQUALIFIED_CALLS = {
 IMMUTABLE_SOURCE_ROOTS = {"repos", "Classes2Test"}
 PROJECT_WORKSPACE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SMOKE_TARGET_CACHE = {}
+PATH_CONTEXT = get_path_context()
+
+
+def _worker_output_path(*parts):
+    return os.path.join(PATH_CONTEXT.get_output_path(), *[str(part) for part in parts])
+
+
+def _worker_project_output_path(project, *parts):
+    return os.path.join(PATH_CONTEXT.get_project_output_path(project), *[str(part) for part in parts])
 
 
 def _normalize_workspace_path(file_path):
@@ -201,7 +211,7 @@ def verify_if_folder_has_already_been_processed(folder):
         Returns:
                     :'True' if the folder has already been processed, False otherwise
     """
-    compiled_path = f'compiledrepos/{folder}'
+    compiled_path = PATH_CONTEXT.get_compiled_repo_path(folder)
     failed_path = f'failedrepos/{folder}'
     if os.path.exists(compiled_path):
         return True
@@ -244,12 +254,12 @@ def remove_missing_files_from_dataframe(project_df):
     # If a test_path or a focal_path of the project_df (that is output/classes.csv filtered with the current project) doesn't exist in the repository, it will be removed from the dataframe
     for index, row in project_df.iterrows():
         if "repos/" in row['Test_Path']:
-            test_path = row['Test_Path'].replace("repos/", "compiledrepos/")
-            focal_path = row['Focal_Path'].replace("repos/", "compiledrepos/")
+            test_path = PATH_CONTEXT.to_worker_compiled_path(row.get('Project'), row['Test_Path'])
+            focal_path = PATH_CONTEXT.to_worker_compiled_path(row.get('Project'), row['Focal_Path'])
         else:
             project = row['Project']
-            test_path = f"compiledrepos/{project}/" + row['Test_Path']
-            focal_path = f"compiledrepos/{project}/" + row['Focal_Path']
+            test_path = PATH_CONTEXT.to_worker_compiled_path(project, row['Test_Path'])
+            focal_path = PATH_CONTEXT.to_worker_compiled_path(project, row['Focal_Path'])
         if not (os.path.isfile(test_path) and os.path.isfile(focal_path)):
             index_to_remove.add(index)
     project_df = project_df.drop(index=index_to_remove)
@@ -271,18 +281,10 @@ def configure_test_smell_detector(project_dataframe, project):
     def normalize_compiled_path(raw_path):
         if raw_path is None or pd.isna(raw_path):
             return None
-        normalized_path = str(raw_path).strip().replace("\\", "/")
-        if not normalized_path or normalized_path.lower() == "nan":
+        normalized_path = PATH_CONTEXT.to_worker_compiled_path(project, raw_path)
+        if normalized_path is None:
             return None
-        if os.path.isabs(normalized_path):
-            return os.path.abspath(normalized_path)
-        if normalized_path.startswith("compiledrepos/"):
-            return os.path.abspath(normalized_path)
-        if normalized_path.startswith("repos/"):
-            return os.path.abspath(normalized_path.replace("repos/", "compiledrepos/", 1))
-        return os.path.abspath(
-            os.path.join("compiledrepos", str(project), normalized_path.lstrip("/"))
-        )
+        return os.path.abspath(normalized_path)
 
     data = []
     project_df = project_dataframe.copy()
@@ -291,7 +293,8 @@ def configure_test_smell_detector(project_dataframe, project):
         focal_path_absolute = normalize_compiled_path(row.get("Focal_Path"))
         data.append([project, test_path_absolute, focal_path_absolute])
     df = pd.DataFrame(data)
-    csv_path = f"output/{project}/pathToInputFile.csv"
+    csv_path = _worker_project_output_path(project, "pathToInputFile.csv")
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
     df.to_csv(csv_path, index=False, header=False, na_rep="-")
     return csv_path
 
@@ -317,17 +320,40 @@ def run_test_smell_detector(csv_path, project, test_type, technique, module=None
     detector_path = os.path.join(os.path.dirname(__file__), "TestSmellDetector.jar")
     if not os.path.exists(detector_path):
         return None
-    command = ["java", "-jar", detector_path, csv_path]
+    project_output_dir = PATH_CONTEXT.get_project_output_path(project)
+    os.makedirs(project_output_dir, exist_ok=True)
+    detector_workdir = project_output_dir
+
+    # Remove stale detector outputs from prior runs to avoid cross-sample/cross-worker contamination.
+    for entry in os.listdir(detector_workdir):
+        if entry.startswith("Output_TestSmellDetection"):
+            stale_path = os.path.join(detector_workdir, entry)
+            try:
+                if os.path.isfile(stale_path):
+                    os.remove(stale_path)
+            except OSError:
+                pass
+
+    command = ["java", "-jar", detector_path, os.path.abspath(csv_path)]
     try:
         test_smell_timeout_seconds = get_subprocess_timeout_seconds("test_smell_timeout_seconds", 300)
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT, timeout=test_smell_timeout_seconds)
+        subprocess.check_output(
+            command,
+            stderr=subprocess.STDOUT,
+            timeout=test_smell_timeout_seconds,
+            cwd=detector_workdir,
+        )
     except subprocess.TimeoutExpired:
         print("Test smell detector timed out.")
         return None
     except Exception as e:
-        print(e.output.decode("utf-8")) 
+        error_output = getattr(e, "output", b"")
+        if isinstance(error_output, bytes):
+            print(error_output.decode("utf-8", errors="replace"))
+        else:
+            print(str(error_output))
         return None
-    files = os.listdir(os.getcwd())
+    files = os.listdir(detector_workdir)
     result_path = None
     for file in files:
         if file.startswith('Output_TestSmellDetection'): 
@@ -341,13 +367,11 @@ def run_test_smell_detector(csv_path, project, test_type, technique, module=None
                     new_name = f'TestSmellDetection_{project}_{module}_{test_type}_{technique}.csv'
                 else:
                     new_name = f'TestSmellDetection_{project}_{module}_{test_type}.csv'
-            if os.path.exists(f'{new_name}'):
-                os.remove(f'{new_name}')
-            os.rename(file, new_name)  
-            result_path = f'output/{project}/{new_name}'
+            source_path = os.path.join(detector_workdir, file)
+            result_path = os.path.join(detector_workdir, new_name)
             if os.path.exists(result_path):
                 os.remove(result_path)
-            shutil.move(new_name, f'output/{project}')
+            os.rename(source_path, result_path)
             break
     return result_path
 
@@ -453,7 +477,7 @@ def snapshot_coverage_reports(
         modules = [module]
 
     snapshot_key = build_coverage_snapshot_key(test_type, technique)
-    snapshot_root = os.path.join("output", str(project_id), "coverage_snapshots", snapshot_key)
+    snapshot_root = _worker_project_output_path(project_id, "coverage_snapshots", snapshot_key)
     os.makedirs(snapshot_root, exist_ok=True)
     copied_module_count = 0
 
@@ -522,6 +546,29 @@ def retrieve_code_coverage_and_cyclomatic_complexity(
     jacoco_df_all = None
     pitest_df_all = None
     pitest_method_df_all = None
+    jacoco_columns = [
+        'GROUP',
+        'PACKAGE',
+        'CLASS',
+        'INSTRUCTION_MISSED',
+        'INSTRUCTION_COVERED',
+        'BRANCH_MISSED',
+        'BRANCH_COVERED',
+        'LINE_MISSED',
+        'LINE_COVERED',
+        'COMPLEXITY_MISSED',
+        'COMPLEXITY_COVERED',
+        'METHOD_MISSED',
+        'METHOD_COVERED',
+    ]
+
+    def _safe_read_csv(path, expected_columns=None, **kwargs):
+        try:
+            return pd.read_csv(path, **kwargs)
+        except pd.errors.EmptyDataError:
+            if expected_columns is None:
+                return pd.DataFrame()
+            return pd.DataFrame(columns=expected_columns)
     # For each module, retrieve the .csv files and read them to obtain the results from JaCoCo and PITest. All the results are then merged into a single DataFrame.
     snapshot_key = None
     if _normalize_optional_identifier(test_type) is not None:
@@ -533,19 +580,24 @@ def retrieve_code_coverage_and_cyclomatic_complexity(
         path = os.path.join(project_path, module)
         if snapshot_key is not None:
             module_relative_path = str(module).replace("\\", "/")
-            snapshot_module_path = os.path.join("output", str(project_id), "coverage_snapshots", snapshot_key, module_relative_path)
+            snapshot_module_path = _worker_project_output_path(
+                project_id,
+                "coverage_snapshots",
+                snapshot_key,
+                module_relative_path,
+            )
             jacoco_snapshot_path = os.path.join(snapshot_module_path, "jacoco.csv")
             pitest_snapshot_path = os.path.join(snapshot_module_path, "mutations.csv")
             if os.path.exists(jacoco_snapshot_path):
-                jacoco_df = pd.read_csv(jacoco_snapshot_path)
+                jacoco_df = _safe_read_csv(jacoco_snapshot_path, expected_columns=jacoco_columns)
             if os.path.exists(pitest_snapshot_path):
-                pitest_df = pd.read_csv(pitest_snapshot_path, header=None)
+                pitest_df = _safe_read_csv(pitest_snapshot_path, expected_columns=list(range(7)), header=None)
         else:
             jacoco_live_path, pitest_live_path = _resolve_live_coverage_report_paths(path, type_project)
             if jacoco_live_path is not None:
-                jacoco_df = pd.read_csv(jacoco_live_path)
+                jacoco_df = _safe_read_csv(jacoco_live_path, expected_columns=jacoco_columns)
             if pitest_live_path is not None:
-                pitest_df = pd.read_csv(pitest_live_path, header=None)
+                pitest_df = _safe_read_csv(pitest_live_path, expected_columns=list(range(7)), header=None)
         
         if jacoco_df is None or pitest_df is None:
             return None
@@ -561,43 +613,49 @@ def retrieve_code_coverage_and_cyclomatic_complexity(
         if target_fqns:
             jacoco_df = jacoco_df[jacoco_df["Focal_FQN"].isin(target_fqns)]
 
-        pitest_df[0] = pitest_df[0].astype(str).str.replace('.java', '', regex=False)
-        pitest_df.columns = ['Focal_Class', 'Package', 'Mutation_Name', 'Method_Name', 'Line_Number', 'Result', 'Killing_test']
-        def _resolve_pitest_fqn(pitest_row):
-            focal_class_name = _normalize_optional_identifier(pitest_row['Focal_Class']) or ''
-            mutated_class_col = _normalize_optional_identifier(pitest_row['Package']) or ''
-            # Safely handle both modern PIT (FQN) and older PIT (package-only) formats.
-            if mutated_class_col.endswith(focal_class_name):
-                return mutated_class_col
-            return f"{mutated_class_col}.{focal_class_name}".strip(".")
-        pitest_df["Focal_FQN"] = pitest_df.apply(
-            _resolve_pitest_fqn,
-            axis=1,
-        )
-        pitest_df["Method_Name_Normalized"] = pitest_df["Method_Name"].apply(_normalize_method_identifier)
-        if target_fqns:
-            pitest_df = pitest_df[pitest_df["Focal_FQN"].isin(target_fqns)]
-        # Each row of the pitest_df DataFrame represents a mutation
-        # Focal_Class: the name of the focal class without the .java extension
-        # Package: the package of the focal class
-        # Mutation_Name: the name of the engine used for the mutation
-        # Method_Signature: the name of the method involved in the mutation
-        # Line_Number: the number of the line of code involved in the mutation
-        # Killing_Test: the test that ultimately killed the mutation
-        pitest_class_df = pitest_df.groupby('Focal_FQN').agg(
-            {'Result': lambda x: round((x == 'KILLED').sum() / len(x) * 100, 2)})
-        pitest_class_df = pitest_class_df.rename(columns={'Result': 'Mutation_Coverage_Class'})
-        pitest_class_df = pitest_class_df.reset_index()
+        if pitest_df.empty:
+            pitest_class_df = pd.DataFrame(columns=['Focal_FQN', 'Mutation_Coverage_Class'])
+            pitest_method_df = pd.DataFrame(columns=['Focal_FQN', 'Method_Name_Normalized', 'Mutation_Coverage_Method'])
+        else:
+            pitest_df[0] = pitest_df[0].astype(str).str.replace('.java', '', regex=False)
+            pitest_df.columns = ['Focal_Class', 'Package', 'Mutation_Name', 'Method_Name', 'Line_Number', 'Result', 'Killing_test']
+            def _resolve_pitest_fqn(pitest_row):
+                focal_class_name = _normalize_optional_identifier(pitest_row['Focal_Class']) or ''
+                mutated_class_col = _normalize_optional_identifier(pitest_row['Package']) or ''
+                # Safely handle both modern PIT (FQN) and older PIT (package-only) formats.
+                if mutated_class_col.endswith(focal_class_name):
+                    return mutated_class_col
+                return f"{mutated_class_col}.{focal_class_name}".strip(".")
+            pitest_df["Focal_FQN"] = pitest_df.apply(
+                _resolve_pitest_fqn,
+                axis=1,
+            )
+            pitest_df["Method_Name_Normalized"] = pitest_df["Method_Name"].apply(_normalize_method_identifier)
+            if target_fqns:
+                pitest_df = pitest_df[pitest_df["Focal_FQN"].isin(target_fqns)]
+            # Each row of the pitest_df DataFrame represents a mutation
+            # Focal_Class: the name of the focal class without the .java extension
+            # Package: the package of the focal class
+            # Mutation_Name: the name of the engine used for the mutation
+            # Method_Signature: the name of the method involved in the mutation
+            # Line_Number: the number of the line of code involved in the mutation
+            # Killing_Test: the test that ultimately killed the mutation
+            pitest_class_df = pitest_df.groupby('Focal_FQN').agg(
+                {'Result': lambda x: round((x == 'KILLED').sum() / len(x) * 100, 2)})
+            pitest_class_df = pitest_class_df.rename(columns={'Result': 'Mutation_Coverage_Class'})
+            pitest_class_df = pitest_class_df.reset_index()
+
+            pitest_method_df = pitest_df.groupby(['Focal_FQN', 'Method_Name_Normalized']).agg(
+                {'Result': lambda x: round((x == 'KILLED').sum() / len(x) * 100, 2)}
+            )
+            pitest_method_df = pitest_method_df.rename(columns={'Result': 'Mutation_Coverage_Method'})
+            pitest_method_df = pitest_method_df.reset_index()
+
         if pitest_df_all is None:
             pitest_df_all = pitest_class_df
         else:
             pitest_df_all = pd.concat([pitest_df_all, pitest_class_df], ignore_index=True)
 
-        pitest_method_df = pitest_df.groupby(['Focal_FQN', 'Method_Name_Normalized']).agg(
-            {'Result': lambda x: round((x == 'KILLED').sum() / len(x) * 100, 2)}
-        )
-        pitest_method_df = pitest_method_df.rename(columns={'Result': 'Mutation_Coverage_Method'})
-        pitest_method_df = pitest_method_df.reset_index()
         if pitest_method_df_all is None:
             pitest_method_df_all = pitest_method_df
         else:
@@ -653,6 +711,11 @@ def retrieve_code_coverage_and_cyclomatic_complexity(
 
         measures_data.append([row['Coverage_Row_Id'], focal_class, cyclomatic_complexity, loc, branch_coverage, method_coverage, line_coverage])
     
+    if pitest_df_all is None:
+        pitest_df_all = pd.DataFrame(columns=['Focal_FQN', 'Mutation_Coverage_Class'])
+    if pitest_method_df_all is None:
+        pitest_method_df_all = pd.DataFrame(columns=['Focal_FQN', 'Method_Name_Normalized', 'Mutation_Coverage_Method'])
+
     measures_df = pd.DataFrame(measures_data, columns=['Coverage_Row_Id', 'Focal_Class', 'Cyclomatic_complexity', 'Lines_of_code', 'Branch_coverage', 'Method_coverage', 'Line_coverage'])
     measures_df = pd.merge(project_df, measures_df, how="left",
                             on=['Coverage_Row_Id', 'Focal_Class'])
@@ -731,21 +794,22 @@ def generate_output_csv_test_type(project_id, test_type, technique, measures_df,
 
     # replace /repos with /compiledrepos in Focal_path e Test_Path
     for index, row in measures_df.iterrows():
-        measures_df.at[index, 'Focal_Path'] = row['Focal_Path'].replace('repos/', 'compiledrepos/')
-        measures_df.at[index, 'Test_Path'] = row['Test_Path'].replace('repos/', 'compiledrepos/')
+        measures_df.at[index, 'Focal_Path'] = PATH_CONTEXT.to_worker_compiled_path(project_id, row['Focal_Path'])
+        measures_df.at[index, 'Test_Path'] = PATH_CONTEXT.to_worker_compiled_path(project_id, row['Test_Path'])
 
     csv_path = None
     if module is None:
         if technique is not None:
-            csv_path = f'./output/{project_id}/TestClasses_{project_id}_{test_type}_{technique}.csv'
+            csv_path = _worker_project_output_path(project_id, f"TestClasses_{project_id}_{test_type}_{technique}.csv")
         else:
-            csv_path = f'./output/{project_id}/TestClasses_{project_id}_{test_type}.csv'
+            csv_path = _worker_project_output_path(project_id, f"TestClasses_{project_id}_{test_type}.csv")
     else:
         if technique is not None:
-            csv_path = f'./output/{project_id}/TestClasses_{project_id}_{module}_{test_type}_{technique}.csv'
+            csv_path = _worker_project_output_path(project_id, f"TestClasses_{project_id}_{module}_{test_type}_{technique}.csv")
         else:
-            csv_path = f'./output/{project_id}/TestClasses_{project_id}_{module}_{test_type}.csv'
+            csv_path = _worker_project_output_path(project_id, f"TestClasses_{project_id}_{module}_{test_type}.csv")
     try:
+        os.makedirs(os.path.dirname(csv_path), exist_ok=True)
         measures_df.to_csv(csv_path, index=False, na_rep="-")
     except Exception as e:
         return None
@@ -1235,20 +1299,6 @@ def _throws_to_signature(method_declaration):
     return tuple(normalized_throws)
 
 
-def _method_signature_fingerprint(method_declaration):
-    return {
-        "name": str(getattr(method_declaration, "name", "") or ""),
-        "modifiers": tuple(sorted(list(getattr(method_declaration, "modifiers", []) or []))),
-        "annotations": tuple(_annotation_names(getattr(method_declaration, "annotations", []) or [])),
-        "return_type": _type_node_to_signature_string(getattr(method_declaration, "return_type", None)),
-        "parameters": tuple(
-            _parameter_to_signature(parameter)
-            for parameter in (getattr(method_declaration, "parameters", None) or [])
-        ),
-        "throws": _throws_to_signature(method_declaration),
-    }
-
-
 def _iterative_declaration_lock_fingerprint(method_declaration):
     return {
         "name": str(getattr(method_declaration, "name", "") or ""),
@@ -1341,6 +1391,23 @@ def _contains_local_mock_creation_regex(method_block):
     return re.search(r"(?<!\.)\bmock\s*\(", method_block) is not None
 
 
+def _method_has_local_focal_instantiation(
+    method_declaration,
+    method_block,
+    focal_class_simple_name,
+):
+    has_local_focal_instantiation = _contains_local_focal_instantiation_ast(
+        method_declaration,
+        focal_class_simple_name,
+    )
+    if not has_local_focal_instantiation:
+        has_local_focal_instantiation = _contains_local_focal_instantiation_regex(
+            method_block,
+            focal_class_simple_name,
+        )
+    return has_local_focal_instantiation
+
+
 def _validate_iterative_method_style_lock(
     original_test_class_source,
     generated_patch_content,
@@ -1390,19 +1457,27 @@ def _validate_iterative_method_style_lock(
             f"(expected={original_declaration_lock}, actual={candidate_declaration_lock})",
         )
 
-    has_local_focal_instantiation = _contains_local_focal_instantiation_ast(
-        candidate_method_declaration,
+    original_has_local_focal_instantiation = _method_has_local_focal_instantiation(
+        original_method_declaration,
+        original_method_block,
         focal_class_simple_name,
     )
-    if not has_local_focal_instantiation:
-        has_local_focal_instantiation = _contains_local_focal_instantiation_regex(
-            candidate_method_block,
-            focal_class_simple_name,
-        )
-    if has_local_focal_instantiation:
+    candidate_has_local_focal_instantiation = _method_has_local_focal_instantiation(
+        candidate_method_declaration,
+        candidate_method_block,
+        focal_class_simple_name,
+    )
+    if original_has_local_focal_instantiation and not candidate_has_local_focal_instantiation:
         return (
             False,
-            f"local focal-class instantiation is forbidden in iterative style lock ({focal_class_simple_name})",
+            "mapped method style requires local focal-class instantiation to be preserved "
+            f"({focal_class_simple_name})",
+        )
+    if not original_has_local_focal_instantiation and candidate_has_local_focal_instantiation:
+        return (
+            False,
+            "local focal-class instantiation is forbidden in iterative style lock when the mapped "
+            f"method does not instantiate the focal class ({focal_class_simple_name})",
         )
 
     has_local_mock_creation = _contains_local_mock_creation_ast(candidate_method_declaration)
@@ -1945,57 +2020,6 @@ def _insert_missing_imports(original_source, original_tree, new_tree):
     return "\n".join(updated_lines)
 
 
-def merge_test_classes(original_test_path, new_test_content):
-    try:
-        with open(original_test_path, "r", encoding="utf-8") as original_test_file:
-            original_source = original_test_file.read()
-    except Exception:
-        return new_test_content
-
-    normalized_new_content = _normalize_generated_test_content(
-        new_test_content,
-        os.path.splitext(os.path.basename(original_test_path))[0],
-    )
-    if normalized_new_content is None:
-        return original_source
-
-    original_tree = _parse_java_or_none(original_source)
-    new_tree = _parse_java_or_none(normalized_new_content)
-    original_class = _get_primary_class(original_tree)
-    new_class = _get_primary_class(new_tree)
-    if original_class is None or new_class is None:
-        return normalized_new_content
-
-    existing_test_methods = {
-        method.name for method in original_class.methods if _is_test_method(method)
-    }
-    new_test_method_blocks = _extract_method_blocks(
-        normalized_new_content, new_class, test_methods_only=True
-    )
-    methods_to_append = [
-        method_block
-        for method_name, method_block in new_test_method_blocks.items()
-        if method_name not in existing_test_methods
-    ]
-    if not methods_to_append:
-        return _insert_missing_imports(original_source, original_tree, new_tree)
-
-    merged_source = _insert_missing_imports(original_source, original_tree, new_tree)
-    merged_tree = _parse_java_or_none(merged_source)
-    merged_class = _get_primary_class(merged_tree)
-    merged_lines = merged_source.splitlines()
-    class_end_line = _find_class_end_line(merged_source, merged_class)
-    insertion_index = max(class_end_line - 1, 0)
-
-    appended_lines = [""]
-    for method_block in methods_to_append:
-        appended_lines.append(method_block)
-        appended_lines.append("")
-
-    merged_lines = merged_lines[:insertion_index] + appended_lines + merged_lines[insertion_index:]
-    return "\n".join(merged_lines).rstrip() + "\n"
-
-
 def _format_ast_test_method_context(ast_context):
     invocations_by_test = ast_context.get("invocations_by_test", {})
     if not invocations_by_test:
@@ -2046,11 +2070,7 @@ def _normalize_method_name(method_name):
 
 
 def _resolve_project_id_from_path(file_path):
-    normalized_path = os.path.abspath(str(file_path)).replace("\\", "/")
-    match = re.search(r"/(?:compiledrepos|repos)/(\d+)(?:/|$)", normalized_path)
-    if match:
-        return match.group(1)
-    return None
+    return PATH_CONTEXT.extract_project_id(file_path)
 
 
 def _load_smoke_target_for_path(file_path):
@@ -2061,7 +2081,7 @@ def _load_smoke_target_for_path(file_path):
         return {}
     if project_id in SMOKE_TARGET_CACHE:
         return SMOKE_TARGET_CACHE[project_id]
-    target_path = os.path.join("output", project_id, "smoke_target.json")
+    target_path = _worker_project_output_path(project_id, "smoke_target.json")
     if not os.path.exists(target_path):
         SMOKE_TARGET_CACHE[project_id] = {}
         return {}
@@ -2175,24 +2195,6 @@ def _truncate_prompt_text(text, max_chars):
     return normalized_text[:max_chars] + f"\n...[truncated to {max_chars} chars for smoke mode]..."
 
 
-def _summarize_test_file_for_prompt(test_file_content):
-    if not test_file_content:
-        return "Existing test file unavailable."
-
-    package_match = re.search(r"^\s*package\s+[^;]+;", test_file_content, re.MULTILINE)
-    package_line = package_match.group(0) if package_match else "package <unknown>;"
-    imports = re.findall(r"^\s*import\s+[^;]+;", test_file_content, re.MULTILINE)
-    import_summary = "\n".join(imports[:20]) if imports else "No import statements found."
-    test_method_names = re.findall(r"(?m)^\s*(?:public|protected|private)?\s*void\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", test_file_content)
-    test_method_names = [method_name for method_name in test_method_names if method_name.lower().startswith("test")]
-    method_summary = ", ".join(test_method_names[:40]) if test_method_names else "No obvious test method names found."
-    return (
-        f"{package_line}\n"
-        f"Imports:\n{import_summary}\n\n"
-        f"Existing test methods:\n{method_summary}"
-    )
-
-
 def _compact_prompt_data_for_smoke(prompt_data, technique, test_file_content):
     compact_prompt_data = prompt_data.copy()
     compact_prompt_data["project_structure"] = (
@@ -2226,6 +2228,10 @@ def _compact_prompt_data_for_smoke(prompt_data, technique, test_file_content):
     )
     compact_prompt_data["failure_log"] = _truncate_prompt_text(
         compact_prompt_data.get("failure_log", ""),
+        900,
+    )
+    compact_prompt_data["compile_failure_log"] = _truncate_prompt_text(
+        compact_prompt_data.get("compile_failure_log", ""),
         900,
     )
     return compact_prompt_data
@@ -2263,261 +2269,6 @@ def _lookup_tracking_metrics(tracking_df, test_class, test_path, generator, tech
     return metrics
 
 
-
-
-def _legacy_make_api_call_v1(test_type, technique, focal_class, focal_path, testing_framework, java_version, has_mockito, test_path, name_test_class, project_structure, project_dependencies, package_test_class=None):
-    """
-    Given a focal class, it generates the test class making an API call to the AI model corresponding to the test type. 
-    Note: At the moment, it supports only 'gpt-4o-mini' test type.
-    Note: At the moment, it supports the 'zeroshot1', 'zeroshot2', 'oneshot1' and 'oneshot2' techniques.
-
-        Parameters:
-                test_type: the type of the test (e.g 'gpt-4o-mini',...)
-                technique: the prompt technique 
-                focal_class: the content of the focal class
-                testing_framework (String): a sentence that indicates to the AI model which testing framework (and eventually which version) it can use.
-                java_version: the java version implemented in the focal class
-                has_mockito (Boolean): 'True' if the prompt should inform the AI model that it can use the Mockito framework., 'False' otherwise
-                test_path: the path of the test
-                name_test_class: the currently name of the test class (ALERT* must be without the .java suffix, e.g. 'foo') 
-                package_test_class (None): the package of the test class
-        Returns:
-                response: the java test class returned by the API call, 'None' if the response is Anomalous
-
-    """
-    def replace_placeholders(text, replacements_dict):
-        return re.sub(r'\{\{(\w+)\}\}', lambda match: replacements_dict.get(match.group(1), match.group(0)), text)
-    def get_attribute_by_model(model_name, attribute_name):
-        agents = ExecutionManager.get_agents()
-        return agents.get(model_name, None).get(attribute_name, None)
-    def get_prompt_by_name(prompt_name):
-        prompts = ExecutionManager.get_prompts()
-        raw_prompt = prompts.get(prompt_name, None)
-        final_prompt = copy.deepcopy(raw_prompt)
-        for role in final_prompt:
-            role['content'] = replace_placeholders(role['content'], prompt_data)
-        return final_prompt
-
-    set_key_as_os_environ(test_type)
-    java_class_example = 'package com.example.project;\n\npublic class Calculator {\n\n	public int add(int a, int b) {\n\n	return a + b;\n	}\n\n}'
-    test_class_example = 'package com.example.project;\n\nimport static org.junit.jupiter.api.Assertions.assertEquals;\nimport org.junit.jupiter.api.DisplayName;\nimport org.junit.jupiter.api.Test;\nimport org.junit.jupiter.params.ParameterizedTest;\nimport org.junit.jupiter.params.provider.CsvSource;\n\nclass CalculatorTests {\n\n	@Test\n	@DisplayName("1 + 1 = 2")\n	void addsTwoNumbers() {\n		Calculator calculator = new Calculator();\n		assertEquals(2, calculator.add(1, 1), "1 + 1 should equal 2");\n	}\n\n	@ParameterizedTest(name = "{0} + {1} = {2}")\n	@CsvSource({\n			"0,    1,   1",\n			"1,    2,   3",\n			"49,  51, 100",\n			"1,  100, 101"\n	})\n	void add(int first, int second, int expectedResult) {\n		Calculator calculator = new Calculator();\n		assertEquals(expectedResult, calculator.add(first, second),\n				() -> first + " + " + second + " should equal " + expectedResult);\n	}\n}'
-    example_testing_framework = 'JUnit 5'
-    example_java_version = '11'
-    # Define the response
-    response = None
-    can_use_mockito = None
-    try:
-        # Leggi il contenuto della classe di test
-        with open(test_path, 'r') as test_file:
-            test_file_content = test_file.read()
-    except Exception as e:
-        print(e)
-        return None
-
-    if has_mockito == True or test_file_content.__contains__("mockito"):
-        can_use_mockito = "You can use the Mockito framework."
-    else:
-        can_use_mockito = "You cannot use the Mockito framework."
-
-    set_public = "You must declare the test class and all the test methods with the public access modifier."
-
-    messages = []
-
-    prompt_data = {
-        "focal_class": focal_class,
-        "focal path": focal_path,
-        "testing_framework": testing_framework,
-        "java_version": java_version,
-        "project_structure": str(project_structure),
-        "project_dependencies": str(project_dependencies),
-        "java_class_example": java_class_example,
-        "test_class_example": test_class_example,
-        "example_testing_framework": example_testing_framework,
-        "example_java_version": example_java_version,
-        "can_use_mockito": can_use_mockito,
-        "set_public": set_public
-
-    }
-    prompt = get_prompt_by_name(technique)
-
-    messages = [{"role": role["role"], "content": role["content"]} for role in prompt]
-
-    temperature = get_attribute_by_model(test_type, 'temperature')
-    api_base = get_attribute_by_model(test_type, 'api_base')
-    stream = bool(get_attribute_by_model(test_type, 'stream'))
-    response = completion(model=test_type, messages=prompt, temperature=temperature, api_base=api_base, stream=stream)
-
-    if response == " " or response is None or not response.choices:
-        return None, messages
-    
-    result = response.choices[0].message['content']
-    # Check if "```java" and "```" are in the result
-    if "```.java\n" in result and "```" in result:
-        # Extract only the text between "```java" and "```"
-        match = re.search(r'```.java\n(.*?)```', result, re.DOTALL)
-        if match:
-            result = match.group(1)
-            if result is None:
-                # Gestisci il caso in cui result è None
-                return None, messages
-            # Extract the class name from the result
-            class_name_match = re.search(r'class (\w+)', result)
-            if class_name_match:
-                if class_name_match.group(1) != name_test_class:
-                    # Cange the class name to the original one
-                    result = re.sub(r'class (\w+)', f'class {name_test_class}', result)
-
-        # Verify if the package is specified in the test class provided by the API call. If not, add it manually.
-        cleaned_content = re.sub(r'//.*', '', result) # Remove the single-line comments
-        cleaned_content = re.sub(r'/\*.*?\*/', '', cleaned_content, flags=re.DOTALL)  # Remove the multi-lines comments
-        pattern = r'package\s+' + re.escape(package_test_class) + r';'
-        match = re.search(pattern, cleaned_content)
-        if match is None:
-            result = 'package' + ' ' + package_test_class + ';' + '\n' + result
-        messages.append({"role": "assistant", "content": result})  # Aggiungi la risposta al contesto
-        return result, messages
-    elif "```java" in result and "```" in result:
-        # Extract only the text between "```java" and "```"
-        match = re.search(r'```java(.*?)```', result, re.DOTALL)
-        if match:
-            result = match.group(1)
-            if result is None:
-                # Gestisci il caso in cui result è None
-                return None, messages
-            # Extract the class name from the result
-            class_name_match = re.search(r'class (\w+)', result)
-            if class_name_match:
-                if class_name_match.group(1) != name_test_class:
-                    # Cange the class name to the original one
-                    result = re.sub(r'class (\w+)', f'class {name_test_class}', result)
-
-        # Verify if the package is specified in the test class provided by the API call. If not, add it manually.
-        cleaned_content = re.sub(r'//.*', '', result) # Remove the single-line comments
-        cleaned_content = re.sub(r'/\*.*?\*/', '', cleaned_content, flags=re.DOTALL)  # Remove the multi-lines comments
-        pattern = r'package\s+' + re.escape(package_test_class) + r';'
-        match = re.search(pattern, cleaned_content)
-        if match is None:
-            result = 'package' + ' ' + package_test_class + ';' + '\n' + result
-        messages.append({"role": "assistant", "content": result})  # Aggiungi la risposta al contesto
-        return result, messages
-
-
-def _legacy_make_api_call_v2(test_type, technique, focal_class, focal_path, testing_framework, java_version, has_mockito, test_path, name_test_class, project_structure, project_dependencies, package_test_class=None):
-    """
-    Deprecated API execution path kept only for reference while Codex CLI is active.
-    """
-
-    def replace_placeholders(text, replacements_dict):
-        return re.sub(
-            r"\{\{(\w+)\}\}",
-            lambda match: str(replacements_dict.get(match.group(1), match.group(0))),
-            text,
-        )
-
-    def get_attribute_by_model(model_name, attribute_name):
-        agents = ExecutionManager.get_agents()
-        return agents.get(model_name, {}).get(attribute_name, None)
-
-    def get_prompt_by_name(prompt_name):
-        prompts = ExecutionManager.get_prompts()
-        raw_prompt = prompts.get(prompt_name, None)
-        if raw_prompt is None:
-            return None
-        final_prompt = copy.deepcopy(raw_prompt)
-        for role in final_prompt:
-            role["content"] = replace_placeholders(role["content"], prompt_data)
-        return final_prompt
-
-    set_key_as_os_environ(test_type)
-    java_class_example = (
-        "package com.example.project;\n\npublic class Calculator {\n\n\tpublic int add(int a, int b) {\n\n\treturn a + b;\n\t}\n\n}"
-    )
-    test_class_example = (
-        'package com.example.project;\n\nimport static org.junit.jupiter.api.Assertions.assertEquals;\n'
-        'import org.junit.jupiter.api.DisplayName;\nimport org.junit.jupiter.api.Test;\n'
-        'import org.junit.jupiter.params.ParameterizedTest;\n'
-        'import org.junit.jupiter.params.provider.CsvSource;\n\nclass CalculatorTests {\n\n\t@Test\n'
-        '\t@DisplayName("1 + 1 = 2")\n\tvoid addsTwoNumbers() {\n\t\tCalculator calculator = new Calculator();\n'
-        '\t\tassertEquals(2, calculator.add(1, 1), "1 + 1 should equal 2");\n\t}\n\n'
-        '\t@ParameterizedTest(name = "{0} + {1} = {2}")\n\t@CsvSource({\n\t\t\t"0,    1,   1",\n'
-        '\t\t\t"1,    2,   3",\n\t\t\t"49,  51, 100",\n\t\t\t"1,  100, 101"\n\t})\n'
-        '\tvoid add(int first, int second, int expectedResult) {\n\t\tCalculator calculator = new Calculator();\n'
-        '\t\tassertEquals(expectedResult, calculator.add(first, second),\n'
-        '\t\t\t\t() -> first + " + " + second + " should equal " + expectedResult);\n\t}\n}'
-    )
-    example_testing_framework = "JUnit 5"
-    example_java_version = "11"
-
-    try:
-        with open(test_path, "r", encoding="utf-8") as test_file:
-            test_file_content = test_file.read()
-    except Exception as e:
-        print(e)
-        return None, [], {"prompt_tokens": 0, "completion_tokens": 0}
-
-    if has_mockito is True or "mockito" in test_file_content:
-        can_use_mockito = "You can use the Mockito framework."
-    else:
-        can_use_mockito = "You cannot use the Mockito framework."
-
-    prompt_data = {
-        "focal_class": focal_class,
-        "focal_path": focal_path,
-        "testing_framework": testing_framework,
-        "java_version": java_version,
-        "project_structure": str(project_structure),
-        "project_dependencies": str(project_dependencies),
-        "java_class_example": java_class_example,
-        "test_class_example": test_class_example,
-        "example_testing_framework": example_testing_framework,
-        "example_java_version": example_java_version,
-        "can_use_mockito": can_use_mockito,
-        "set_public": "You must declare the test class and all the test methods with the public access modifier.",
-        "existing_test_class": test_file_content,
-        "mapped_focal_methods": "{}",
-        "focal_methods_without_tests": "[]",
-        "focal_method_context": focal_class,
-    }
-
-    prompt_data.update(
-        _build_ast_prompt_context(
-            focal_path,
-            focal_class,
-            test_path,
-        )
-    )
-
-    prompt = get_prompt_by_name(technique)
-    if prompt is None:
-        return None, [], {"prompt_tokens": 0, "completion_tokens": 0}
-
-    messages = [{"role": role["role"], "content": role["content"]} for role in prompt]
-    temperature = get_attribute_by_model(test_type, "temperature")
-    api_base = get_attribute_by_model(test_type, "api_base")
-    stream = bool(get_attribute_by_model(test_type, "stream"))
-    response = completion(
-        model=test_type,
-        messages=prompt,
-        temperature=temperature,
-        api_base=api_base,
-        stream=stream,
-    )
-    usage_metadata = _extract_usage_metadata(response)
-
-    if response == " " or response is None or not response.choices:
-        return None, messages, usage_metadata
-
-    result = response.choices[0].message["content"]
-    result = _normalize_generated_test_content(result, name_test_class, package_test_class)
-    if result is None:
-        return None, messages, usage_metadata
-
-    messages.append({"role": "assistant", "content": result})
-    return result, messages, usage_metadata
-
-
-def _legacy_set_key_as_os_environ(test_type):
-    return None
 
 
 def _load_run_settings():
@@ -2630,13 +2381,36 @@ def _summarize_codex_execution(execution_result):
 
 
 def _resolve_codex_executable():
-    configured_executable = os.getenv("AGONE_CODEX_EXECUTABLE") or _get_run_setting("codex_executable", None)
+    configured_executable = os.getenv("AGONE_CODEX_EXECUTABLE")
+    if configured_executable is None:
+        configured_executable = _get_run_setting("codex_executable", None)
+
     if configured_executable:
-        configured_executable = os.path.abspath(os.path.expandvars(os.path.expanduser(str(configured_executable))))
-        return configured_executable
-    sandbox_binary = os.path.join(os.path.expanduser("~"), ".codex", ".sandbox-bin", "codex.exe")
-    if os.path.isfile(sandbox_binary):
-        return sandbox_binary
+        configured_value = str(configured_executable).strip().strip('"').strip("'")
+        if configured_value:
+            expanded_value = os.path.expandvars(os.path.expanduser(configured_value))
+            looks_like_path = (
+                os.path.isabs(expanded_value)
+                or os.path.sep in expanded_value
+                or (os.path.altsep is not None and os.path.altsep in expanded_value)
+            )
+            if looks_like_path:
+                return os.path.abspath(expanded_value)
+
+            resolved_from_path = shutil.which(expanded_value)
+            if resolved_from_path:
+                return resolved_from_path
+            return expanded_value
+
+    sandbox_directory = os.path.join(os.path.expanduser("~"), ".codex", ".sandbox-bin")
+    sandbox_candidates = [
+        os.path.join(sandbox_directory, "codex.exe"),
+        os.path.join(sandbox_directory, "codex"),
+    ]
+    for sandbox_binary in sandbox_candidates:
+        if os.path.isfile(sandbox_binary):
+            return sandbox_binary
+
     executable_candidates = ["codex.cmd", "codex.exe", "codex"]
     for executable_name in executable_candidates:
         executable_path = shutil.which(executable_name)
@@ -2652,44 +2426,53 @@ def _is_smoke_test_mode_enabled():
 def _resolve_codex_diagnostic_log_path(target_files_list):
     project_id = None
     for file_path in target_files_list or []:
-        normalized_path = os.path.abspath(file_path).replace("\\", "/")
-        match = re.search(r"/(?:compiledrepos|repos)/(\d+)(?:/|$)", normalized_path)
-        if match:
-            project_id = match.group(1)
+        detected_project = PATH_CONTEXT.extract_project_id(file_path)
+        if detected_project is not None:
+            project_id = detected_project
             break
 
     if project_id is not None:
-        output_directory = os.path.join("output", project_id)
+        output_directory = PATH_CONTEXT.get_project_output_path(project_id)
     else:
-        output_directory = "output"
+        output_directory = PATH_CONTEXT.get_output_path()
     os.makedirs(output_directory, exist_ok=True)
     return os.path.join(output_directory, "codex_cli_diagnostics.log")
 
 
-def _resolve_codex_last_message_path(target_files_list):
+def _resolve_codex_output_path(target_files_list, file_name):
     project_id = None
     for file_path in target_files_list or []:
-        normalized_path = os.path.abspath(file_path).replace("\\", "/")
-        match = re.search(r"/(?:compiledrepos|repos)/(\d+)(?:/|$)", normalized_path)
-        if match:
-            project_id = match.group(1)
+        detected_project = PATH_CONTEXT.extract_project_id(file_path)
+        if detected_project is not None:
+            project_id = detected_project
             break
 
     if project_id is not None:
-        output_directory = os.path.join("output", project_id)
+        output_directory = PATH_CONTEXT.get_project_output_path(project_id)
     else:
-        output_directory = "output"
+        output_directory = PATH_CONTEXT.get_output_path()
     os.makedirs(output_directory, exist_ok=True)
-    return os.path.join(output_directory, "codex_last_message.txt")
+    return os.path.join(output_directory, file_name)
+
+
+def _resolve_codex_last_message_path(target_files_list):
+    return _resolve_codex_output_path(target_files_list, "codex_last_message.txt")
+
+
+def _resolve_codex_last_prompt_path(target_files_list):
+    return _resolve_codex_output_path(target_files_list, "codex_last_prompt.txt")
+
+
+def _resolve_codex_last_response_path(target_files_list):
+    return _resolve_codex_output_path(target_files_list, "codex_last_response.txt")
 
 
 def _resolve_failure_log_path_for_file(file_path):
-    normalized_path = os.path.abspath(str(file_path or "")).replace("\\", "/")
-    match = re.search(r"/(?:compiledrepos|repos)/(\d+)(?:/|$)", normalized_path)
-    if match:
-        output_directory = os.path.join("output", match.group(1))
+    project_id = PATH_CONTEXT.extract_project_id(file_path)
+    if project_id:
+        output_directory = PATH_CONTEXT.get_project_output_path(project_id)
     else:
-        output_directory = "output"
+        output_directory = PATH_CONTEXT.get_output_path()
     os.makedirs(output_directory, exist_ok=True)
     return os.path.join(output_directory, "latest_failure_log.txt")
 
@@ -2743,42 +2526,6 @@ def _read_text_file(file_path):
             return text_file.read()
     except Exception:
         return ""
-
-
-def _prepare_codex_workspace(target_files_list):
-    source_root = _common_target_root(target_files_list)
-    workspace_root = _resolve_codex_workspace_root(target_files_list)
-    workspace_files = []
-
-    for original_path in target_files_list or []:
-        absolute_original_path = os.path.abspath(original_path)
-        try:
-            relative_path = os.path.relpath(absolute_original_path, source_root)
-        except ValueError:
-            relative_path = os.path.basename(absolute_original_path)
-
-        workspace_file_path = os.path.join(workspace_root, relative_path)
-        os.makedirs(os.path.dirname(workspace_file_path), exist_ok=True)
-        shutil.copy2(absolute_original_path, workspace_file_path)
-        workspace_files.append(
-            {
-                "original_path": absolute_original_path,
-                "workspace_path": workspace_file_path,
-                "relative_path": relative_path,
-            }
-        )
-
-    return workspace_root, workspace_files
-
-
-def _sync_codex_workspace_back(workspace_files):
-    for workspace_file in workspace_files or []:
-        workspace_path = workspace_file.get("workspace_path")
-        original_path = workspace_file.get("original_path")
-        if not workspace_path or not original_path or not os.path.exists(workspace_path):
-            continue
-        _assert_mutable_workspace_path(original_path)
-        shutil.copy2(workspace_path, original_path)
 
 
 def _run_codex_preflight(codex_executable, working_root, diagnostic_log_path):
@@ -2927,9 +2674,21 @@ def run_codex_agent(prompt_instruction, target_files_list):
     usage_metadata = {"prompt_tokens": 0, "completion_tokens": 0}
     diagnostic_log_path = _resolve_codex_diagnostic_log_path(normalized_files)
     last_message_path = _resolve_codex_last_message_path(normalized_files)
+    prompt_path = _resolve_codex_last_prompt_path(normalized_files)
+    response_path = _resolve_codex_last_response_path(normalized_files)
+
+    def _write_codex_snapshot(file_path, content):
+        try:
+            with open(file_path, "w", encoding="utf-8", errors="replace") as snapshot_file:
+                snapshot_file.write(content or "")
+        except Exception:
+            pass
+
+    _write_codex_snapshot(prompt_path, scoped_prompt)
 
     if _is_mock_codex_enabled():
         _append_codex_diagnostic(diagnostic_log_path, "mock_codex enabled; Codex subprocess skipped.")
+        _write_codex_snapshot(response_path, "mock_codex enabled; skipped Codex subprocess.")
         return {
             "success": True,
             "returncode": 0,
@@ -2940,6 +2699,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
             "diagnostic_log": diagnostic_log_path,
             "last_message": "",
             "last_message_path": last_message_path,
+            "prompt_path": prompt_path,
+            "response_path": response_path,
         }
 
     codex_timeout_seconds = get_subprocess_timeout_seconds("codex_timeout_seconds", 300)
@@ -2958,6 +2719,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
 
     print(f"Codex diagnostic log: {os.path.abspath(diagnostic_log_path)}")
     print(f"Codex last message path: {os.path.abspath(last_message_path)}")
+    print(f"Codex last prompt path: {os.path.abspath(prompt_path)}")
+    print(f"Codex last response path: {os.path.abspath(response_path)}")
     print(f"Codex executable resolved to: {codex_executable}")
     print(f"Codex working root: {working_root}")
     print(f"Codex target files count: {len(normalized_files)}")
@@ -2978,6 +2741,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
     if not preflight_ok:
         print(f"Codex preflight failed: {preflight_message}")
         diagnostic_tail = _read_text_tail(diagnostic_log_path)
+        response_snapshot = (preflight_message or "").strip() or diagnostic_tail
+        _write_codex_snapshot(response_path, response_snapshot)
         return {
             "success": False,
             "returncode": 1,
@@ -2988,6 +2753,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
             "diagnostic_log": diagnostic_log_path,
             "last_message": _read_text_file(last_message_path),
             "last_message_path": last_message_path,
+            "prompt_path": prompt_path,
+            "response_path": response_path,
         }
 
     start_time = time.monotonic()
@@ -3004,6 +2771,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
                 stdout=diagnostic_log,
                 stderr=subprocess.STDOUT,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 check=False,
                 timeout=codex_timeout_seconds,
             )
@@ -3014,16 +2783,20 @@ def run_codex_agent(prompt_instruction, target_files_list):
             f"Codex subprocess timed out after {elapsed:.2f}s.",
         )
         print(f"Codex subprocess timed out after {elapsed:.2f}s. Diagnostic log: {os.path.abspath(diagnostic_log_path)}")
+        timeout_message = f"Codex CLI timed out after {codex_timeout_seconds} seconds."
+        _write_codex_snapshot(response_path, timeout_message)
         return {
             "success": False,
             "returncode": 124,
             "stdout": _read_text_tail(diagnostic_log_path),
-            "stderr": f"Codex CLI timed out after {codex_timeout_seconds} seconds.",
+            "stderr": timeout_message,
             "command": command,
             "usage": usage_metadata,
             "diagnostic_log": diagnostic_log_path,
             "last_message": _read_text_file(last_message_path),
             "last_message_path": last_message_path,
+            "prompt_path": prompt_path,
+            "response_path": response_path,
         }
     except Exception as e:
         elapsed = time.monotonic() - start_time
@@ -3032,6 +2805,7 @@ def run_codex_agent(prompt_instruction, target_files_list):
             f"Codex subprocess raised {type(e).__name__} after {elapsed:.2f}s: {e}",
         )
         print(f"Codex subprocess raised {type(e).__name__}: {e}")
+        _write_codex_snapshot(response_path, str(e))
         return {
             "success": False,
             "returncode": 1,
@@ -3042,6 +2816,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
             "diagnostic_log": diagnostic_log_path,
             "last_message": _read_text_file(last_message_path),
             "last_message_path": last_message_path,
+            "prompt_path": prompt_path,
+            "response_path": response_path,
         }
 
     elapsed = time.monotonic() - start_time
@@ -3053,6 +2829,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
     )
     print(f"Codex subprocess finished in {elapsed:.2f}s with returncode={result.returncode}.")
     print(f"Codex diagnostic log available at: {os.path.abspath(diagnostic_log_path)}")
+    response_snapshot = (last_message or "").strip() or diagnostic_tail
+    _write_codex_snapshot(response_path, response_snapshot)
 
     return {
         "success": result.returncode == 0,
@@ -3064,6 +2842,8 @@ def run_codex_agent(prompt_instruction, target_files_list):
         "diagnostic_log": diagnostic_log_path,
         "last_message": last_message,
         "last_message_path": last_message_path,
+        "prompt_path": prompt_path,
+        "response_path": response_path,
     }
 
 
@@ -3084,6 +2864,7 @@ def generate_test_with_codex(
     target_test_method=None,
     target_focal_method=None,
     failure_log_override=None,
+    compile_failure_log_override=None,
 ):
     """
     Expands the configured prompt template and asks Codex CLI to generate test
@@ -3127,6 +2908,19 @@ def generate_test_with_codex(
         if failure_log_override is not None and str(failure_log_override).strip()
         else _load_failure_log_for_path(test_path)
     )
+    compile_failure_log_text = (
+        str(compile_failure_log_override).strip()
+        if compile_failure_log_override is not None and str(compile_failure_log_override).strip()
+        else ""
+    )
+    compile_failure_log_section = ""
+    if compile_failure_log_text:
+        compile_failure_log_section = (
+            "// --- COMPILER FAILURE LOG (REGENERATIVE RETRY ONLY) ---\n"
+            "<code>\n"
+            f"{compile_failure_log_text}\n"
+            "</code>"
+        )
 
     normalized_target_test_method = _normalize_method_name(target_test_method)
     normalized_target_focal_method = _normalize_method_name(target_focal_method)
@@ -3150,6 +2944,7 @@ def generate_test_with_codex(
         "focal_method_context": focal_class,
         "mapped_test_method_anchor": "",
         "failure_log": failure_log_text,
+        "compile_failure_log": compile_failure_log_section,
     }
 
     selected_test_methods = None
@@ -3229,7 +3024,7 @@ def generate_test_with_codex(
 
     instruction_parts = [
         _format_prompt_instruction(prompt_roles),
-        "Use the provided focal class and AST mapping as the source of truth.",
+        "Use the provided mapped test anchor, AST mapping, invocation summary, and focal-method context as the source of truth.",
     ]
     smoke_mode_enabled = _is_smoke_test_mode_enabled()
     if technique == "iterative-healing":
@@ -3243,10 +3038,24 @@ def generate_test_with_codex(
         instruction_parts.append(
             "You may change parameters and throws only if needed to align with evolved focal behavior."
         )
-        instruction_parts.append("Use existing class-level fields/collaborators only; do not instantiate the focal class locally and do not create local mocks.")
+        focal_class_simple_name = os.path.splitext(os.path.basename(str(focal_path or "")))[0]
+        mapped_style_anchor = str(prompt_data.get("mapped_test_method_anchor", "") or "").strip()
+        anchor_has_local_focal_instantiation = _contains_local_focal_instantiation_regex(
+            mapped_style_anchor,
+            focal_class_simple_name,
+        )
+        if anchor_has_local_focal_instantiation:
+            instruction_parts.append(
+                "Preserve local focal-class instantiation style from the mapped method anchor when present "
+                f"(e.g., `new {focal_class_simple_name}(...)`)."
+            )
+        else:
+            instruction_parts.append(
+                "Do not introduce local focal-class instantiation if the mapped method anchor does not use it."
+            )
+        instruction_parts.append("Do not create local Mockito mocks inside the target method.")
         instruction_parts.append("Do not modify any other method in the class.")
         instruction_parts.append("Do not add helpers, fields, imports, or annotations.")
-        mapped_style_anchor = str(prompt_data.get("mapped_test_method_anchor", "") or "").strip()
         if mapped_style_anchor:
             instruction_parts.append(
                 "Preserve this method style anchor exactly (except for the minimal assertion/setup edits needed to resolve the failure):\n"
@@ -3476,26 +3285,16 @@ def generate_output_csv_project(project, project_dataframe, test_types, techniqu
     def normalize_test_path(test_path_value):
         if test_path_value is None or pd.isna(test_path_value):
             return None
-        normalized_path = str(test_path_value)
-        if normalized_path.startswith("compiledrepos/"):
-            return normalized_path
-        if normalized_path.startswith("repos/"):
-            return normalized_path.replace("repos/", "compiledrepos/")
-        return f"compiledrepos/{project}/" + normalized_path
+        return PATH_CONTEXT.to_worker_compiled_path(project, test_path_value)
 
     def normalize_focal_path(focal_path_value):
         if focal_path_value is None or pd.isna(focal_path_value):
             return None
-        normalized_path = str(focal_path_value)
-        if normalized_path.startswith("compiledrepos/"):
-            return normalized_path
-        if normalized_path.startswith("repos/"):
-            return normalized_path.replace("repos/", "compiledrepos/")
-        return f"compiledrepos/{project}/" + normalized_path
+        return PATH_CONTEXT.to_worker_compiled_path(project, focal_path_value)
 
     def load_mutation_lookup():
         mutation_lookup = {}
-        mutation_file_path = os.path.join("output", str(project), "focal_mutations.json")
+        mutation_file_path = _worker_project_output_path(project, "focal_mutations.json")
         if not os.path.exists(mutation_file_path):
             return mutation_lookup
         try:
@@ -3563,7 +3362,8 @@ def generate_output_csv_project(project, project_dataframe, test_types, techniqu
         if "Post_Repair_Mutation_Coverage" in df_output.columns and "Mutation_Coverage" in df_output.columns:
             df_output.at[output_index, "Post_Repair_Mutation_Coverage"] = df_output.at[output_index, "Mutation_Coverage"]
     project_df = project_dataframe.copy()
-    files = os.listdir(f'output/{project}')
+    project_output_dir = PATH_CONTEXT.get_project_output_path(project)
+    files = os.listdir(project_output_dir) if os.path.isdir(project_output_dir) else []
     # dictionary where the keys are the dataframes label and the values are the dataframes. There is a dataframe for each TestClasses file
     dataframes = dict()
     for test_type in test_types:
@@ -3573,35 +3373,44 @@ def generate_output_csv_project(project, project_dataframe, test_types, techniqu
             for technique in techniques:
                 dataframes[f'{test_type}_{technique}'] = pd.DataFrame()
 
+    def resolve_testclasses_dataframe(key, module_name=None):
+        if module_name is None:
+            token = f"TestClasses_{project}_{key}"
+        else:
+            token = f"TestClasses_{project}_{module_name}_{key}"
+
+        matching_files = [file for file in files if token in file]
+        if not matching_files:
+            return None
+
+        try:
+            matching_files = sorted(
+                matching_files,
+                key=lambda file: os.path.getmtime(os.path.join(project_output_dir, file)),
+                reverse=True,
+            )
+        except OSError:
+            pass
+
+        selected_file = matching_files[0]
+        selected_path = os.path.join(project_output_dir, selected_file)
+        if selected_file.endswith(".csv"):
+            return pd.read_csv(selected_path)
+        if selected_file.endswith(".mavenfailed"):
+            return pd.DataFrame()
+        if selected_file.endswith(".failed"):
+            return None
+        return None
+
     # if the TestClasses file is maven failed or gradle failed (all the test classes failed during the maven execution), then leave the corresponding dataframe empty
     # if the TestClasses file is failed (generic error in AgoneTest.py) or not found, then set the corresponding dataframe to None
     # if the TestClasses file is a csv, then set the dataframe to the content of the csv
     if module is None:
         for key in dataframes.keys():
-            find = False
-            for file in files:
-                if file.__contains__(f"TestClasses_{project}_{key}"):
-                    find = True
-                    if file.endswith(".csv"):
-                        dataframes[key] = pd.read_csv(f'output/{project}/{file}')
-                    elif file.endswith('.failed'):
-                        dataframes[key] = None     
-                    break
-            if find == False:
-                dataframes[key] = None
+            dataframes[key] = resolve_testclasses_dataframe(key)
     else:
          for key in dataframes.keys():
-            find = False
-            for file in files:
-                if file.__contains__(f"TestClasses_{project}_{module}_{key}"):
-                    find = True
-                    if file.endswith(".csv"):
-                        dataframes[key] = pd.read_csv(f'output/{project}/{file}')
-                    elif file.endswith('.failed'):
-                        dataframes[key] = None
-                    break
-            if find == False:
-                dataframes[key] = None
+            dataframes[key] = resolve_testclasses_dataframe(key, module_name=module)
         
 
     # Remove from the dictionary the keys associated to a dataframe setted to None
@@ -3750,9 +3559,9 @@ def generate_output_csv_project(project, project_dataframe, test_types, techniqu
         return previous_df[keep_mask].copy()
 
     if module is None:
-        df_output_path = f"output/{project}/{project}_Output.csv"
+        df_output_path = _worker_project_output_path(project, f"{project}_Output.csv")
     else:
-        df_output_path = f"output/{project}/{project}_{module}_Output.csv"
+        df_output_path = _worker_project_output_path(project, f"{project}_{module}_Output.csv")
 
     df_new_execution = pd.DataFrame()
     if os.path.exists(df_output_path):
@@ -3853,7 +3662,7 @@ def remove_dot_evosuite_dir(project, module):
                     module: the project module containing the .evosuite directory
     """
     if module is not None:
-        dot_evosuite_to_remove = f'compiledrepos/{project}/{module}/.evosuite'
+        dot_evosuite_to_remove = os.path.join(PATH_CONTEXT.get_compiled_repo_path(project), module, ".evosuite")
         try:
             if os.path.exists(dot_evosuite_to_remove):
                 shutil.rmtree(dot_evosuite_to_remove)
@@ -3996,3 +3805,5 @@ def is_admin(system):
                 return False
         except:
             return False
+
+

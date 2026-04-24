@@ -1,0 +1,35 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+.env
+.env.*
+
+# Runtime state recreated by the pipeline
+/compiledrepos/
+/failedrepos/
+/output/
+/repos/
+/Agone_Test/output/
+
+# Generated reports, logs, and scratch files
+/Output_TestSmellDetection_*.csv
+/phase2_extracted.txt
+/tmp_phase2upd*/
+*.bak_*
+*.err.log
+*.out.log
+*.mavenfailed
+output.zip
+
+# Local-only paper writing assets
+/paper_assets/
+/Phase2_*.docx
+/Phase2_*.md
+
+# Bundled download archives kept only for local setup convenience
+/tools/*.zip

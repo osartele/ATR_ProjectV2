@@ -1,7 +1,6 @@
 import json
 import os
 import sys
-import random
 import re
 import shutil
 import subprocess
@@ -17,6 +16,7 @@ from execution_manager import ExecutionManager
 import project_structure_analyzer as psa
 import project_dependencies_analyzer as pda
 import focal_mutator
+from path_context import get_path_context, remove_path_force
 from dotenv import load_dotenv
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -27,6 +27,21 @@ ExecutionManager.initialize()
 supported_test_types = ExecutionManager.get_agents_list()
 supported_techniques = ExecutionManager.get_prompts_list()
 SMOKE_TEST_CONTEXT = None
+PATH_CONTEXT = get_path_context()
+
+
+def _worker_output_path(*parts):
+    base = PATH_CONTEXT.get_output_path()
+    return os.path.join(base, *[str(part) for part in parts])
+
+
+def _worker_project_output_path(project, *parts):
+    base = PATH_CONTEXT.get_project_output_path(project)
+    return os.path.join(base, *[str(part) for part in parts])
+
+
+def _worker_compiled_repo_path(project):
+    return PATH_CONTEXT.get_compiled_repo_path(project)
 
 
 def _detect_system():
@@ -82,11 +97,16 @@ def _materialize_smoke_repo(source_repo_path, compiled_repo_path):
         except OSError:
             return False
 
+        source_pom = source_path / "pom.xml"
+        if source_pom.is_file() and not (compiled_path / "pom.xml").is_file():
+            return False
+
         source_entries = [
             entry.name
             for entry in source_path.iterdir()
             if entry.name not in {".git", "target", "build", ".gradle"}
         ]
+        source_entries = sorted(source_entries)
         if not source_entries:
             return compiled_path.exists()
 
@@ -98,17 +118,27 @@ def _materialize_smoke_repo(source_repo_path, compiled_repo_path):
     if _is_materialized(source_repo_path, compiled_repo_path):
         return "existing"
     if compiled_repo_path.exists() or compiled_repo_path.is_symlink():
-        shutil.rmtree(compiled_repo_path, ignore_errors=True)
+        if not remove_path_force(compiled_repo_path):
+            raise OSError(f"Unable to clean worker repository path before copy: {compiled_repo_path}")
         time.sleep(1)
 
     compiled_repo_path.parent.mkdir(parents=True, exist_ok=True)
-
-    shutil.copytree(
-        source_repo_path,
-        compiled_repo_path,
-        ignore=shutil.ignore_patterns(".git", "target", "build", ".gradle"),
-        copy_function=shutil.copyfile,
-    )
+    try:
+        shutil.copytree(
+            source_repo_path,
+            compiled_repo_path,
+            ignore=shutil.ignore_patterns(".git", "target", "build", ".gradle"),
+            copy_function=shutil.copyfile,
+        )
+    except FileExistsError:
+        if not remove_path_force(compiled_repo_path):
+            raise
+        shutil.copytree(
+            source_repo_path,
+            compiled_repo_path,
+            ignore=shutil.ignore_patterns(".git", "target", "build", ".gradle"),
+            copy_function=shutil.copyfile,
+        )
     return "copy"
 
 
@@ -209,28 +239,27 @@ def _prepare_smoke_test_environment(target_json_path=None, refresh_compiled_repo
     test_file_path = (repo_root / test_file).resolve()
     focal_file_path = (repo_root / focal_file).resolve()
     ast_mapping = psa.map_test_to_focal_methods(str(test_file_path), str(focal_file_path)) or {}
-    normalized_mapping = {}
-    for test_method_name, focal_method_names in ast_mapping.items():
-        normalized_test = mavenLib._normalize_method_name(test_method_name)
-        if normalized_test is None:
-            continue
-        normalized_focal_methods = [
-            normalized_focal
-            for normalized_focal in (
-                mavenLib._normalize_method_name(method_name)
-                for method_name in (focal_method_names or [])
-            )
-            if normalized_focal is not None
-        ]
-        if normalized_focal_methods:
-            normalized_mapping[normalized_test] = list(dict.fromkeys(normalized_focal_methods))
+    normalized_mapping = _normalize_ast_mapping(ast_mapping)
+    normalized_preferred_test_case = _normalize_method_identifier(preferred_test_case)
+    normalized_preferred_focal_method = _normalize_method_identifier(preferred_focal_method)
 
-    test_case, focal_method = mavenLib._extract_ast_method_pair(
-        str(test_file_path),
-        str(focal_file_path),
-        preferred_test_method=preferred_test_case,
-        preferred_focal_method=preferred_focal_method,
-    )
+    if normalized_preferred_test_case and normalized_preferred_focal_method:
+        predicted_focal_methods = normalized_mapping.get(normalized_preferred_test_case, [])
+        if normalized_preferred_focal_method not in predicted_focal_methods:
+            raise ValueError(
+                "Smoke target filtered out before pipeline: AST mapping does not confirm "
+                f"{normalized_preferred_test_case} -> {normalized_preferred_focal_method}. "
+                f"Predicted mapping: {normalized_mapping}"
+            )
+        test_case = normalized_preferred_test_case
+        focal_method = normalized_preferred_focal_method
+    else:
+        test_case, focal_method = mavenLib._extract_ast_method_pair(
+            str(test_file_path),
+            str(focal_file_path),
+            preferred_test_method=preferred_test_case,
+            preferred_focal_method=preferred_focal_method,
+        )
     if not test_case or not focal_method:
         raise ValueError(
             "Unable to derive smoke target method pair from AST mapping for "
@@ -245,7 +274,7 @@ def _prepare_smoke_test_environment(target_json_path=None, refresh_compiled_repo
     if module_relative_path == ".":
         module_relative_path = None
 
-    output_root = agone_root.parent / "output"
+    output_root = Path(PATH_CONTEXT.get_output_path())
     output_root.mkdir(parents=True, exist_ok=True)
     (output_root / project_id).mkdir(parents=True, exist_ok=True)
 
@@ -269,7 +298,7 @@ def _prepare_smoke_test_environment(target_json_path=None, refresh_compiled_repo
 
     repo_materialization = "existing"
     if refresh_compiled_repo:
-        compiled_repo_root = agone_root.parent / "compiledrepos" / project_id
+        compiled_repo_root = Path(PATH_CONTEXT.get_compiled_repo_path(project_id))
         repo_materialization = _materialize_smoke_repo(repo_root, compiled_repo_root)
 
     project_info = _build_smoke_project_info(project_id, repo_root, module_relative_path, project_type)
@@ -306,12 +335,137 @@ def _get_smoke_test_context():
 
 
 def _normalize_compiled_path(project, raw_path):
-    path = str(raw_path)
-    if path.startswith("compiledrepos/"):
-        return path
-    if path.startswith("repos/"):
-        return path.replace("repos/", "compiledrepos/")
-    return f"compiledrepos/{project}/" + path
+    normalized = PATH_CONTEXT.to_worker_compiled_path(project, raw_path)
+    return normalized if normalized is not None else str(raw_path)
+
+
+def _normalize_method_identifier(method_name):
+    if method_name is None:
+        return None
+    if pd.isna(method_name):
+        return None
+    normalized = str(method_name).strip()
+    if not normalized or normalized == "-" or normalized.lower() == "nan":
+        return None
+    normalized = normalized.split("(", 1)[0].strip()
+    return mavenLib._normalize_method_name(normalized)
+
+
+def _normalize_ast_mapping(ast_mapping):
+    normalized_mapping = {}
+    for test_method_name, focal_method_names in (ast_mapping or {}).items():
+        normalized_test_method = _normalize_method_identifier(test_method_name)
+        if normalized_test_method is None:
+            continue
+        normalized_focal_methods = []
+        for focal_method_name in focal_method_names or []:
+            normalized_focal_method = _normalize_method_identifier(focal_method_name)
+            if normalized_focal_method is not None:
+                normalized_focal_methods.append(normalized_focal_method)
+        if normalized_focal_methods:
+            normalized_mapping[normalized_test_method] = list(dict.fromkeys(normalized_focal_methods))
+    return normalized_mapping
+
+
+def _write_ast_filter_rejections(project, scope_label, rejected_rows):
+    if not rejected_rows:
+        return
+
+    output_path = _worker_project_output_path(project, f"ast_filter_rejections_{scope_label}.csv")
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    rejection_df = pd.DataFrame(rejected_rows)
+    if os.path.exists(output_path):
+        try:
+            existing_df = pd.read_csv(output_path)
+            rejection_df = pd.concat([existing_df, rejection_df], ignore_index=True)
+        except Exception:
+            pass
+    rejection_df.to_csv(output_path, index=False)
+
+
+def _filter_rows_by_ast_verified_mapping(project_df, project, scope_label="project"):
+    if project_df is None or project_df.empty:
+        return project_df
+
+    mapping_cache = {}
+    rejected_rows = []
+    kept_indices = []
+
+    for index, row in project_df.iterrows():
+        row_project = row.get("Project", project)
+        expected_test_method = _normalize_method_identifier(row.get("AST_Test_Method"))
+        if expected_test_method is None:
+            expected_test_method = _normalize_method_identifier(row.get("Test_Case"))
+        expected_focal_method = _normalize_method_identifier(row.get("AST_Focal_Method"))
+        if expected_focal_method is None:
+            expected_focal_method = _normalize_method_identifier(row.get("Focal_Method"))
+
+        test_path = _normalize_compiled_path(row_project, row.get("Test_Path"))
+        focal_path = _normalize_compiled_path(row_project, row.get("Focal_Path"))
+        mapping_key = (str(test_path), str(focal_path))
+        predicted_focal_methods = []
+        reject_reason = None
+
+        if not (os.path.isfile(test_path) and os.path.isfile(focal_path)):
+            reject_reason = "missing_test_or_focal_file"
+        elif expected_test_method is None or expected_focal_method is None:
+            reject_reason = "missing_expected_test_or_focal_method"
+        else:
+            if mapping_key not in mapping_cache:
+                try:
+                    ast_mapping = psa.map_test_to_focal_methods(test_path, focal_path)
+                    mapping_cache[mapping_key] = _normalize_ast_mapping(ast_mapping)
+                except Exception as ast_error:
+                    mapping_cache[mapping_key] = {"__ast_error__": str(ast_error)}
+            normalized_mapping = mapping_cache[mapping_key]
+            if "__ast_error__" in normalized_mapping:
+                reject_reason = f"ast_mapping_error:{normalized_mapping['__ast_error__']}"
+            else:
+                predicted_focal_methods = normalized_mapping.get(expected_test_method, [])
+                if expected_focal_method not in predicted_focal_methods:
+                    if expected_test_method not in normalized_mapping:
+                        reject_reason = f"ast_missing_test_method:{expected_test_method}"
+                    else:
+                        reject_reason = (
+                            f"ast_focal_mismatch:expected={expected_focal_method};"
+                            f"predicted={','.join(predicted_focal_methods) if predicted_focal_methods else '-'}"
+                        )
+
+        if reject_reason is None:
+            kept_indices.append(index)
+            continue
+
+        rejected_rows.append(
+            {
+                "Project": row_project,
+                "Scope": scope_label,
+                "Test_Class": row.get("Test_Class"),
+                "Focal_Class": row.get("Focal_Class"),
+                "Test_Path": row.get("Test_Path"),
+                "Focal_Path": row.get("Focal_Path"),
+                "Expected_Test_Method": expected_test_method or "-",
+                "Expected_Focal_Method": expected_focal_method or "-",
+                "Predicted_Focal_Methods": ",".join(predicted_focal_methods) if predicted_focal_methods else "-",
+                "Reason": reject_reason,
+            }
+        )
+
+    if rejected_rows:
+        print(
+            f"AST pre-filter dropped {len(rejected_rows)} row(s) for project {project} "
+            f"(scope={scope_label})."
+        )
+        for rejected_row in rejected_rows[:3]:
+            print(
+                "  - "
+                f"{rejected_row['Test_Class']}::{rejected_row['Expected_Test_Method']} -> "
+                f"{rejected_row['Expected_Focal_Method']} [{rejected_row['Reason']}]"
+            )
+        _write_ast_filter_rejections(project, scope_label, rejected_rows)
+
+    filtered_df = project_df.loc[kept_indices].copy()
+    filtered_df = filtered_df.reset_index(drop=True)
+    return filtered_df
 
 
 def _split_human_baseline(test_types):
@@ -320,42 +474,181 @@ def _split_human_baseline(test_types):
     return baseline_test_types, follow_up_test_types
 
 
+MUTATION_FAMILY_ROTATION = ["logical", "signature", "exception"]
+EXCEPTION_MUTATION_SCOPES = ["catch_block", "method_entry"]
+MAX_LOGICAL_MUTATION_VARIANTS = 12
+
+
+def _ordered_mutation_families(start_family):
+    normalized_start_family = str(start_family or "").strip().lower()
+    if normalized_start_family not in MUTATION_FAMILY_ROTATION:
+        return list(MUTATION_FAMILY_ROTATION)
+    return [normalized_start_family] + [
+        family for family in MUTATION_FAMILY_ROTATION if family != normalized_start_family
+    ]
+
+
+def _select_deterministic_target_method(row, test_path, focal_path):
+    explicit_focal_method = _normalize_method_identifier(row.get("AST_Focal_Method"))
+    if explicit_focal_method is not None:
+        return explicit_focal_method
+
+    if not os.path.isfile(test_path):
+        return None
+
+    preferred_test_method = _normalize_method_identifier(row.get("AST_Test_Method"))
+    try:
+        mapping = psa.map_test_to_focal_methods(test_path, focal_path)
+    except Exception:
+        return None
+
+    normalized_mapping = _normalize_ast_mapping(mapping)
+    if preferred_test_method and preferred_test_method in normalized_mapping:
+        preferred_focal_candidates = sorted(normalized_mapping[preferred_test_method])
+        if preferred_focal_candidates:
+            return preferred_focal_candidates[0]
+
+    all_candidates = sorted({method for methods in normalized_mapping.values() for method in methods})
+    if all_candidates:
+        return all_candidates[0]
+    return None
+
+
+def _infer_deterministic_target_parameter_count(row, test_path, target_method):
+    if not target_method or not os.path.isfile(test_path):
+        return None
+    test_method = _normalize_method_identifier(row.get("AST_Test_Method"))
+    if test_method is None:
+        return None
+    return mavenLib._infer_target_focal_parameter_count(test_path, test_method, target_method)
+
+
+def _apply_deterministic_family_mutation(
+    focal_path,
+    target_method,
+    target_parameter_count,
+    preferred_start_family,
+):
+    attempted_variants = set()
+    failure_messages = []
+
+    for mutation_family in _ordered_mutation_families(preferred_start_family):
+        if mutation_family == "logical":
+            for candidate_index in range(MAX_LOGICAL_MUTATION_VARIANTS):
+                variant_key = f"logical:{candidate_index}"
+                if variant_key in attempted_variants:
+                    continue
+                attempted_variants.add(variant_key)
+                try:
+                    mutation_result = focal_mutator.apply_logical_mutation(
+                        focal_path,
+                        target_method=target_method,
+                        target_parameter_count=target_parameter_count,
+                        preferred_candidate_index=candidate_index,
+                    )
+                    mutation_result = dict(mutation_result or {})
+                    mutation_result.setdefault("mutation_attempt_key", variant_key)
+                    mutation_result.setdefault("mutation_family_assigned", preferred_start_family)
+                    mutation_result.setdefault("mutation_family_applied", "logical")
+                    return mutation_result
+                except ValueError as error:
+                    error_text = str(error or "")
+                    failure_messages.append(f"{variant_key}: {error}")
+                    if "No logical mutation candidate at index" in error_text:
+                        break
+            continue
+
+        if mutation_family == "signature":
+            variant_key = "signature"
+            if variant_key in attempted_variants:
+                continue
+            attempted_variants.add(variant_key)
+            try:
+                mutation_result = focal_mutator.apply_signature_mutation(
+                    focal_path,
+                    target_method=target_method,
+                    target_parameter_count=target_parameter_count,
+                )
+                mutation_result = dict(mutation_result or {})
+                mutation_result.setdefault("mutation_attempt_key", variant_key)
+                mutation_result.setdefault("mutation_family_assigned", preferred_start_family)
+                mutation_result.setdefault("mutation_family_applied", "signature")
+                return mutation_result
+            except ValueError as error:
+                failure_messages.append(f"{variant_key}: {error}")
+            continue
+
+        if mutation_family == "exception":
+            for scope in EXCEPTION_MUTATION_SCOPES:
+                variant_key = f"exception:{scope}"
+                if variant_key in attempted_variants:
+                    continue
+                attempted_variants.add(variant_key)
+                try:
+                    mutation_result = focal_mutator.apply_exception_mutation(
+                        focal_path,
+                        target_method=target_method,
+                        target_parameter_count=target_parameter_count,
+                        preferred_injection_scope=scope,
+                    )
+                    mutation_result = dict(mutation_result or {})
+                    mutation_result.setdefault("mutation_attempt_key", variant_key)
+                    mutation_result.setdefault("mutation_family_assigned", preferred_start_family)
+                    mutation_result.setdefault("mutation_family_applied", "exception")
+                    return mutation_result
+                except ValueError as error:
+                    failure_messages.append(f"{variant_key}: {error}")
+            continue
+
+    if failure_messages:
+        raise ValueError("; ".join(failure_messages))
+    raise ValueError("Unable to apply any deterministic mutation variant to the focal class.")
+
+
 def apply_focal_mutations(project, project_dataframe):
-    rng = random.Random(str(project))
     mutation_records = []
     mutated_focal_paths = set()
     focal_backups = {}
+    family_assignment_index = 0
+    sort_columns = [column for column in ["Focal_Path", "Test_Path", "AST_Test_Method", "AST_Focal_Method"] if column in project_dataframe.columns]
+    if sort_columns:
+        deterministic_dataframe = project_dataframe.sort_values(by=sort_columns, kind="mergesort")
+    else:
+        deterministic_dataframe = project_dataframe.copy()
 
-    for _, row in project_dataframe.iterrows():
+    for _, row in deterministic_dataframe.iterrows():
         focal_path = _normalize_compiled_path(project, row["Focal_Path"])
         test_path = _normalize_compiled_path(project, row["Test_Path"])
         if focal_path in mutated_focal_paths or not os.path.isfile(focal_path):
             continue
 
-        target_method = None
-        if os.path.isfile(test_path):
-            try:
-                mapping = psa.map_test_to_focal_methods(test_path, focal_path)
-                mapped_methods = sorted({method for methods in mapping.values() for method in methods})
-                if mapped_methods:
-                    target_method = rng.choice(mapped_methods)
-            except Exception:
-                target_method = None
+        assigned_family = MUTATION_FAMILY_ROTATION[family_assignment_index % len(MUTATION_FAMILY_ROTATION)]
+        family_assignment_index += 1
+        target_method = _select_deterministic_target_method(row, test_path, focal_path)
+        target_parameter_count = _infer_deterministic_target_parameter_count(row, test_path, target_method)
 
         try:
             with open(focal_path, "r", encoding="utf-8") as focal_file:
                 focal_backups[focal_path] = focal_file.read()
-            mutation_result = focal_mutator.apply_random_mutation(focal_path, target_method=target_method, rng=rng)
+            mutation_result = _apply_deterministic_family_mutation(
+                focal_path,
+                target_method,
+                target_parameter_count,
+                preferred_start_family=assigned_family,
+            )
             mutation_result["focal_path"] = focal_path
             mutation_result["test_path"] = test_path
             mutation_records.append(mutation_result)
             mutated_focal_paths.add(focal_path)
-            print(f"Applied {mutation_result['mutation_type']} mutation to {focal_path}")
+            print(
+                f"Applied {mutation_result['mutation_type']} mutation to {focal_path} "
+                f"(assigned_family={assigned_family}, variant={mutation_result.get('mutation_attempt_key', '-')})"
+            )
         except Exception as e:
             print(f"Skipping mutation for {focal_path}: {e}")
 
     if mutation_records:
-        output_dir = os.path.join("output", str(project))
+        output_dir = _worker_project_output_path(project)
         os.makedirs(output_dir, exist_ok=True)
         with open(os.path.join(output_dir, "focal_mutations.json"), "w", encoding="utf-8") as mutation_file:
             json.dump(mutation_records, mutation_file, indent=2)
@@ -366,7 +659,7 @@ def apply_focal_mutations(project, project_dataframe):
 
 
 def restore_focal_mutations(project):
-    backup_path = os.path.join("output", str(project), "focal_mutation_backups.json")
+    backup_path = _worker_project_output_path(project, "focal_mutation_backups.json")
     if not os.path.exists(backup_path):
         return
     try:
@@ -390,7 +683,10 @@ def restore_focal_mutations(project):
 
 def _load_pristine_focal_content_from_git(focal_path):
     normalized_path = str(focal_path).replace("\\", "/")
-    match = re.search(r"(?:^|/)(?:compiledrepos|repos)/(\d+)/(.*)", normalized_path)
+    match = re.search(
+        r"(?:^|/)(?:compiledrepos(?:/worker_[A-Za-z0-9_-]+)?|repos)/(\d+)/(.*)",
+        normalized_path,
+    )
     if match is None:
         return None
 
@@ -439,21 +735,26 @@ def select_projects_to_process():
         projects_to_process (Set): the projects resulted from the intersection of the three sets, 'None' if an error occurred
     """
     # Read the classes.csv file into a DataFrame
+    classes_csv_path = _worker_output_path("classes.csv")
     try:
-        df = pd.read_csv('./output/classes.csv')
+        df = pd.read_csv(classes_csv_path)
         projects_in_csv = [str(project) for project in df['Project'].unique().tolist()]
     except Exception as e:
         print(f"Error reading classes.csv: {e}")
         return None
 
-    if os.path.exists('./compiledrepos'):
-        # Get the list of directories in ./compiledrepos
-        projects_in_compiledrepos = os.listdir('./compiledrepos')
+    compiled_root = PATH_CONTEXT.get_compiled_root()
+    if os.path.exists(compiled_root):
+        projects_in_compiledrepos = [
+            entry for entry in os.listdir(compiled_root)
+            if str(entry).isdigit()
+        ]
     else:
         return None
 
+    project_info_path = _worker_output_path("project_info.json")
     try:
-        with open('output/project_info.json', "r") as project_info_file:
+        with open(project_info_path, "r", encoding="utf-8") as project_info_file:
             project_info_data = json.load(project_info_file)
             # Get the list of projects in project_info.json
             projects_in_project_info = list(project_info_data.keys())
@@ -475,6 +776,7 @@ def generate_files(test_types, techniques, execution_override, correct, specific
         specific_project (optional): the ID of the project to execute (if the function has to execute only one specific project).
     """
     print("Starting to generate files")
+    PATH_CONTEXT.ensure_worker_directories()
     smoke_test_context = _get_smoke_test_context()
     projects_to_process = select_projects_to_process()
     java_directory = os.getenv("JAVA_DIRECTORY")
@@ -486,8 +788,9 @@ def generate_files(test_types, techniques, execution_override, correct, specific
     # False if the project selected by the user was not found, True otherwise
     flag_find = False
     # Extract all versions from project_info.json
+    project_info_path = _worker_output_path("project_info.json")
     try:
-        with open('output/project_info.json', "r") as project_info_file:
+        with open(project_info_path, "r", encoding="utf-8") as project_info_file:
             project_info_data = json.load(project_info_file)
     except Exception as e:
         print(f"Error opening project_info.json: {e}")
@@ -496,7 +799,7 @@ def generate_files(test_types, techniques, execution_override, correct, specific
     compatible_projects_evosuite, number_projects_evosuite = calculate_number_projects_evosuite_compatibility(projects_to_process, project_info_data)
     print(f"\nAt least {number_projects_evosuite} projects are compatible for evosuite execution!\n")
 
-    output_agone_classes_path = "output/output_agone_classes.csv"
+    output_agone_classes_path = _worker_output_path("output_agone_classes.csv")
     all_test_types = test_types.copy()
     all_techniques = techniques.copy()
     # Iterate over each project
@@ -509,7 +812,7 @@ def generate_files(test_types, techniques, execution_override, correct, specific
         if smoke_test_context is not None:
             print(f"SMOKE TEST MODE: Running N=1 for target: {smoke_test_context['target_name']}")
         print(f"PROCESSING PROJECT: '{project}'")
-        project_path = f'./compiledrepos/{project}'
+        project_path = _worker_compiled_repo_path(project)
         project_structure_path = os.path.join(project_path, "project_structure.json")
         project_dependencies_path = os.path.join(project_path, "project_dependencies.json")
         if not os.path.isfile(project_structure_path):
@@ -525,11 +828,21 @@ def generate_files(test_types, techniques, execution_override, correct, specific
             techniques = set()
             for all_test_type in all_test_types:
                 if all_test_type == 'human' or all_test_type == 'evosuite':
-                    if not verify_if_project_test_type_has_already_been_executed(project, all_test_type, 'output/output_agone_projects.csv', None):
+                    if not verify_if_project_test_type_has_already_been_executed(
+                        project,
+                        all_test_type,
+                        _worker_output_path("output_agone_projects.csv"),
+                        None,
+                    ):
                         test_types.add(all_test_type)
                 else:
                     for all_technique in all_techniques:
-                        if not verify_if_project_test_type_has_already_been_executed(project, all_test_type, 'output/output_agone_projects.csv', all_technique):
+                        if not verify_if_project_test_type_has_already_been_executed(
+                            project,
+                            all_test_type,
+                            _worker_output_path("output_agone_projects.csv"),
+                            all_technique,
+                        ):
                             test_types.add(all_test_type)
                             techniques.add(all_technique)
             clean_previous_execution_files_project(project)
@@ -580,9 +893,13 @@ def generate_files(test_types, techniques, execution_override, correct, specific
 
             utils.set_java_home(java_directory, java_version, system)
             # Read the classes.csv file into a DataFrame
-            df = pd.read_csv('./output/classes.csv')
+            df = pd.read_csv(_worker_output_path("classes.csv"))
             project_df = df[df['Project'].isin([int(project)])] # I get only the rows of the current project
             project_df = utils.remove_missing_files_from_dataframe(project_df)
+            project_df = _filter_rows_by_ast_verified_mapping(project_df, project, scope_label="project")
+            if project_df.empty:
+                print(f"Skipping project {project}: no AST-verified samples remain after pre-filtering.")
+                continue
             baseline_test_types, follow_up_test_types = _split_human_baseline(test_types)
             restore_focal_mutations_for_human_baseline(project, baseline_test_types)
             execution_groups = []
@@ -626,9 +943,10 @@ def generate_files(test_types, techniques, execution_override, correct, specific
             else:
                 print(f"Error processing output CSV files for project '{project}'")
 
-            if os.path.exists(f'output/{project}/pathToInputFile.csv'):
+            path_to_input_file = _worker_project_output_path(project, "pathToInputFile.csv")
+            if os.path.exists(path_to_input_file):
                 try:
-                    os.remove(f'output/{project}/pathToInputFile.csv')
+                    os.remove(path_to_input_file)
                 except Exception as e:
                     print(f"Error deleting pathToInputFile.csv: {e}")
         finally:
@@ -786,8 +1104,8 @@ def generate_lists_projects_classes_filtered(test_types, techniques):
 
     """
     initial_check = False
-    output_agone_projects_path = 'output/output_agone_projects.csv'
-    output_agone_classes_path = 'output/output_agone_classes.csv'
+    output_agone_projects_path = _worker_output_path("output_agone_projects.csv")
+    output_agone_classes_path = _worker_output_path("output_agone_classes.csv")
     if os.path.exists(output_agone_projects_path) and os.path.exists(output_agone_classes_path):
         output_agone_projects_df = pd.read_csv(output_agone_projects_path)
         output_agone_classes_df = pd.read_csv(output_agone_classes_path)
@@ -810,8 +1128,8 @@ def generate_lists_projects_classes_filtered(test_types, techniques):
     projects_list_df = pd.DataFrame(list(projects_set),columns=['Project'])
     classes_list_df = pd.DataFrame(list(classes_set), columns=['ID_Focal_Class'])
     try:
-        projects_list_path = 'output/output_agone_projects_filtered.csv'
-        classes_list_path = 'output/output_agone_classes_filtered.csv'
+        projects_list_path = _worker_output_path("output_agone_projects_filtered.csv")
+        classes_list_path = _worker_output_path("output_agone_classes_filtered.csv")
 
         projects_list_df.to_csv(projects_list_path, index=False)
         classes_list_df.to_csv(classes_list_path, index=False)
@@ -849,11 +1167,11 @@ def generate_output_agone_mean_filtered(test_types, techniques):
                 (bool): True if the generation has been executed successfully, False if an error occurred.
 
     """
-    output_agone_classes_path = 'output/output_agone_classes.csv'
+    output_agone_classes_path = _worker_output_path("output_agone_classes.csv")
     output_agone_classes_df = pd.read_csv(output_agone_classes_path)
     if output_agone_classes_df is None or output_agone_classes_df.empty:
         return True
-    output_agone_mean_filtered_path = 'output/output_agone_mean_filtered.csv'
+    output_agone_mean_filtered_path = _worker_output_path("output_agone_mean_filtered.csv")
     java_classes =  output_agone_classes_df['ID_Focal_Class'].unique()
     # All the Java classes that have been executed correctly with all test types (compilation failed inclued), and for which the cyclomatic complexity and LOC are known.
     java_classes_filtered = set()
@@ -969,9 +1287,9 @@ def generate_output_agone_info(test_types, techniques, test_types_user, techniqu
     Returns:
                 : True if the generation has been executed successfully, False otherwise.
     """
-    output_agone_projects_path = 'output/output_agone_projects.csv'
-    output_agone_classes_path = 'output/output_agone_classes.csv'
-    output_agone_info_path = 'output/output_agone_info.txt'
+    output_agone_projects_path = _worker_output_path("output_agone_projects.csv")
+    output_agone_classes_path = _worker_output_path("output_agone_classes.csv")
+    output_agone_info_path = _worker_output_path("output_agone_info.txt")
     try:
         output_agone_projects_df = pd.read_csv(output_agone_projects_path)
         output_agone_classes_df = pd.read_csv(output_agone_classes_path)
@@ -1135,7 +1453,7 @@ def generate_output_agone_projects(output_agone_classes_df):
     Returns:
                 (bool): True if the generation has been executed successfully, False if an error occurred.
     """
-    output_agone_projects_path = 'output/output_agone_projects.csv'
+    output_agone_projects_path = _worker_output_path("output_agone_projects.csv")
     if output_agone_classes_df is None or output_agone_classes_df.empty:
         empty_df = pd.DataFrame()
         empty_df.to_csv(output_agone_projects_path, index=False, na_rep="-")  
@@ -1250,7 +1568,7 @@ def generate_output_agone_mean(test_types, techniques, output_agone_classes_df):
                 (bool): True if the generation has been executed successfully, False if an error occurred.
 
     """
-    output_agone_mean_path = 'output/output_agone_mean.csv'
+    output_agone_mean_path = _worker_output_path("output_agone_mean.csv")
 
     if output_agone_classes_df is None or output_agone_classes_df.empty:
         empty_df = pd.DataFrame()
@@ -1370,10 +1688,15 @@ def process_module(module, project, project_path, java_version, junit_version, t
     has_mockito = utils.verify_mockito(type_project, path)
     utils.set_java_home(java_directory, java_version, system)
     # Read the classes.csv file into a DataFrame
-    df = pd.read_csv('./output/classes.csv')
+    df = pd.read_csv(_worker_output_path("classes.csv"))
     project_df = df[df['Project'].isin([int(project)])] # I get only the rows of the current project
     module_df = project_df[project_df['Module'].isin([module])] # I get only the rows of the current module
     module_df = utils.remove_missing_files_from_dataframe(module_df)
+    module_scope_label = f"module_{str(module).replace('/', '_').replace('\\\\', '_')}"
+    module_df = _filter_rows_by_ast_verified_mapping(module_df, project, scope_label=module_scope_label)
+    if module_df.empty:
+        print(f"Skipping module '{module}' for project {project}: no AST-verified samples remain after pre-filtering.")
+        return pd.DataFrame()
     baseline_test_types, follow_up_test_types = _split_human_baseline(test_types)
     restore_focal_mutations_for_human_baseline(project, baseline_test_types)
     execution_groups = []
@@ -1399,9 +1722,10 @@ def process_module(module, project, project_path, java_version, junit_version, t
             if index == 0 and baseline_test_types and follow_up_test_types:
                 apply_focal_mutations(project, module_df)
     result_generate_output_csv_project, output_csv_path = utils.generate_output_csv_project(project, module_df, test_types, techniques, module) 
-    if os.path.exists(f'output/{project}/pathToInputFile.csv'):
+    path_to_input_file = _worker_project_output_path(project, "pathToInputFile.csv")
+    if os.path.exists(path_to_input_file):
         try:
-            os.remove(f'output/{project}/pathToInputFile.csv')
+            os.remove(path_to_input_file)
         except Exception as e:
             print("An error occured while trying to delete pathToInputFile.csv") 
     if result_generate_output_csv_project  is not None:
@@ -1481,8 +1805,11 @@ def ask_user_clean_all():
         choice = input("Reset function: Do you want to clean up all the previous executions? (Y/N)  ")
         #choice = 'N'
         if choice == 'Y':
-            for project in os.listdir('./output'):
-                project_path = os.path.join('output', project)
+            worker_output_root = _worker_output_path()
+            if not os.path.isdir(worker_output_root):
+                return True
+            for project in os.listdir(worker_output_root):
+                project_path = os.path.join(worker_output_root, project)
                 if os.path.isfile(project_path):
                     continue
                 print(f"Cleaning '{project}'")
@@ -1490,11 +1817,11 @@ def ask_user_clean_all():
                     if filename.endswith('.csv'):
                         os.remove(os.path.join(project_path, filename))
             empty_df = pd.DataFrame()
-            output_agone_classes_path = 'output/output_agone_classes.csv'
-            output_agone_projects_path = 'output/output_agone_projects.csv'
-            output_agone_mean_path = 'output/output_agone_mean.csv'
-            output_agone_mean_filtered_path = 'output/output_agone_mean_filtered.csv'
-            output_agone_info_path = 'output/output_agone_info.txt'
+            output_agone_classes_path = _worker_output_path("output_agone_classes.csv")
+            output_agone_projects_path = _worker_output_path("output_agone_projects.csv")
+            output_agone_mean_path = _worker_output_path("output_agone_mean.csv")
+            output_agone_mean_filtered_path = _worker_output_path("output_agone_mean_filtered.csv")
+            output_agone_info_path = _worker_output_path("output_agone_info.txt")
             if os.path.exists(output_agone_classes_path):
                 empty_df.to_csv(output_agone_classes_path)
             if os.path.exists(output_agone_projects_path):
@@ -1541,7 +1868,7 @@ def clean_previous_execution_files_project(project):
     Parameters:
             project: the ID of the project.
     """
-    project_path = os.path.join('output', project)
+    project_path = _worker_project_output_path(project)
     if os.path.isfile(project_path):
         for filename in os.listdir(project_path):
             if filename.endswith('.csv') and filename is not f"{project}_Output.csv":
