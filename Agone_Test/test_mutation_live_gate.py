@@ -195,6 +195,46 @@ class MutationLiveGateTests(unittest.TestCase):
         self.assertEqual(calls[:2], [0, 1])
         self.assertEqual(mutation_result.get("mutation_attempt_key"), "logical:1")
 
+    def test_retry_mutation_prefers_designated_family_before_others(self):
+        call_order = []
+
+        def _fake_signature_mutation(file_path, target_method=None, target_parameter_count=None):
+            call_order.append("signature")
+            raise ValueError("No behavioral mutation candidate was found in the target method body.")
+
+        def _fake_logical_mutation(
+            file_path,
+            target_method=None,
+            target_parameter_count=None,
+            preferred_candidate_index=None,
+        ):
+            call_order.append(f"logical:{preferred_candidate_index}")
+            if preferred_candidate_index == 0:
+                raise ValueError("logical candidate 0 rejected")
+            raise ValueError(f"No logical mutation candidate at index {preferred_candidate_index}.")
+
+        with patch.object(
+            mavenLib,
+            "MUTATION_RETRY_PRIORITIES",
+            [
+                ("signature", "MATH_PRIMITIVE_RETURNS", _fake_signature_mutation),
+                ("logical", "NEGATE_CONDITIONALS", _fake_logical_mutation),
+            ],
+        ):
+            mutation_result, mutation_type, mutation_error = mavenLib._apply_prioritized_retry_mutation(
+                "compiledrepos/1/src/main/java/demo/SampleService.java",
+                "targetMethod",
+                set(),
+                target_focal_parameter_count=4,
+                preferred_first_family="logical",
+            )
+
+        self.assertIsNone(mutation_result)
+        self.assertIsNone(mutation_type)
+        self.assertEqual(call_order[0:2], ["logical:0", "logical:1"])
+        self.assertIn("signature", call_order)
+        self.assertIn("logical:0: logical candidate 0 rejected", mutation_error)
+
     def test_verify_mutation_live_returns_no_context_safe_signal(self):
         scoped_df = _scoped_dataframe()
         baseline_side_effect = [
@@ -226,9 +266,7 @@ class MutationLiveGateTests(unittest.TestCase):
             ],
         ), patch.object(mavenLib, "_upsert_focal_mutation_record"), patch.object(
             mavenLib, "_current_mutation_type_for_focal", return_value=None
-        ), patch.object(mavenLib.os.path, "isfile", return_value=True), patch.object(
-            mavenLib, "_get_int_run_setting", return_value=2
-        ):
+        ), patch.object(mavenLib.os.path, "isfile", return_value=True):
             result = mavenLib.verify_mutation_is_live(
                 project="1",
                 maven_execution_path=".",
@@ -262,9 +300,7 @@ class MutationLiveGateTests(unittest.TestCase):
             ),
         ), patch.object(mavenLib, "_upsert_focal_mutation_record"), patch.object(
             mavenLib, "_current_mutation_type_for_focal", return_value=None
-        ), patch.object(mavenLib.os.path, "isfile", return_value=True), patch.object(
-            mavenLib, "_get_int_run_setting", return_value=2
-        ):
+        ), patch.object(mavenLib.os.path, "isfile", return_value=True):
             result = mavenLib.verify_mutation_is_live(
                 project="1",
                 maven_execution_path=".",
@@ -291,6 +327,7 @@ class MutationLiveGateTests(unittest.TestCase):
         retry_mutations = [
             ({"mutation_type": "logical", "method_name": "targetMethod"}, "logical", ""),
             ({"mutation_type": "signature", "method_name": "targetMethod"}, "signature", ""),
+            (None, None, "no prioritized mutation strategies remaining for retry"),
         ]
         with patch.object(mavenLib, "run_maven_baseline_stage", side_effect=baseline_side_effect), patch.object(
             mavenLib, "_restore_focal_from_backup", return_value=(True, "")
@@ -300,9 +337,7 @@ class MutationLiveGateTests(unittest.TestCase):
             side_effect=retry_mutations,
         ), patch.object(mavenLib, "_upsert_focal_mutation_record"), patch.object(
             mavenLib, "_current_mutation_type_for_focal", return_value=None
-        ), patch.object(mavenLib.os.path, "isfile", return_value=True), patch.object(
-            mavenLib, "_get_int_run_setting", return_value=2
-        ):
+        ), patch.object(mavenLib.os.path, "isfile", return_value=True):
             result = mavenLib.verify_mutation_is_live(
                 project="1",
                 maven_execution_path=".",

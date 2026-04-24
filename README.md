@@ -1,79 +1,60 @@
-# Classes2Test + AgoneTest
-This repository contains:
+# Agone Pipeline + Classes2Test
 
-- The Classes2Test dataset (focal class ↔ test class mappings)
-- The AgoneTest benchmarking framework (LLM prompts, runners, plotting)
-- The exact outputs used in the paper (CSV summaries + per‑sample JSONs)
+This repository contains the Agone pipeline code plus the `Classes2Test` benchmark inputs used to drive it.
 
-## Quick Links
-
-- Results (macro averages): `output/output_agone_mean.csv`
-- Results (per class): `output/output_agone_classes.csv`
-- Raw records (by project): `output/<PROJECT_ID>/...`
-- Dataset (ground truth): `dataset/`
-- framework code: `AgoneTest/`
+The repository is intentionally kept source-focused. Large generated working copies, run outputs, logs, and local paper-writing assets are treated as local artifacts and are not meant to be committed.
 
 ## Repository Layout
 
-- `dataset/`: JSON files mapping each focal class to its corresponding test class/cases. Example: `dataset/100021742/100021742_19.json`.
-- `output/`: Reproducibility artifacts and summaries from our runs:
-  - `output/output_agone_mean.csv`: macro‑averaged metrics by generator/prompt.
-  - `output/output_agone_classes.csv`: per‑class metrics and smells.
-  - `output/<PROJECT_ID>/...`: per‑sample JSONs organized by project ID.
-- `output.zip`: a zipped archive of the `output/output_agone_mean.csv` and `output/output_agone_classes.csv` for reviewers convenience.
-- `AgoneTest/`: benchmark scripts and utilities (prompt sets, execution manager, plotting).
+- `Agone_Test/`: pipeline code, prompts, runners, analysis helpers, and tests.
+- `Classes2Test/`: benchmark JSON inputs mapping focal classes to corresponding test classes and cases.
+- `tools/`: bundled local tooling used by the pipeline.
+- `repos/`: local source-repository clones used as pipeline inputs. Recreated locally and ignored by Git.
+- `compiledrepos/`: mutable worker copies created during execution. Generated locally and ignored by Git.
+- `output/`: run outputs, metrics, logs, and worker artifacts. Generated locally and ignored by Git.
 
-## Results At A Glance
+## Dataset Format
 
-Open the aggregate CSV to inspect macro metrics by generator and prompt technique:
+Each file in `Classes2Test/` is one focal-class/test-class mapping.
 
-- `output/output_agone_mean.csv`
-  - Columns include: `Generator(LLM)`, `Prompt_Technique`, `Compilation`, `Branch_Coverage%`, `Line_Coverage%`, `Method_Coverage%`, `Mutation_Score%`, and test‑smell rates.
+- Naming convention: `<PROJECT_ID>_<N>.json`
+- Top-level sections:
+  - `focal_class`
+  - `test_class`
+  - `test_case`
 
-Per‑class metrics (useful for detailed analyses or slicing by project/class):
-
-- `output/output_agone_classes.csv`
-  - Columns include: `Generator(LLM)`, `Prompt_Technique`, `Compilation`, `Project_ID`, `Class_Under_Test`, coverage/mutation metrics, and per‑smell indicators.
-
-## Dataset Format (Classes2Test)
-
-- Structure: `dataset/<PROJECT_ID>/<PROJECT_ID>_<N>.json`
-- Each JSON encodes one focal class, its test class, and at least one test case with code context and metadata.
-- Top‑level keys:
-  - `focal_class`: identifier, file path, fields, and methods present in the class under test.
-  - `test_class`: identifier, file path, and fields for the paired test class.
-  - `test_case`: concrete test method metadata and body (identifier, signature, body, invocations).
-
-## Running the framework AgoneTest
+## Running the Pipeline
 
 Prerequisites:
 
 - Python 3.10+
-- Java JDKs (see `AgoneTest/envExample` for versions/paths)
-- API keys for any LLMs you plan to run (optional if using only non‑LLM baselines)
+- Java JDKs configured in `.env`
+- Any API keys required for the agents you want to run
 
 Setup:
 
-- Create a `.env` from `AgoneTest/envExample` and set the `JAVA_DIRECTORY`, `JAVA_HOME_*`, and any API keys you intend to use.
-- Install Python deps: `pip install -r AgoneTest/requirements.txt`
+```bash
+pip install -r Agone_Test/requirements.txt
+```
 
-Run AgoneTest:
+- Copy `Agone_Test/envExample` to `.env` and fill in the required Java paths and optional API keys.
+- Prepare local source repos under `repos/` using the extraction and cloning helpers in `Agone_Test/extract.py`.
 
-- Interactive mode: `python AgoneTest/agone_test.py`
-  - Select project(s), choose whether to re‑run existing results, and whether to apply error‑correction.
-  - Outputs write into `output/` and include:
-    - `output/output_agone_classes.csv`
-    - `output/output_agone_mean.csv` 
+Run:
 
+```bash
+python Agone_Test/agone_test.py
+```
 
-## How To Use This Repo
+During execution, the pipeline creates:
 
-- Want the data only? Browse `dataset/` and the per‑sample JSONs in `output/<PROJECT_ID>/`.
-- Want the headline results? Open `output/output_agone_mean.csv`.
-- Want fine‑grained analysis? Use `output/output_agone_classes.csv` and the plotting scripts in `AgoneTest/`.
-- Want to reproduce? Configure `.env`, install deps, and run `AgoneTest/agone_test.py`.
+- `compiledrepos/worker_<id>/...` for mutable worker copies
+- `output/worker_<id>/...` for logs, CSVs, diagnostics, and per-sample artifacts
+
+These directories are intentionally excluded from version control.
 
 ## Notes
 
-- The dataset builds upon the Methods2Test corpus and extends it to class‑level mappings suitable for test generation and evaluation.
-- The AgoneTest framework is made available for research. A commercial version may be developed in the future.
+- `Classes2Test/` is the versioned benchmark input.
+- `repos/`, `compiledrepos/`, and `output/` are runtime state.
+- `Agone_Test/PIPELINE_WHITEBOX.md` documents the execution flow and worker-safe path model.

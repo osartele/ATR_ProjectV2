@@ -422,6 +422,30 @@ def _mutation_attempt_key(mutation_type, mutation_record=None):
     return "exception"
 
 
+def _mutation_family_key(mutation_key):
+    normalized_key = str(mutation_key or "").strip().lower()
+    if not normalized_key:
+        return None
+    return normalized_key.split(":", 1)[0]
+
+
+def _ordered_mutation_retry_priorities(preferred_first_family=None):
+    priorities = list(MUTATION_RETRY_PRIORITIES or [])
+    preferred_family = _mutation_family_key(preferred_first_family)
+    if preferred_family is None:
+        return priorities
+
+    prioritized = []
+    remaining = []
+    for priority in priorities:
+        mutation_type = priority[0] if priority else None
+        if _mutation_family_key(mutation_type) == preferred_family:
+            prioritized.append(priority)
+        else:
+            remaining.append(priority)
+    return prioritized + remaining
+
+
 def _current_mutation_type_for_focal(
     project_id,
     focal_path,
@@ -491,13 +515,30 @@ def _apply_prioritized_retry_mutation(
     target_focal_method,
     attempted_mutation_types,
     target_focal_parameter_count=None,
+    preferred_first_family=None,
 ):
-    attempted_keys = {str(item).strip() for item in (attempted_mutation_types or set()) if str(item).strip()}
+    normalized_attempted_keys = {
+        str(item).strip()
+        for item in (attempted_mutation_types or set())
+        if str(item).strip()
+    }
+    attempted_keys = normalized_attempted_keys
+    if isinstance(attempted_mutation_types, set):
+        attempted_mutation_types.clear()
+        attempted_mutation_types.update(normalized_attempted_keys)
+        attempted_keys = attempted_mutation_types
+
+    def _register_attempt(attempt_key):
+        normalized_key = str(attempt_key or "").strip()
+        if not normalized_key:
+            return
+        attempted_keys.add(normalized_key)
+
     failed_attempts = []
-    for mutation_type, mutation_class, mutation_function in MUTATION_RETRY_PRIORITIES:
-        if mutation_type == "logical":
-            if "logical" in attempted_keys:
-                continue
+    priorities = _ordered_mutation_retry_priorities(preferred_first_family=preferred_first_family)
+    for mutation_type, mutation_class, mutation_function in priorities:
+        mutation_family = _mutation_family_key(mutation_type)
+        if mutation_family == "logical":
             max_logical_variants = 12
             for candidate_index in range(max_logical_variants):
                 variant_key = f"logical:{candidate_index}"
@@ -514,19 +555,20 @@ def _apply_prioritized_retry_mutation(
                     mutation_result["mutation_priority_class"] = mutation_class
                     mutation_result["mutation_attempt_key"] = variant_key
                     mutation_result.setdefault("mutation_candidate_index", candidate_index)
+                    _register_attempt(variant_key)
                     return mutation_result, mutation_type, ""
                 except ValueError as error:
                     error_text = str(error or "")
                     if "No logical mutation candidate at index" in error_text:
+                        _register_attempt(variant_key)
                         if candidate_index == 0:
                             failed_attempts.append(f"{mutation_type}: {error}")
                         break
+                    _register_attempt(variant_key)
                     failed_attempts.append(f"{variant_key}: {error}")
             continue
 
-        if mutation_type == "exception":
-            if "exception" in attempted_keys:
-                continue
+        if mutation_family == "exception":
             exception_variant_keys = ["exception:catch_block", "exception:method_entry"]
             for variant_key in exception_variant_keys:
                 if variant_key in attempted_keys:
@@ -542,12 +584,15 @@ def _apply_prioritized_retry_mutation(
                     mutation_result = dict(mutation_result or {})
                     mutation_result["mutation_priority_class"] = mutation_class
                     mutation_result["mutation_attempt_key"] = variant_key
+                    _register_attempt(variant_key)
                     return mutation_result, mutation_type, ""
                 except ValueError as error:
+                    _register_attempt(variant_key)
                     failed_attempts.append(f"{variant_key}: {error}")
             continue
 
-        if mutation_type in attempted_keys:
+        mutation_variant_key = str(mutation_type or mutation_family or "").strip()
+        if not mutation_variant_key or mutation_variant_key in attempted_keys:
             continue
         try:
             mutation_result = mutation_function(
@@ -557,10 +602,12 @@ def _apply_prioritized_retry_mutation(
             )
             mutation_result = dict(mutation_result or {})
             mutation_result["mutation_priority_class"] = mutation_class
-            mutation_result["mutation_attempt_key"] = mutation_type
+            mutation_result["mutation_attempt_key"] = mutation_variant_key
+            _register_attempt(mutation_variant_key)
             return mutation_result, mutation_type, ""
         except ValueError as error:
-            failed_attempts.append(f"{mutation_type}: {error}")
+            _register_attempt(mutation_variant_key)
+            failed_attempts.append(f"{mutation_variant_key}: {error}")
             continue
 
     if failed_attempts:
@@ -723,8 +770,6 @@ def verify_mutation_is_live(
             "attempted_mutation_types": [],
         }
 
-    retry_limit = _get_int_run_setting("mutation_live_retry_max", 2)
-    retry_limit = max(retry_limit, 0)
     retries_executed = 0
     attempted_mutation_types = set()
     current_mutation_key = _current_mutation_type_for_focal(
@@ -735,14 +780,15 @@ def verify_mutation_is_live(
     )
     if current_mutation_key:
         attempted_mutation_types.add(current_mutation_key)
+    preferred_family = _mutation_family_key(current_mutation_key)
 
     _log_flow_event(
         maven_execution_path,
         f"[MutationLiveGate] Quiet mutation detected for focal={resolved_focal_path}; "
-        f"starting prioritized retries (limit={retry_limit}).",
+        "starting prioritized retries with exhaustive family traversal.",
     )
-    for retry_number in range(1, retry_limit + 1):
-        retries_executed = retry_number
+    while True:
+        retry_number = retries_executed + 1
         restored, restore_reason = _restore_focal_from_backup(project_id, resolved_focal_path)
         if not restored:
             _log_flow_event(
@@ -756,6 +802,7 @@ def verify_mutation_is_live(
             normalized_ast_focal_method,
             attempted_mutation_types,
             target_focal_parameter_count=target_focal_parameter_count,
+            preferred_first_family=preferred_family,
         )
         if mutation_result is None or mutation_type is None:
             _log_flow_event(
@@ -763,6 +810,7 @@ def verify_mutation_is_live(
                 f"[MutationLiveGate] Retry {retry_number} did not apply a new mutation: {mutation_error}",
             )
             break
+        retries_executed = retry_number
 
         mutation_attempt_key = mutation_result.get("mutation_attempt_key") or _mutation_attempt_key(
             mutation_type,
@@ -1218,10 +1266,17 @@ def _prepare_maven_stage_context(path, project_dataframe, system, ast_test_metho
         '-Dfeatures=-auto_threads',
     ]
     maven_executable = 'mvn.cmd' if system == 'Windows' else 'mvn'
-
+    offline_enabled = os.getenv("AGONE_MAVEN_OFFLINE", "1").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "y",
+        "on",
+    }
+    offline_flags = ['-o'] if offline_enabled else []
     baseline_command = [
         maven_executable,
-        '-o',
+        *offline_flags,
         '-B',
         *baseline_module_args,
         *([test_classes] if test_classes else []),
@@ -1232,7 +1287,7 @@ def _prepare_maven_stage_context(path, project_dataframe, system, ast_test_metho
     ]
     pit_command = [
         maven_executable,
-        '-o',
+        *offline_flags,
         '-B',
         *pit_module_args,
         *pitest_runtime_flags,

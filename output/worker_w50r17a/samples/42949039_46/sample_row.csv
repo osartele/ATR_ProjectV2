@@ -1,2 +1,0 @@
-"Project","Focal_Class","Test_Class","Focal_Path","Test_Path","Module","Focal_Method","Test_Case","AST_Focal_Method","AST_Test_Method"
-"42949039","ConfigurationHelper","ConfigurationHelperTest","repos/42949039/herd-code/herd-core/src/main/java/org/finra/herd/core/helper/ConfigurationHelper.java","repos/42949039/herd-code/herd-core/src/test/java/org/finra/herd/core/helper/ConfigurationHelperTest.java","herd-code\herd-core","getProperty","testGetPropertyValidationThrowsWhenConfigurationValueIsNull","getProperty","testGetPropertyValidationThrowsWhenConfigurationValueIsNull"

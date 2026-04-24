@@ -546,6 +546,29 @@ def retrieve_code_coverage_and_cyclomatic_complexity(
     jacoco_df_all = None
     pitest_df_all = None
     pitest_method_df_all = None
+    jacoco_columns = [
+        'GROUP',
+        'PACKAGE',
+        'CLASS',
+        'INSTRUCTION_MISSED',
+        'INSTRUCTION_COVERED',
+        'BRANCH_MISSED',
+        'BRANCH_COVERED',
+        'LINE_MISSED',
+        'LINE_COVERED',
+        'COMPLEXITY_MISSED',
+        'COMPLEXITY_COVERED',
+        'METHOD_MISSED',
+        'METHOD_COVERED',
+    ]
+
+    def _safe_read_csv(path, expected_columns=None, **kwargs):
+        try:
+            return pd.read_csv(path, **kwargs)
+        except pd.errors.EmptyDataError:
+            if expected_columns is None:
+                return pd.DataFrame()
+            return pd.DataFrame(columns=expected_columns)
     # For each module, retrieve the .csv files and read them to obtain the results from JaCoCo and PITest. All the results are then merged into a single DataFrame.
     snapshot_key = None
     if _normalize_optional_identifier(test_type) is not None:
@@ -566,15 +589,15 @@ def retrieve_code_coverage_and_cyclomatic_complexity(
             jacoco_snapshot_path = os.path.join(snapshot_module_path, "jacoco.csv")
             pitest_snapshot_path = os.path.join(snapshot_module_path, "mutations.csv")
             if os.path.exists(jacoco_snapshot_path):
-                jacoco_df = pd.read_csv(jacoco_snapshot_path)
+                jacoco_df = _safe_read_csv(jacoco_snapshot_path, expected_columns=jacoco_columns)
             if os.path.exists(pitest_snapshot_path):
-                pitest_df = pd.read_csv(pitest_snapshot_path, header=None)
+                pitest_df = _safe_read_csv(pitest_snapshot_path, expected_columns=list(range(7)), header=None)
         else:
             jacoco_live_path, pitest_live_path = _resolve_live_coverage_report_paths(path, type_project)
             if jacoco_live_path is not None:
-                jacoco_df = pd.read_csv(jacoco_live_path)
+                jacoco_df = _safe_read_csv(jacoco_live_path, expected_columns=jacoco_columns)
             if pitest_live_path is not None:
-                pitest_df = pd.read_csv(pitest_live_path, header=None)
+                pitest_df = _safe_read_csv(pitest_live_path, expected_columns=list(range(7)), header=None)
         
         if jacoco_df is None or pitest_df is None:
             return None
@@ -590,43 +613,49 @@ def retrieve_code_coverage_and_cyclomatic_complexity(
         if target_fqns:
             jacoco_df = jacoco_df[jacoco_df["Focal_FQN"].isin(target_fqns)]
 
-        pitest_df[0] = pitest_df[0].astype(str).str.replace('.java', '', regex=False)
-        pitest_df.columns = ['Focal_Class', 'Package', 'Mutation_Name', 'Method_Name', 'Line_Number', 'Result', 'Killing_test']
-        def _resolve_pitest_fqn(pitest_row):
-            focal_class_name = _normalize_optional_identifier(pitest_row['Focal_Class']) or ''
-            mutated_class_col = _normalize_optional_identifier(pitest_row['Package']) or ''
-            # Safely handle both modern PIT (FQN) and older PIT (package-only) formats.
-            if mutated_class_col.endswith(focal_class_name):
-                return mutated_class_col
-            return f"{mutated_class_col}.{focal_class_name}".strip(".")
-        pitest_df["Focal_FQN"] = pitest_df.apply(
-            _resolve_pitest_fqn,
-            axis=1,
-        )
-        pitest_df["Method_Name_Normalized"] = pitest_df["Method_Name"].apply(_normalize_method_identifier)
-        if target_fqns:
-            pitest_df = pitest_df[pitest_df["Focal_FQN"].isin(target_fqns)]
-        # Each row of the pitest_df DataFrame represents a mutation
-        # Focal_Class: the name of the focal class without the .java extension
-        # Package: the package of the focal class
-        # Mutation_Name: the name of the engine used for the mutation
-        # Method_Signature: the name of the method involved in the mutation
-        # Line_Number: the number of the line of code involved in the mutation
-        # Killing_Test: the test that ultimately killed the mutation
-        pitest_class_df = pitest_df.groupby('Focal_FQN').agg(
-            {'Result': lambda x: round((x == 'KILLED').sum() / len(x) * 100, 2)})
-        pitest_class_df = pitest_class_df.rename(columns={'Result': 'Mutation_Coverage_Class'})
-        pitest_class_df = pitest_class_df.reset_index()
+        if pitest_df.empty:
+            pitest_class_df = pd.DataFrame(columns=['Focal_FQN', 'Mutation_Coverage_Class'])
+            pitest_method_df = pd.DataFrame(columns=['Focal_FQN', 'Method_Name_Normalized', 'Mutation_Coverage_Method'])
+        else:
+            pitest_df[0] = pitest_df[0].astype(str).str.replace('.java', '', regex=False)
+            pitest_df.columns = ['Focal_Class', 'Package', 'Mutation_Name', 'Method_Name', 'Line_Number', 'Result', 'Killing_test']
+            def _resolve_pitest_fqn(pitest_row):
+                focal_class_name = _normalize_optional_identifier(pitest_row['Focal_Class']) or ''
+                mutated_class_col = _normalize_optional_identifier(pitest_row['Package']) or ''
+                # Safely handle both modern PIT (FQN) and older PIT (package-only) formats.
+                if mutated_class_col.endswith(focal_class_name):
+                    return mutated_class_col
+                return f"{mutated_class_col}.{focal_class_name}".strip(".")
+            pitest_df["Focal_FQN"] = pitest_df.apply(
+                _resolve_pitest_fqn,
+                axis=1,
+            )
+            pitest_df["Method_Name_Normalized"] = pitest_df["Method_Name"].apply(_normalize_method_identifier)
+            if target_fqns:
+                pitest_df = pitest_df[pitest_df["Focal_FQN"].isin(target_fqns)]
+            # Each row of the pitest_df DataFrame represents a mutation
+            # Focal_Class: the name of the focal class without the .java extension
+            # Package: the package of the focal class
+            # Mutation_Name: the name of the engine used for the mutation
+            # Method_Signature: the name of the method involved in the mutation
+            # Line_Number: the number of the line of code involved in the mutation
+            # Killing_Test: the test that ultimately killed the mutation
+            pitest_class_df = pitest_df.groupby('Focal_FQN').agg(
+                {'Result': lambda x: round((x == 'KILLED').sum() / len(x) * 100, 2)})
+            pitest_class_df = pitest_class_df.rename(columns={'Result': 'Mutation_Coverage_Class'})
+            pitest_class_df = pitest_class_df.reset_index()
+
+            pitest_method_df = pitest_df.groupby(['Focal_FQN', 'Method_Name_Normalized']).agg(
+                {'Result': lambda x: round((x == 'KILLED').sum() / len(x) * 100, 2)}
+            )
+            pitest_method_df = pitest_method_df.rename(columns={'Result': 'Mutation_Coverage_Method'})
+            pitest_method_df = pitest_method_df.reset_index()
+
         if pitest_df_all is None:
             pitest_df_all = pitest_class_df
         else:
             pitest_df_all = pd.concat([pitest_df_all, pitest_class_df], ignore_index=True)
 
-        pitest_method_df = pitest_df.groupby(['Focal_FQN', 'Method_Name_Normalized']).agg(
-            {'Result': lambda x: round((x == 'KILLED').sum() / len(x) * 100, 2)}
-        )
-        pitest_method_df = pitest_method_df.rename(columns={'Result': 'Mutation_Coverage_Method'})
-        pitest_method_df = pitest_method_df.reset_index()
         if pitest_method_df_all is None:
             pitest_method_df_all = pitest_method_df
         else:
@@ -682,6 +711,11 @@ def retrieve_code_coverage_and_cyclomatic_complexity(
 
         measures_data.append([row['Coverage_Row_Id'], focal_class, cyclomatic_complexity, loc, branch_coverage, method_coverage, line_coverage])
     
+    if pitest_df_all is None:
+        pitest_df_all = pd.DataFrame(columns=['Focal_FQN', 'Mutation_Coverage_Class'])
+    if pitest_method_df_all is None:
+        pitest_method_df_all = pd.DataFrame(columns=['Focal_FQN', 'Method_Name_Normalized', 'Mutation_Coverage_Method'])
+
     measures_df = pd.DataFrame(measures_data, columns=['Coverage_Row_Id', 'Focal_Class', 'Cyclomatic_complexity', 'Lines_of_code', 'Branch_coverage', 'Method_coverage', 'Line_coverage'])
     measures_df = pd.merge(project_df, measures_df, how="left",
                             on=['Coverage_Row_Id', 'Focal_Class'])
@@ -2990,7 +3024,7 @@ def generate_test_with_codex(
 
     instruction_parts = [
         _format_prompt_instruction(prompt_roles),
-        "Use the provided focal class and AST mapping as the source of truth.",
+        "Use the provided mapped test anchor, AST mapping, invocation summary, and focal-method context as the source of truth.",
     ]
     smoke_mode_enabled = _is_smoke_test_mode_enabled()
     if technique == "iterative-healing":

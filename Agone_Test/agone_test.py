@@ -1,7 +1,6 @@
 import json
 import os
 import sys
-import random
 import re
 import shutil
 import subprocess
@@ -475,37 +474,176 @@ def _split_human_baseline(test_types):
     return baseline_test_types, follow_up_test_types
 
 
+MUTATION_FAMILY_ROTATION = ["logical", "signature", "exception"]
+EXCEPTION_MUTATION_SCOPES = ["catch_block", "method_entry"]
+MAX_LOGICAL_MUTATION_VARIANTS = 12
+
+
+def _ordered_mutation_families(start_family):
+    normalized_start_family = str(start_family or "").strip().lower()
+    if normalized_start_family not in MUTATION_FAMILY_ROTATION:
+        return list(MUTATION_FAMILY_ROTATION)
+    return [normalized_start_family] + [
+        family for family in MUTATION_FAMILY_ROTATION if family != normalized_start_family
+    ]
+
+
+def _select_deterministic_target_method(row, test_path, focal_path):
+    explicit_focal_method = _normalize_method_identifier(row.get("AST_Focal_Method"))
+    if explicit_focal_method is not None:
+        return explicit_focal_method
+
+    if not os.path.isfile(test_path):
+        return None
+
+    preferred_test_method = _normalize_method_identifier(row.get("AST_Test_Method"))
+    try:
+        mapping = psa.map_test_to_focal_methods(test_path, focal_path)
+    except Exception:
+        return None
+
+    normalized_mapping = _normalize_ast_mapping(mapping)
+    if preferred_test_method and preferred_test_method in normalized_mapping:
+        preferred_focal_candidates = sorted(normalized_mapping[preferred_test_method])
+        if preferred_focal_candidates:
+            return preferred_focal_candidates[0]
+
+    all_candidates = sorted({method for methods in normalized_mapping.values() for method in methods})
+    if all_candidates:
+        return all_candidates[0]
+    return None
+
+
+def _infer_deterministic_target_parameter_count(row, test_path, target_method):
+    if not target_method or not os.path.isfile(test_path):
+        return None
+    test_method = _normalize_method_identifier(row.get("AST_Test_Method"))
+    if test_method is None:
+        return None
+    return mavenLib._infer_target_focal_parameter_count(test_path, test_method, target_method)
+
+
+def _apply_deterministic_family_mutation(
+    focal_path,
+    target_method,
+    target_parameter_count,
+    preferred_start_family,
+):
+    attempted_variants = set()
+    failure_messages = []
+
+    for mutation_family in _ordered_mutation_families(preferred_start_family):
+        if mutation_family == "logical":
+            for candidate_index in range(MAX_LOGICAL_MUTATION_VARIANTS):
+                variant_key = f"logical:{candidate_index}"
+                if variant_key in attempted_variants:
+                    continue
+                attempted_variants.add(variant_key)
+                try:
+                    mutation_result = focal_mutator.apply_logical_mutation(
+                        focal_path,
+                        target_method=target_method,
+                        target_parameter_count=target_parameter_count,
+                        preferred_candidate_index=candidate_index,
+                    )
+                    mutation_result = dict(mutation_result or {})
+                    mutation_result.setdefault("mutation_attempt_key", variant_key)
+                    mutation_result.setdefault("mutation_family_assigned", preferred_start_family)
+                    mutation_result.setdefault("mutation_family_applied", "logical")
+                    return mutation_result
+                except ValueError as error:
+                    error_text = str(error or "")
+                    failure_messages.append(f"{variant_key}: {error}")
+                    if "No logical mutation candidate at index" in error_text:
+                        break
+            continue
+
+        if mutation_family == "signature":
+            variant_key = "signature"
+            if variant_key in attempted_variants:
+                continue
+            attempted_variants.add(variant_key)
+            try:
+                mutation_result = focal_mutator.apply_signature_mutation(
+                    focal_path,
+                    target_method=target_method,
+                    target_parameter_count=target_parameter_count,
+                )
+                mutation_result = dict(mutation_result or {})
+                mutation_result.setdefault("mutation_attempt_key", variant_key)
+                mutation_result.setdefault("mutation_family_assigned", preferred_start_family)
+                mutation_result.setdefault("mutation_family_applied", "signature")
+                return mutation_result
+            except ValueError as error:
+                failure_messages.append(f"{variant_key}: {error}")
+            continue
+
+        if mutation_family == "exception":
+            for scope in EXCEPTION_MUTATION_SCOPES:
+                variant_key = f"exception:{scope}"
+                if variant_key in attempted_variants:
+                    continue
+                attempted_variants.add(variant_key)
+                try:
+                    mutation_result = focal_mutator.apply_exception_mutation(
+                        focal_path,
+                        target_method=target_method,
+                        target_parameter_count=target_parameter_count,
+                        preferred_injection_scope=scope,
+                    )
+                    mutation_result = dict(mutation_result or {})
+                    mutation_result.setdefault("mutation_attempt_key", variant_key)
+                    mutation_result.setdefault("mutation_family_assigned", preferred_start_family)
+                    mutation_result.setdefault("mutation_family_applied", "exception")
+                    return mutation_result
+                except ValueError as error:
+                    failure_messages.append(f"{variant_key}: {error}")
+            continue
+
+    if failure_messages:
+        raise ValueError("; ".join(failure_messages))
+    raise ValueError("Unable to apply any deterministic mutation variant to the focal class.")
+
+
 def apply_focal_mutations(project, project_dataframe):
-    rng = random.Random(str(project))
     mutation_records = []
     mutated_focal_paths = set()
     focal_backups = {}
+    family_assignment_index = 0
+    sort_columns = [column for column in ["Focal_Path", "Test_Path", "AST_Test_Method", "AST_Focal_Method"] if column in project_dataframe.columns]
+    if sort_columns:
+        deterministic_dataframe = project_dataframe.sort_values(by=sort_columns, kind="mergesort")
+    else:
+        deterministic_dataframe = project_dataframe.copy()
 
-    for _, row in project_dataframe.iterrows():
+    for _, row in deterministic_dataframe.iterrows():
         focal_path = _normalize_compiled_path(project, row["Focal_Path"])
         test_path = _normalize_compiled_path(project, row["Test_Path"])
         if focal_path in mutated_focal_paths or not os.path.isfile(focal_path):
             continue
 
-        target_method = None
-        if os.path.isfile(test_path):
-            try:
-                mapping = psa.map_test_to_focal_methods(test_path, focal_path)
-                mapped_methods = sorted({method for methods in mapping.values() for method in methods})
-                if mapped_methods:
-                    target_method = rng.choice(mapped_methods)
-            except Exception:
-                target_method = None
+        assigned_family = MUTATION_FAMILY_ROTATION[family_assignment_index % len(MUTATION_FAMILY_ROTATION)]
+        family_assignment_index += 1
+        target_method = _select_deterministic_target_method(row, test_path, focal_path)
+        target_parameter_count = _infer_deterministic_target_parameter_count(row, test_path, target_method)
 
         try:
             with open(focal_path, "r", encoding="utf-8") as focal_file:
                 focal_backups[focal_path] = focal_file.read()
-            mutation_result = focal_mutator.apply_random_mutation(focal_path, target_method=target_method, rng=rng)
+            mutation_result = _apply_deterministic_family_mutation(
+                focal_path,
+                target_method,
+                target_parameter_count,
+                preferred_start_family=assigned_family,
+            )
             mutation_result["focal_path"] = focal_path
             mutation_result["test_path"] = test_path
             mutation_records.append(mutation_result)
             mutated_focal_paths.add(focal_path)
-            print(f"Applied {mutation_result['mutation_type']} mutation to {focal_path}")
+            print(
+                f"Applied {mutation_result['mutation_type']} mutation to {focal_path} "
+                f"(assigned_family={assigned_family}, variant={mutation_result.get('mutation_attempt_key', '-')})"
+            )
         except Exception as e:
             print(f"Skipping mutation for {focal_path}: {e}")
 
